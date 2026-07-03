@@ -8,7 +8,7 @@ import {
 } from "../data/troops";
 import { bumpQuestStat } from "../data/quests";
 import { completeMission, getNextMission } from "../data/campaign";
-import { GENERALS, applyGeneralBoost } from "../data/generals";
+import { GENERALS, applyGeneralBoost, getEffectiveGeneral } from "../data/generals";
 
 // ── Grid ──────────────────────────────────────────────────────────────────────
 const COLS = 32, ROWS = 18;
@@ -441,6 +441,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
   const [selectedGeneral, setSelectedGeneral] = useState(null); // armed general awaiting a target click
   const [generalUsed, setGeneralUsed]         = useState(false);
   const [generalUnitId, setGeneralUnitId]     = useState(null);
+  const [armedGeneralLevel, setArmedGeneralLevel] = useState(0);
 
   // Placement hover — track which cell cursor is over during pending placement
   const [hoverCell, setHoverCell] = useState(null);
@@ -840,7 +841,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
     const init=makeInitialUnits(mode, mission);
     unitsRef.current=init;setUnitsRaw(init);
     setPhase('setup');
-    setSelectedGeneral(null);setGeneralUsed(false);setGeneralUnitId(null);
+    setSelectedGeneral(null);setGeneralUsed(false);setGeneralUnitId(null);setArmedGeneralLevel(0);
     setPending(null);setHoverCell(null);setSelectedIds(new Set());
     setLog(['Deploy your Factory — the battle begins the instant you place it.']);
     enemyManaRef.current=STARTING_MANA;
@@ -866,11 +867,11 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
   // ── Generals — arm one, then click a troop to bind it (single use per battle) ──
   function chooseGeneral(id) {
     if(generalUsed)return;
-    const g=GENERALS.find(x=>x.id===id);
+    const g=getEffectiveGeneral(id);
     if(!g)return;
     setPending(null);setHoverCell(null);
     setSelectedGeneral(g);
-    addLog(`${g.name} ready — click one of your troops to assign.`);
+    addLog(`${g.name}${g.level>0?` (Lv.${g.level})`:''} ready — click one of your troops to assign.`);
   }
   function cancelGeneral() {
     setSelectedGeneral(null);
@@ -880,8 +881,8 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
     if(!u||u.faction!=='player'||u.hp<=0||!(u.mov>0)){addLog('Generals can only lead a mobile troop.');return;}
     const boosted=applyGeneralBoost(u,selectedGeneral);
     setUnits(unitsRef.current.map(x=>x.id===unitId?boosted:x));
-    setGeneralUsed(true);setGeneralUnitId(unitId);setSelectedGeneral(null);
-    addLog(`⭐ ${selectedGeneral.name} now leads ${u.name}!`);
+    setGeneralUsed(true);setGeneralUnitId(unitId);setArmedGeneralLevel(selectedGeneral.level||0);setSelectedGeneral(null);
+    addLog(`⭐ ${selectedGeneral.name}${selectedGeneral.level>0?` (Lv.${selectedGeneral.level})`:''} now leads ${u.name}!`);
   }
 
   // ── Click handler (no manual movement) ───────────────────────────────────
@@ -1036,9 +1037,10 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
             (() => {
               const leadUnit = units.find(u=>u.id===generalUnitId);
               const g = GENERALS.find(x=>x.id===leadUnit?.general);
+              const lvl = armedGeneralLevel;
               return leadUnit ? (
                 <div className="rounded-lg border px-2 py-1.5" style={{borderColor:g?.color||'#52525b',background:`${g?.color||'#52525b'}22`}}>
-                  <p className="text-xs font-bold" style={{color:g?.color||'#e5e7eb'}}>{g?.icon} {g?.name}</p>
+                  <p className="text-xs font-bold" style={{color:g?.color||'#e5e7eb'}}>{g?.icon} {g?.name}{lvl>0?` · Lv.${lvl}`:''}</p>
                   <p className="text-zinc-400 text-[9px]">leads {leadUnit.name}</p>
                 </div>
               ) : (

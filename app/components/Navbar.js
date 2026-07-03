@@ -5,6 +5,7 @@ import ReportBugModal from "./modals/ReportBugModal";
 import SuggestionModal from "./modals/SuggestionModal";
 import AdminApplicationModal from "./modals/AdminApplicationModal";
 import ShopModal from "./modals/ShopModal";
+import GeneralsModal from "./modals/GeneralsModal";
 
 const XP_MAX = 1000;
 
@@ -145,6 +146,16 @@ export default function Navbar({ onAdmin }) {
 
             <div className="flex-1" />
 
+            {/* Generals */}
+            <button
+              onClick={() => setModal("generals")}
+              className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-indigo-500 rounded-full px-4 py-1.5 text-sm font-semibold transition-all"
+              title="Generals"
+            >
+              <span className="text-base">⭐</span>
+              <span className="text-zinc-300 hidden sm:inline">Generals</span>
+            </button>
+
             {/* Shop */}
             <button
               onClick={() => setModal("shop")}
@@ -211,6 +222,7 @@ export default function Navbar({ onAdmin }) {
       {modal === "suggestion" && <SuggestionModal       onClose={() => setModal(null)} />}
       {modal === "admin"      && <AdminApplicationModal onClose={() => setModal(null)} />}
       {modal === "shop"       && <ShopModal             onClose={() => setModal(null)} />}
+      {modal === "generals"   && <GeneralsModal         onClose={() => setModal(null)} />}
     </>
   );
 }
