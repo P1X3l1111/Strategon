@@ -3,9 +3,8 @@ import { useState, useEffect } from "react";
 import MapEditor, { makeDefaultGrid } from "./MapEditor";
 
 const MODES = [
-  { id:'classic',   name:'Classic',   color:'#6366f1', icon:'⚔', desc:'Clear all enemy buildings.' },
-  { id:'endless',   name:'Endless',   color:'#16a34a', icon:'∞', desc:'Enemies storm from the right wall.' },
-  { id:'minefield', name:'Minefield', color:'#ea580c', icon:'✦', desc:'Landmines scatter the field.' },
+  { id:'classic', name:'Classic', color:'#6366f1', icon:'⚔', desc:'Clear all enemy buildings.' },
+  { id:'endless', name:'Endless', color:'#16a34a', icon:'∞', desc:'Enemies storm from the right wall.' },
 ];
 
 const ACCOUNTS_KEY = 'rpg_accounts';

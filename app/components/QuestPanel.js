@@ -53,7 +53,7 @@ export default function QuestPanel({ type }) {
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-white font-black text-sm flex items-center gap-1.5 whitespace-nowrap">
           {isDaily ? "📅 Daily Quests" : "🗓️ Weekly Quests"}
-          {!isDaily && <span className="text-amber-400 text-[10px] font-bold bg-amber-950 border border-amber-800 rounded-full px-1.5 py-0.5">Wk {weekIdx}/4</span>}
+          {!isDaily && <span className="text-amber-400 text-[10px] font-bold bg-amber-950 border border-amber-800 rounded-full px-1.5 py-0.5">Week {weekIdx}</span>}
         </h3>
         <span className="text-zinc-600 text-[9px] font-semibold shrink-0">{resetLabel}</span>
       </div>

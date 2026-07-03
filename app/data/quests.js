@@ -9,8 +9,11 @@ function todayKey(d = new Date()) {
 function weekNumber(d = new Date()) { return Math.floor(d.getTime() / (7 * DAY_MS)); }
 function weekKey(d = new Date())    { return String(weekNumber(d)); }
 
-// Which of the 4 rotating weekly quest sets is live right now (1-4).
-export function getActiveWeekIndex() { return (weekNumber() % 4) + 1; }
+// A perpetually increasing week counter for display ("Week 5", "Week 6"...).
+// The weekly quest *content* below no longer rotates with this — it's just
+// flavor progress so returning players see the week count tick forward.
+const WEEK_EPOCH = Math.floor(new Date("2026-01-01T00:00:00Z").getTime() / (7 * DAY_MS));
+export function getActiveWeekIndex() { return weekNumber() - WEEK_EPOCH + 1; }
 
 function currentUser() {
   if (typeof window === "undefined") return null;
@@ -81,7 +84,9 @@ export function getActiveDailyQuests() {
   return chosen;
 }
 
-// ── Weekly quests — harder, 9 per week (fits a 3x3 grid), rotating across a 4-week cycle ──
+// ── Weekly quests — harder, 9 per week (fits a 3x3 grid). Same 9 quests every
+// week (progress and claims still reset weekly) so returning players always
+// know what's on offer instead of a new set appearing each time.
 function buildWeekSet(w) {
   const mult = 1 + (w - 1) * 0.4; // week 4 pays ~2.2x week 1
   const R = (mana = 0, gems = 0) => ({ rewardMana: Math.round(mana * mult), rewardGems: Math.round(gems * mult) });
@@ -97,7 +102,7 @@ function buildWeekSet(w) {
     { id: `w${w}_squad`,   statKey: "multiUnitCommands", target: 3 * w + 2,   desc: `Issue ${3 * w + 2} group commands`,       ...R(90) },
   ];
 }
-export function getActiveWeeklyQuests() { return buildWeekSet(getActiveWeekIndex()); }
+export function getActiveWeeklyQuests() { return buildWeekSet(1); }
 
 // ── Progress state (per user, resets on day/week rollover) ────────────────────
 const QS_KEY = (u) => `rpg_quest_state_${u}`;

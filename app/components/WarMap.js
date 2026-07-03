@@ -62,11 +62,9 @@ const UD = {
 const SHOP_CATS  = ['struct','infantry','armor','artillery','trap'];
 const CAT_LABELS = { struct:'Struct', infantry:'Inf', armor:'Armor', artillery:'Arty', trap:'Trap' };
 const MODES = [
-  { id:'classic',   name:'Classic',   color:'#6366f1' },
-  { id:'endless',   name:'Endless',   color:'#16a34a' },
-  { id:'minefield', name:'Minefield', color:'#ea580c' },
+  { id:'classic', name:'Classic', color:'#6366f1' },
+  { id:'endless', name:'Endless', color:'#16a34a' },
 ];
-const MINE_DMG = 20;
 
 // Enemy AI: ordered list of what to buy and at what wave of spending
 const ENEMY_BUILD_QUEUE = [
@@ -154,13 +152,6 @@ function mkUD(type, col, row, faction) {
   };
 }
 
-function generateMines(existingUnits) {
-  const occ = new Set(existingUnits.flatMap(u => unitCells(u).map(([c,r]) => `${c},${r}`)));
-  const cands = [];
-  for (let r=0;r<ROWS;r++) for (let c=5;c<COLS-2;c++)
-    if (TR[GRID[r]?.[c]]?.pass && !occ.has(`${c},${r}`)) cands.push(`${c},${r}`);
-  return new Set(cands.sort(()=>Math.random()-0.5).slice(0,14));
-}
 
 function makeInitialUnits(mode, mission) {
   const units = [
@@ -347,10 +338,6 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
     return () => ro.disconnect();
   }, [ready]);
 
-  const minesRef = useRef(new Set());
-  const [mines, setMinesRaw] = useState(new Set());
-  function setMines(m) { minesRef.current = m; setMinesRaw(m); }
-
   // Enemy AI state
   const enemyManaRef     = useRef(STARTING_MANA);
   const enemyBuildIdx    = useRef(0);
@@ -489,19 +476,6 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
         if (step) cur=cur.map(u=>u.id===pu.id?{...u,col:step.col,row:step.row}:u);
       }
 
-      // Mines
-      if (mode==='minefield') {
-        for (const en of cur.filter(u=>u.faction==='enemy'&&u.hp>0&&u.mov>0)) {
-          const k=`${en.col},${en.row}`;
-          if (minesRef.current.has(k)) {
-            cur=cur.map(u=>u.id===en.id?{...u,hp:Math.max(0,u.hp-MINE_DMG)}:u);
-            const nm=new Set(minesRef.current);nm.delete(k);setMines(nm);
-            events.push({id:en.id,col:en.col,row:en.row,dmg:MINE_DMG});
-            if (en.hp-MINE_DMG<=0) bumpQuestStat('enemiesKilled');
-          }
-        }
-      }
-
       // Win/lose
       const playerHQ=cur.find(u=>u.type==='base_main');
       if (!playerHQ||playerHQ.hp<=0) {
@@ -566,7 +540,6 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
   function startBattle() {
     if(!factoryPlaced){addLog('Place a Factory first!');return;}
     const allUnits=[...unitsRef.current];
-    if(mode==='minefield')setMines(generateMines(allUnits));
     setUnits(allUnits);setPhase('battle');
     enemyManaRef.current=STARTING_MANA;
     enemyBuildIdx.current=0;
@@ -577,7 +550,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
   function resetGame() {
     const init=makeInitialUnits(mode, mission);
     unitsRef.current=init;setUnitsRaw(init);
-    setPhase('setup');setMines(new Set());
+    setPhase('setup');
     setPending(null);setHoverCell(null);setSelectedIds(new Set());
     setLog(['Deploy your Factory, then Start Battle.']);
     enemyManaRef.current=STARTING_MANA;
@@ -817,7 +790,6 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
             const ts=TR[terrain];
             const key=`${col},${row}`;
             const isFlash=flashCells.has(key);
-            const isMine=mode==='minefield'&&mines.has(key)&&!cellOccupied(col,row,units);
             const isHover=pendingType&&hoverCell?.col===col&&hoverCell?.row===row;
             const canPlace=isHover&&ts.pass&&!cellOccupied(col,row,units)&&col<PLAYER_MAX_COL;
             return (
@@ -827,13 +799,12 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
                 onMouseLeave={()=>pendingType&&setHoverCell(null)}
                 style={{
                   position:'absolute',left:col*C,top:row*C,width:C,height:C,
-                  backgroundColor:isFlash?'#ca8a04':isMine?'#431407':ts.bg,
+                  backgroundColor:isFlash?'#ca8a04':ts.bg,
                 }}>
                 {terrain==='F'&&<svg width={C} height={C} viewBox={`0 0 ${C} ${C}`} style={{position:'absolute',inset:0,opacity:0.55,pointerEvents:'none'}}><circle cx={C*.27} cy={C*.46} r={C*.17} fill="#166534"/><circle cx={C*.54} cy={C*.35} r={C*.15} fill="#14532d"/><circle cx={C*.69} cy={C*.54} r={C*.15} fill="#166534"/></svg>}
                 {terrain==='M'&&<svg width={C} height={C} viewBox={`0 0 ${C} ${C}`} style={{position:'absolute',inset:0,opacity:0.4,pointerEvents:'none'}}><polygon points={`${C/2},${C*.1} ${C*.92},${C*.92} ${C*.08},${C*.92}`} fill="#78716c"/></svg>}
                 {terrain==='W'&&<svg width={C} height={C} viewBox={`0 0 ${C} ${C}`} style={{position:'absolute',inset:0,opacity:0.4,pointerEvents:'none'}}><path d={`M 0 ${C*.5} Q ${C*.25} ${C*.3} ${C*.5} ${C*.5} Q ${C*.75} ${C*.7} ${C} ${C*.5}`} fill="none" stroke="#60a5fa" strokeWidth="2"/></svg>}
                 {terrain==='R'&&<div style={{position:'absolute',inset:0,background:'repeating-linear-gradient(90deg,transparent,transparent 6px,rgba(0,0,0,0.12) 6px,rgba(0,0,0,0.12) 7px)',pointerEvents:'none'}}/>}
-                {isMine&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}><svg width={C-10} height={C-10} viewBox="0 0 24 24"><circle cx="12" cy="14" r="8" fill="#ea580c" opacity="0.8"/><circle cx="12" cy="14" r="4" fill="rgba(0,0,0,0.4)"/><line x1="12" y1="6" x2="12" y2="2" stroke="#ea580c" strokeWidth="2" strokeLinecap="round"/></svg></div>}
                 {/* Single-cell placement highlight — no grid, just the hovered cell */}
                 {isHover&&<div style={{position:'absolute',inset:0,pointerEvents:'none',
                   background:canPlace?'rgba(255,255,255,0.18)':'rgba(239,68,68,0.25)',

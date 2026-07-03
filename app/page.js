@@ -6,12 +6,12 @@ import WarMap from "./components/WarMap";
 import AdminPanel from "./components/AdminPanel";
 import CampaignSelect from "./components/CampaignSelect";
 import QuestPanel from "./components/QuestPanel";
+import DailyRewardPanel from "./components/DailyRewardPanel";
 import { makeDefaultGrid } from "./components/MapEditor";
 
 const MODES = [
-  { id: "classic",   name: "Classic",   icon: "⚔",  color: "#6366f1", desc: "Clear all enemies in one decisive battle." },
-  { id: "endless",   name: "Endless",   icon: "∞",  color: "#16a34a", desc: "Enemies storm from the right wall forever." },
-  { id: "minefield", name: "Minefield", icon: "✦",  color: "#ea580c", desc: "Mines litter the battlefield — every step counts." },
+  { id: "classic", name: "Classic", icon: "⚔", color: "#6366f1", desc: "Clear all enemies in one decisive battle." },
+  { id: "endless", name: "Endless", icon: "∞", color: "#16a34a", desc: "Enemies storm from the right wall forever." },
 ];
 
 // Map-seeding keys — includes campaign's shared battlefield in addition to the 3 modes above
@@ -130,9 +130,10 @@ export default function Home() {
 
           <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-10 items-center">
 
-            {/* Quests — left half of the page, centered within that half */}
-            <div className="flex justify-center order-2 lg:order-1 mt-12 lg:mt-0">
+            {/* Quests — pinned fully to the left, Daily Reward sits above Daily Quests */}
+            <div className="flex justify-start order-2 lg:order-1 mt-12 lg:mt-0">
               <div className="w-full max-w-[640px] flex flex-col gap-4">
+                <DailyRewardPanel />
                 <QuestPanel type="daily" />
                 <QuestPanel type="weekly" />
               </div>
@@ -146,12 +147,42 @@ export default function Home() {
                   <p className="text-zinc-500 text-sm">Choose a battle mode to deploy your forces</p>
                 </div>
 
-                {/* Bento layout — Campaign is the featured tile spanning the full left column,
-                    the three quick-play modes stack as wide cards beside it. */}
-                <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] lg:grid-rows-3 gap-5 w-full max-w-2xl">
+                {/* Classic and Campaign are the two default/primary modes, shown side by side;
+                    Endless spans the full width below as a single wide line. */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-2xl">
+                  {(() => {
+                    const classic = MODES.find(m => m.id === "classic");
+                    const isClassicReady = mapStatus === null ? true : (mapStatus[classic.id] ?? false);
+                    return (
+                      <button
+                        onClick={() => isClassicReady && enterGame(classic.id)}
+                        disabled={!isClassicReady}
+                        className={`group relative flex flex-col items-center justify-center gap-3 text-center border rounded-2xl p-6 h-56 transition-all duration-200 shadow-xl overflow-hidden ${
+                          isClassicReady
+                            ? "bg-zinc-900 border-zinc-700 hover:bg-zinc-800 hover:border-zinc-500 hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98] cursor-pointer"
+                            : "bg-zinc-900/40 border-zinc-800 cursor-not-allowed opacity-50"
+                        }`}
+                      >
+                        <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: isClassicReady ? classic.color : "#3f3f46" }} />
+                        {!isClassicReady && mapStatus !== null && (
+                          <span className="absolute top-3 right-3 text-[10px] font-bold text-red-400 bg-red-950 border border-red-800 px-1.5 py-0.5 rounded-full">
+                            No Map
+                          </span>
+                        )}
+                        <span className="text-6xl font-black" style={{ color: isClassicReady ? classic.color : "#52525b", fontFamily: "monospace" }}>
+                          {isClassicReady ? classic.icon : "🔒"}
+                        </span>
+                        <span className="text-white font-black text-2xl">{classic.name}</span>
+                        <span className="text-zinc-400 text-sm leading-snug px-2">
+                          {(!isClassicReady && mapStatus !== null) ? "Admin must create a map for this mode." : classic.desc}
+                        </span>
+                      </button>
+                    );
+                  })()}
+
                   <button
                     onClick={() => setView("campaign")}
-                    className="group relative lg:row-span-3 flex flex-col items-center justify-center gap-4 text-center border rounded-2xl p-8 h-56 lg:h-auto transition-all duration-200 shadow-xl overflow-hidden bg-gradient-to-br from-zinc-900 to-amber-950/30 border-amber-800/60 hover:border-amber-500 hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98] cursor-pointer"
+                    className="group relative flex flex-col items-center justify-center gap-3 text-center border rounded-2xl p-6 h-56 transition-all duration-200 shadow-xl overflow-hidden bg-gradient-to-br from-zinc-900 to-amber-950/30 border-amber-800/60 hover:border-amber-500 hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98] cursor-pointer"
                   >
                     <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: "#f59e0b" }} />
                     <span className="text-6xl">🎖️</span>
@@ -159,38 +190,37 @@ export default function Home() {
                     <span className="text-zinc-400 text-sm leading-snug px-2">Win scripted missions — some require capturing enemy troops alive.</span>
                   </button>
 
-                  {MODES.map(m => {
-                    // mapStatus is null on first SSR render → treat as "loading/ready" so server+client match
-                    const isReady = mapStatus === null ? true : (mapStatus[m.id] ?? false);
+                  {(() => {
+                    const endless = MODES.find(m => m.id === "endless");
+                    const isEndlessReady = mapStatus === null ? true : (mapStatus[endless.id] ?? false);
                     return (
                       <button
-                        key={m.id}
-                        onClick={() => isReady && enterGame(m.id)}
-                        disabled={!isReady}
-                        className={`group relative flex items-center gap-4 text-left border rounded-2xl px-5 py-4 h-32 transition-all duration-200 shadow-xl overflow-hidden ${
-                          isReady
-                            ? "bg-zinc-900 border-zinc-700 hover:bg-zinc-800 hover:border-zinc-500 hover:scale-[1.02] hover:translate-x-1 active:scale-[0.98] cursor-pointer"
+                        onClick={() => isEndlessReady && enterGame(endless.id)}
+                        disabled={!isEndlessReady}
+                        className={`group relative col-span-1 sm:col-span-2 flex items-center gap-4 text-left border rounded-2xl px-6 py-5 transition-all duration-200 shadow-xl overflow-hidden ${
+                          isEndlessReady
+                            ? "bg-zinc-900 border-zinc-700 hover:bg-zinc-800 hover:border-zinc-500 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
                             : "bg-zinc-900/40 border-zinc-800 cursor-not-allowed opacity-50"
                         }`}
                       >
-                        <div className="absolute inset-y-0 left-0 w-1.5" style={{ background: isReady ? m.color : "#3f3f46" }} />
-                        {!isReady && mapStatus !== null && (
-                          <span className="absolute top-2 right-2 text-[10px] font-bold text-red-400 bg-red-950 border border-red-800 px-1.5 py-0.5 rounded-full">
+                        <div className="absolute inset-y-0 left-0 w-1.5" style={{ background: isEndlessReady ? endless.color : "#3f3f46" }} />
+                        {!isEndlessReady && mapStatus !== null && (
+                          <span className="absolute top-3 right-3 text-[10px] font-bold text-red-400 bg-red-950 border border-red-800 px-1.5 py-0.5 rounded-full">
                             No Map
                           </span>
                         )}
-                        <span className="text-4xl font-black shrink-0" style={{ color: isReady ? m.color : "#52525b", fontFamily: "monospace" }}>
-                          {isReady ? m.icon : "🔒"}
+                        <span className="text-4xl font-black shrink-0" style={{ color: isEndlessReady ? endless.color : "#52525b", fontFamily: "monospace" }}>
+                          {isEndlessReady ? endless.icon : "🔒"}
                         </span>
                         <div className="min-w-0">
-                          <span className="text-white font-black text-lg block">{m.name}</span>
+                          <span className="text-white font-black text-lg block">{endless.name}</span>
                           <span className="text-zinc-400 text-xs leading-snug">
-                            {(!isReady && mapStatus !== null) ? "Admin must create a map for this mode." : m.desc}
+                            {(!isEndlessReady && mapStatus !== null) ? "Admin must create a map for this mode." : endless.desc}
                           </span>
                         </div>
                       </button>
                     );
-                  })}
+                  })()}
                 </div>
 
                 <p className="text-zinc-700 text-xs text-center">
