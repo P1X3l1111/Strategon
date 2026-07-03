@@ -173,7 +173,7 @@ export default function Home() {
                   <div className="flex flex-wrap justify-center gap-5">
                     {MODES.filter(m => m.id !== "classic" && m.id !== "endless").map(m => (
                       <div key={m.id} className="w-full sm:w-[calc((100%-2.5rem)/3)] flex-none">
-                        <ModeCard m={m} isReady={isModeReady(m.id, mapStatus)} onClick={() => enterGame(m.id)} />
+                        <ModeCard m={m} isReady={isModeReady(m.id, mapStatus)} onClick={() => enterGame(m.id)} compact />
                       </div>
                     ))}
                   </div>
@@ -207,12 +207,14 @@ function isModeReady(id, mapStatus) {
   return mapStatus === null ? true : (mapStatus[id] ?? false);
 }
 
-function ModeCard({ m, isReady, onClick }) {
+function ModeCard({ m, isReady, onClick, compact = false }) {
   return (
     <button
       onClick={() => isReady && onClick()}
       disabled={!isReady}
-      className={`group relative flex flex-col items-center justify-center gap-3 text-center border rounded-2xl p-6 h-56 transition-all duration-200 shadow-xl overflow-hidden ${
+      className={`group relative flex flex-col items-center justify-center text-center border rounded-2xl transition-all duration-200 shadow-xl overflow-hidden ${
+        compact ? "gap-1.5 p-3 h-28" : "gap-3 p-6 h-56"
+      } ${
         isReady
           ? "bg-zinc-900 border-zinc-700 hover:bg-zinc-800 hover:border-zinc-500 hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98] cursor-pointer"
           : "bg-zinc-900/40 border-zinc-800 cursor-not-allowed opacity-50"
@@ -224,13 +226,15 @@ function ModeCard({ m, isReady, onClick }) {
           No Map
         </span>
       )}
-      <span className="text-6xl font-black" style={{ color: isReady ? m.color : "#52525b", fontFamily: "monospace" }}>
+      <span className={`font-black ${compact ? "text-3xl" : "text-6xl"}`} style={{ color: isReady ? m.color : "#52525b", fontFamily: "monospace" }}>
         {isReady ? m.icon : "🔒"}
       </span>
-      <span className="text-white font-black text-2xl">{m.name}</span>
-      <span className="text-zinc-400 text-sm leading-snug px-2">
-        {isReady ? m.desc : "Admin must create a map for this mode."}
-      </span>
+      <span className={`text-white font-black ${compact ? "text-base" : "text-2xl"}`}>{m.name}</span>
+      {!compact && (
+        <span className="text-zinc-400 text-sm leading-snug px-2">
+          {isReady ? m.desc : "Admin must create a map for this mode."}
+        </span>
+      )}
     </button>
   );
 }
