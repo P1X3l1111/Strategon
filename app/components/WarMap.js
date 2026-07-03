@@ -9,6 +9,7 @@ import {
 import { bumpQuestStat } from "../data/quests";
 import { completeMission, getNextMission } from "../data/campaign";
 import { GENERALS, applyGeneralBoost, getEffectiveGeneral } from "../data/generals";
+import { normalizeMapData } from "./MapEditor";
 
 // ── Grid ──────────────────────────────────────────────────────────────────────
 const COLS = 32, ROWS = 18;
@@ -213,25 +214,37 @@ function mkUD(type, col, row, faction) {
 }
 
 
-function makeInitialUnits(mode, mission) {
+// Built-in fallbacks used whenever the admin hasn't customized a map's placements yet.
+const DEFAULT_CP       = { classic: {col:1, row:8}, siege: {col:7, row:8} };
+const DEFAULT_OUTPOSTS = {
+  classic: [{col:2,row:4}, {col:2,row:13}],
+  siege:   [{col:5,row:9}, {col:10,row:9}],
+};
+const DEFAULT_SIEGE_ENEMIES = [
+  {type:'inf_light',   col:7,  row:2},  {type:'inf_light',  col:8,  row:2},  {type:'artillery',  col:9,  row:2},  // north
+  {type:'inf_assault', col:6,  row:15}, {type:'tank_light', col:7,  row:15}, {type:'inf_light',  col:10, row:15}, // south
+  {type:'armor_car',   col:13, row:8},  {type:'inf_assault',col:13, row:9},  {type:'artillery',  col:13, row:10}, // east
+  {type:'inf_light',   col:3,  row:8},  {type:'commandos',  col:3,  row:9},  {type:'tank_light', col:3,  row:10}, // west
+];
+
+function makeInitialUnits(mode, mission, layout) {
+  const cp       = layout?.commandPost || DEFAULT_CP[mode] || DEFAULT_CP.classic;
+  const outposts = (layout?.outposts?.length ? layout.outposts : null) || DEFAULT_OUTPOSTS[mode] || DEFAULT_OUTPOSTS.classic;
+
   if (mode === 'siege') {
     // Castle sits in the middle of the player's own half, already encircled —
     // no enemy HQ to push toward, just a garrison to break on every side.
+    const enemies = (layout?.enemyUnits?.length ? layout.enemyUnits : null) || DEFAULT_SIEGE_ENEMIES;
     return [
-      { id:`b${UID++}`, type:'base_main', size:2, faction:'player', col:7,  row:8,  name:'Command Post', hp:1000, maxHp:1000, atk:5, mov:0, range:3, opm:0, mpt:0, opt:0, behavior:'defend_spot' },
-      { id:`b${UID++}`, type:'base_fort', size:1, faction:'player', col:5,  row:9,  name:'Outpost',      hp:250,  maxHp:250,  atk:8, mov:0, range:3, opm:0, mpt:0, opt:0, behavior:'defend_spot' },
-      { id:`b${UID++}`, type:'base_fort', size:1, faction:'player', col:10, row:9,  name:'Outpost',      hp:250,  maxHp:250,  atk:8, mov:0, range:3, opm:0, mpt:0, opt:0, behavior:'defend_spot' },
-      mkUD('inf_light',   7, 2, 'enemy'), mkUD('inf_light',   8, 2, 'enemy'), mkUD('artillery',   9, 2, 'enemy'),  // north
-      mkUD('inf_assault', 6, 15,'enemy'), mkUD('tank_light',  7, 15,'enemy'), mkUD('inf_light',  10, 15,'enemy'), // south
-      mkUD('armor_car',  13, 8, 'enemy'), mkUD('inf_assault',13, 9, 'enemy'), mkUD('artillery',  13, 10,'enemy'), // east
-      mkUD('inf_light',   3, 8, 'enemy'), mkUD('commandos',   3, 9, 'enemy'), mkUD('tank_light',  3, 10,'enemy'), // west
+      { id:`b${UID++}`, type:'base_main', size:2, faction:'player', col:cp.col, row:cp.row, name:'Command Post', hp:1000, maxHp:1000, atk:5, mov:0, range:3, opm:0, mpt:0, opt:0, behavior:'defend_spot' },
+      ...outposts.map(o => ({ id:`b${UID++}`, type:'base_fort', size:1, faction:'player', col:o.col, row:o.row, name:'Outpost', hp:250, maxHp:250, atk:8, mov:0, range:3, opm:0, mpt:0, opt:0, behavior:'defend_spot' })),
+      ...enemies.map(e => mkUD(e.type, e.col, e.row, 'enemy')),
     ];
   }
 
   const units = [
-    { id:`b${UID++}`, type:'base_main', size:2, faction:'player', col:1, row:8,  name:'Command Post', hp:1000, maxHp:1000, atk:5, mov:0, range:3, opm:0, mpt:0, opt:0, behavior:'defend_spot' },
-    { id:`b${UID++}`, type:'base_fort', size:1, faction:'player', col:2, row:4,  name:'Outpost',      hp:250,  maxHp:250,  atk:8, mov:0, range:3, opm:0, mpt:0, opt:0, behavior:'defend_spot' },
-    { id:`b${UID++}`, type:'base_fort', size:1, faction:'player', col:2, row:13, name:'Outpost',      hp:250,  maxHp:250,  atk:8, mov:0, range:3, opm:0, mpt:0, opt:0, behavior:'defend_spot' },
+    { id:`b${UID++}`, type:'base_main', size:2, faction:'player', col:cp.col, row:cp.row, name:'Command Post', hp:1000, maxHp:1000, atk:5, mov:0, range:3, opm:0, mpt:0, opt:0, behavior:'defend_spot' },
+    ...outposts.map(o => ({ id:`b${UID++}`, type:'base_fort', size:1, faction:'player', col:o.col, row:o.row, name:'Outpost', hp:250, maxHp:250, atk:8, mov:0, range:3, opm:0, mpt:0, opt:0, behavior:'defend_spot' })),
   ];
   if (mission) {
     for (const e of mission.enemyUnits) {
@@ -374,20 +387,22 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
   const [oil,  setOil]  = useState(STARTING_OIL);
   const [ready, setReady] = useState(false);
 
-  // Load custom map for this mode from localStorage (set by admin map editor)
-  const [activeGrid] = useState(() => {
+  // Load custom map for this mode from localStorage (set by admin map editor) —
+  // terrain plus admin-placed Command Post / Outposts / (Siege) enemy garrison.
+  const [mapData] = useState(() => {
     try {
       const saved = typeof window !== 'undefined' && localStorage.getItem(`rpg_map_${mode}`);
-      if (saved) return JSON.parse(saved);
+      if (saved) return normalizeMapData(JSON.parse(saved));
     } catch {}
     return null;
   });
+  const activeGrid = mapData?.terrain || null;
 
   useEffect(() => { setReady(true); }, []);
 
   const unitsRef = useRef(null);
   const [units, setUnitsRaw] = useState(() => {
-    const init = makeInitialUnits(mode, mission);
+    const init = makeInitialUnits(mode, mission, mapData);
     unitsRef.current = init;
     return init;
   });
@@ -838,7 +853,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
     }
   }
   function resetGame() {
-    const init=makeInitialUnits(mode, mission);
+    const init=makeInitialUnits(mode, mission, mapData);
     unitsRef.current=init;setUnitsRaw(init);
     setPhase('setup');
     setSelectedGeneral(null);setGeneralUsed(false);setGeneralUnitId(null);setArmedGeneralLevel(0);
