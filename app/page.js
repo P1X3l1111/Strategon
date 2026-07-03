@@ -142,11 +142,23 @@ export default function Home() {
             <div className="flex justify-center order-1 lg:order-2">
               <div className="flex flex-col items-center gap-8">
                 <div className="text-center">
-                  <h1 className="text-5xl font-black text-white tracking-tight mb-2">WAR MAP</h1>
+                  <h1 className="text-5xl font-black text-white tracking-tight mb-2">MODES</h1>
                   <p className="text-zinc-500 text-sm">Choose a battle mode to deploy your forces</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-5 w-full max-w-xl">
+                {/* Bento layout — Campaign is the featured tile spanning the full left column,
+                    the three quick-play modes stack as wide cards beside it. */}
+                <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] lg:grid-rows-3 gap-5 w-full max-w-2xl">
+                  <button
+                    onClick={() => setView("campaign")}
+                    className="group relative lg:row-span-3 flex flex-col items-center justify-center gap-4 text-center border rounded-2xl p-8 h-56 lg:h-auto transition-all duration-200 shadow-xl overflow-hidden bg-gradient-to-br from-zinc-900 to-amber-950/30 border-amber-800/60 hover:border-amber-500 hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98] cursor-pointer"
+                  >
+                    <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: "#f59e0b" }} />
+                    <span className="text-6xl">🎖️</span>
+                    <span className="text-white font-black text-2xl">Campaign</span>
+                    <span className="text-zinc-400 text-sm leading-snug px-2">Win scripted missions — some require capturing enemy troops alive.</span>
+                  </button>
+
                   {MODES.map(m => {
                     // mapStatus is null on first SSR render → treat as "loading/ready" so server+client match
                     const isReady = mapStatus === null ? true : (mapStatus[m.id] ?? false);
@@ -155,38 +167,30 @@ export default function Home() {
                         key={m.id}
                         onClick={() => isReady && enterGame(m.id)}
                         disabled={!isReady}
-                        className={`group relative flex flex-col items-center justify-center gap-3 text-center border rounded-2xl p-6 h-52 transition-all duration-200 shadow-xl overflow-hidden ${
+                        className={`group relative flex items-center gap-4 text-left border rounded-2xl px-5 py-4 h-32 transition-all duration-200 shadow-xl overflow-hidden ${
                           isReady
-                            ? "bg-zinc-900 border-zinc-700 hover:bg-zinc-800 hover:border-zinc-500 hover:scale-[1.03] hover:-translate-y-1 active:scale-[0.98] cursor-pointer"
+                            ? "bg-zinc-900 border-zinc-700 hover:bg-zinc-800 hover:border-zinc-500 hover:scale-[1.02] hover:translate-x-1 active:scale-[0.98] cursor-pointer"
                             : "bg-zinc-900/40 border-zinc-800 cursor-not-allowed opacity-50"
                         }`}
                       >
-                        <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: isReady ? m.color : "#3f3f46" }} />
+                        <div className="absolute inset-y-0 left-0 w-1.5" style={{ background: isReady ? m.color : "#3f3f46" }} />
                         {!isReady && mapStatus !== null && (
-                          <span className="absolute top-3 right-3 text-[10px] font-bold text-red-400 bg-red-950 border border-red-800 px-1.5 py-0.5 rounded-full">
+                          <span className="absolute top-2 right-2 text-[10px] font-bold text-red-400 bg-red-950 border border-red-800 px-1.5 py-0.5 rounded-full">
                             No Map
                           </span>
                         )}
-                        <span className="text-5xl font-black" style={{ color: isReady ? m.color : "#52525b", fontFamily: "monospace" }}>
+                        <span className="text-4xl font-black shrink-0" style={{ color: isReady ? m.color : "#52525b", fontFamily: "monospace" }}>
                           {isReady ? m.icon : "🔒"}
                         </span>
-                        <span className="text-white font-black text-lg">{m.name}</span>
-                        <span className="text-zinc-400 text-xs leading-snug px-1">
-                          {(!isReady && mapStatus !== null) ? "Admin must create a map for this mode." : m.desc}
-                        </span>
+                        <div className="min-w-0">
+                          <span className="text-white font-black text-lg block">{m.name}</span>
+                          <span className="text-zinc-400 text-xs leading-snug">
+                            {(!isReady && mapStatus !== null) ? "Admin must create a map for this mode." : m.desc}
+                          </span>
+                        </div>
                       </button>
                     );
                   })}
-
-                  <button
-                    onClick={() => setView("campaign")}
-                    className="group relative flex flex-col items-center justify-center gap-3 text-center border rounded-2xl p-6 h-52 col-span-2 transition-all duration-200 shadow-xl overflow-hidden bg-gradient-to-br from-zinc-900 to-amber-950/30 border-amber-800/60 hover:border-amber-500 hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98] cursor-pointer"
-                  >
-                    <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: "#f59e0b" }} />
-                    <span className="text-5xl">🎖️</span>
-                    <span className="text-white font-black text-lg">Campaign</span>
-                    <span className="text-zinc-400 text-xs leading-snug px-1">Win scripted missions — some require capturing enemy troops alive.</span>
-                  </button>
                 </div>
 
                 <p className="text-zinc-700 text-xs text-center">
