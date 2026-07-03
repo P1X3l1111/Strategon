@@ -141,8 +141,8 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Modes — right half of the page, centered within that half */}
-            <div className="flex justify-center order-1 lg:order-2">
+            {/* Modes — right half of the page, kept toward the left of that half */}
+            <div className="flex justify-start order-1 lg:order-2">
               <div className="flex flex-col items-center gap-8">
                 <div className="text-center">
                   <h1 className="text-5xl font-black text-white tracking-tight mb-2">MODES</h1>
@@ -172,7 +172,7 @@ export default function Home() {
 
                   <div className="flex flex-wrap justify-center gap-5">
                     {MODES.filter(m => m.id !== "classic" && m.id !== "endless").map(m => (
-                      <div key={m.id} className="w-full sm:w-[calc((100%-2.5rem)/3)] flex-none">
+                      <div key={m.id} className="w-full sm:w-[calc((100%-1.25rem)/2)] flex-none">
                         <ModeCard m={m} isReady={isModeReady(m.id, mapStatus)} onClick={() => enterGame(m.id)} compact />
                       </div>
                     ))}
@@ -212,7 +212,7 @@ function ModeCard({ m, isReady, onClick, compact = false }) {
     <button
       onClick={() => isReady && onClick()}
       disabled={!isReady}
-      className={`group relative flex flex-col items-center justify-center text-center border rounded-2xl transition-all duration-200 shadow-xl overflow-hidden ${
+      className={`group relative flex flex-col items-center justify-center text-center border rounded-2xl transition-all duration-200 shadow-xl overflow-hidden w-full ${
         compact ? "gap-1.5 p-3 h-28" : "gap-3 p-6 h-56"
       } ${
         isReady
