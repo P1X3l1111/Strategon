@@ -34,7 +34,7 @@ export default function DailyRewardPanel() {
   const cyclePos = (reward.nextStreak - 1) % 7; // 0-indexed slot about to be claimed/just claimed
 
   return (
-    <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-4 flex flex-col gap-3 w-full">
+    <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-3 flex flex-col gap-2 w-full">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-white font-black text-sm whitespace-nowrap">🎁 Daily Reward</h3>
         <span className="text-amber-300 text-xs font-bold flex items-center gap-1 shrink-0">🔥 {reward.streak}-day streak</span>
@@ -53,7 +53,7 @@ export default function DailyRewardPanel() {
           return (
             <div
               key={tier.day}
-              className={`rounded-lg border p-1.5 flex flex-col items-center gap-0.5 text-center ${
+              className={`rounded-lg border p-1 flex flex-col items-center gap-0.5 text-center ${
                 isActive ? "border-indigo-500 bg-indigo-950/50" : isDone ? "border-green-800 bg-green-950/30" : "border-zinc-800 bg-zinc-800/40"
               }`}
             >
@@ -67,7 +67,7 @@ export default function DailyRewardPanel() {
       <button
         onClick={handleClaim}
         disabled={reward.claimedToday}
-        className={`w-full py-2 rounded-lg text-xs font-bold transition-all active:scale-95 ${
+        className={`w-full py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 ${
           reward.claimedToday
             ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
             : "bg-green-600 hover:bg-green-500 text-white"

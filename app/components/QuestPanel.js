@@ -55,7 +55,7 @@ export default function QuestPanel({ type }) {
   }
 
   return (
-    <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-4 flex flex-col gap-3 w-full">
+    <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-3 flex flex-col gap-2 w-full">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-white font-black text-sm flex items-center gap-1.5 whitespace-nowrap">
           {isDaily ? "📅 Daily Quests" : "🗓️ Weekly Quests"}
@@ -74,7 +74,7 @@ export default function QuestPanel({ type }) {
                 key={w}
                 onClick={() => unlocked && setSelectedWeek(w)}
                 disabled={!unlocked}
-                className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all ${
+                className={`flex-1 py-1 rounded-lg text-[11px] font-bold border transition-all ${
                   !unlocked
                     ? "border-zinc-800 text-zinc-600 bg-zinc-900/40 cursor-not-allowed"
                     : isSelected
@@ -95,31 +95,31 @@ export default function QuestPanel({ type }) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+      <div className={`grid grid-cols-3 gap-1.5 ${isDaily ? "" : "sm:grid-cols-5"}`}>
         {quests.map((q) => {
           const progress   = Math.min(stats[q.statKey] || 0, q.target);
           const isClaimed  = claimed.includes(q.id);
           const isComplete = progress >= q.target;
           const meta       = STAT_META[q.statKey];
           return (
-            <div key={q.id} className={`rounded-xl border p-2.5 flex flex-col gap-1.5 h-[124px] ${isClaimed ? "border-zinc-800 bg-zinc-900/40 opacity-50" : "border-zinc-700 bg-zinc-800/50"}`}>
+            <div key={q.id} className={`rounded-xl border p-1.5 flex flex-col gap-0.5 h-[88px] ${isClaimed ? "border-zinc-800 bg-zinc-900/40 opacity-50" : "border-zinc-700 bg-zinc-800/50"}`}>
               <div className="flex items-start gap-1.5">
-                <span className="text-lg shrink-0 leading-none">{meta?.icon || "⭐"}</span>
-                <p className="text-white text-[11px] font-bold leading-snug line-clamp-2">{q.desc}</p>
+                <span className="text-sm shrink-0 leading-none">{meta?.icon || "⭐"}</span>
+                <p className="text-white text-[10px] font-bold leading-snug line-clamp-2">{q.desc}</p>
               </div>
-              <div className="h-1.5 bg-zinc-700 rounded-full overflow-hidden">
+              <div className="h-1 bg-zinc-700 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-300 ${isComplete ? "bg-green-500" : "bg-indigo-500"}`}
                   style={{ width: `${Math.max(0, (progress / q.target) * 100)}%` }}
                 />
               </div>
-              <p className="text-zinc-500 text-[9px]">
+              <p className="text-zinc-500 text-[8px]">
                 {progress}/{q.target} · +{q.rewardCoins || 0}💰{q.rewardGems ? ` +${q.rewardGems}💎` : ""}
               </p>
               <button
                 onClick={() => handleClaim(q)}
                 disabled={!isComplete || isClaimed}
-                className={`mt-auto w-full py-1.5 rounded-lg text-[10px] font-bold transition-all active:scale-95 ${
+                className={`mt-auto w-full py-1 rounded-lg text-[9px] font-bold transition-all active:scale-95 ${
                   isClaimed
                     ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
                     : isComplete
