@@ -102,10 +102,10 @@ export default function QuestPanel({ type }) {
           const isComplete = progress >= q.target;
           const meta       = STAT_META[q.statKey];
           return (
-            <div key={q.id} className={`rounded-xl border p-2.5 flex flex-col gap-1.5 min-h-[110px] ${isClaimed ? "border-zinc-800 bg-zinc-900/40 opacity-50" : "border-zinc-700 bg-zinc-800/50"}`}>
-              <div className="flex items-center gap-1.5">
-                <span className="text-lg shrink-0">{meta?.icon || "⭐"}</span>
-                <p className="text-white text-[11px] font-bold leading-snug">{q.desc}</p>
+            <div key={q.id} className={`rounded-xl border p-2.5 flex flex-col gap-1.5 h-[124px] ${isClaimed ? "border-zinc-800 bg-zinc-900/40 opacity-50" : "border-zinc-700 bg-zinc-800/50"}`}>
+              <div className="flex items-start gap-1.5">
+                <span className="text-lg shrink-0 leading-none">{meta?.icon || "⭐"}</span>
+                <p className="text-white text-[11px] font-bold leading-snug line-clamp-2">{q.desc}</p>
               </div>
               <div className="h-1.5 bg-zinc-700 rounded-full overflow-hidden">
                 <div
