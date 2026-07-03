@@ -189,9 +189,17 @@ function getWeekBuckets(cycleIdx) {
   return chunkBySizes(shuffled, WEEK_BUCKET_SIZES);
 }
 
+// All quests unlocked so far this cycle (used to validate claims regardless
+// of which single week the player currently has open in the UI).
 export function getActiveWeeklyQuests() {
   const buckets = getWeekBuckets(cycleIndex());
   return buckets.slice(0, getActiveWeekIndex()).flat();
+}
+
+// Just one week's 15 quests, for the week-tabbed display.
+export function getWeeklyQuestsForWeek(weekNum) {
+  const buckets = getWeekBuckets(cycleIndex());
+  return buckets[weekNum - 1] || [];
 }
 
 // ── Progress state (per user, resets on day/week rollover) ────────────────────

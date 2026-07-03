@@ -3,27 +3,31 @@
 import { useEffect, useState } from "react";
 import {
   STAT_META,
-  getActiveDailyQuests, getActiveWeeklyQuests, getActiveWeekIndex,
+  getActiveDailyQuests, getWeeklyQuestsForWeek, getActiveWeekIndex,
   getQuestState, claimDailyQuest, claimWeeklyQuest,
   hoursUntilDailyReset, daysUntilWeeklyReset,
 } from "../data/quests";
+
+const WEEK_COUNT = 4;
 
 // Self-contained daily/weekly quest list — reads its own progress, claims its
 // own rewards, and refreshes on "rpg_quests_updated". Rendered inline on the home screen.
 export default function QuestPanel({ type }) {
   const isDaily = type === "daily";
+  const weekIdx = getActiveWeekIndex(); // how many weeks are unlocked this cycle (1-4)
   // Both the quest selection and progress are seeded/keyed off localStorage (the
   // logged-in user), so they must stay empty through the initial SSR/hydration
   // pass and only be read client-side — otherwise server and client render
   // different quests for the same slot and React flags a hydration mismatch.
-  const [state, setState]   = useState(null);
-  const [quests, setQuests] = useState([]);
-  const [flash, setFlash]   = useState(null);
+  const [state, setState]     = useState(null);
+  const [quests, setQuests]   = useState([]);
+  const [flash, setFlash]     = useState(null);
+  const [selectedWeek, setSelectedWeek] = useState(weekIdx); // which week tab is open (weekly only)
 
   useEffect(() => {
     function refresh() {
       setState(getQuestState());
-      setQuests(isDaily ? getActiveDailyQuests() : getActiveWeeklyQuests());
+      setQuests(isDaily ? getActiveDailyQuests() : getWeeklyQuestsForWeek(selectedWeek));
     }
     refresh();
     window.addEventListener("rpg_quests_updated", refresh);
@@ -32,14 +36,13 @@ export default function QuestPanel({ type }) {
       window.removeEventListener("rpg_quests_updated", refresh);
       window.removeEventListener("rpg_profile_updated", refresh);
     };
-  }, [isDaily]);
+  }, [isDaily, selectedWeek]);
 
   const stats       = (isDaily ? state?.dailyStats   : state?.weeklyStats)   || {};
   const claimed     = (isDaily ? state?.dailyClaimed : state?.weeklyClaimed) || [];
-  const weekIdx     = getActiveWeekIndex();
   const resetLabel  = isDaily
     ? `Resets in ${hoursUntilDailyReset()}h`
-    : weekIdx < 4
+    : weekIdx < WEEK_COUNT
       ? `More unlock in ${daysUntilWeeklyReset()}d`
       : `New cycle in ${daysUntilWeeklyReset()}d`;
 
@@ -56,10 +59,35 @@ export default function QuestPanel({ type }) {
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-white font-black text-sm flex items-center gap-1.5 whitespace-nowrap">
           {isDaily ? "📅 Daily Quests" : "🗓️ Weekly Quests"}
-          {!isDaily && <span className="text-amber-400 text-[10px] font-bold bg-amber-950 border border-amber-800 rounded-full px-1.5 py-0.5">Week {weekIdx}/4</span>}
         </h3>
         <span className="text-zinc-600 text-[9px] font-semibold shrink-0">{resetLabel}</span>
       </div>
+
+      {/* Week tabs — a button per week, highlighted once that week has unlocked */}
+      {!isDaily && (
+        <div className="flex items-center gap-1.5">
+          {Array.from({ length: WEEK_COUNT }, (_, i) => i + 1).map((w) => {
+            const unlocked = w <= weekIdx;
+            const isSelected = w === selectedWeek;
+            return (
+              <button
+                key={w}
+                onClick={() => unlocked && setSelectedWeek(w)}
+                disabled={!unlocked}
+                className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all ${
+                  !unlocked
+                    ? "border-zinc-800 text-zinc-600 bg-zinc-900/40 cursor-not-allowed"
+                    : isSelected
+                    ? "border-amber-500 text-white bg-amber-950"
+                    : "border-zinc-700 text-zinc-400 bg-zinc-800/50 hover:text-white hover:border-zinc-500"
+                }`}
+              >
+                {unlocked ? `Week ${w}` : `🔒 Week ${w}`}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {flash && (
         <div className="bg-green-900/60 border border-green-700 text-green-300 text-[11px] font-bold rounded-lg px-2 py-1 text-center">
