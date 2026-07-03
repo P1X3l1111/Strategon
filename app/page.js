@@ -1,65 +1,213 @@
-import Image from "next/image";
+"use client";
+import { useState, useEffect } from "react";
+import OnboardingModal from "./components/OnboardingModal";
+import Navbar from "./components/Navbar";
+import WarMap from "./components/WarMap";
+import AdminPanel from "./components/AdminPanel";
+import CampaignSelect from "./components/CampaignSelect";
+import QuestPanel from "./components/QuestPanel";
+import { makeDefaultGrid } from "./components/MapEditor";
+
+const MODES = [
+  { id: "classic",   name: "Classic",   icon: "⚔",  color: "#6366f1", desc: "Clear all enemies in one decisive battle." },
+  { id: "endless",   name: "Endless",   icon: "∞",  color: "#16a34a", desc: "Enemies storm from the right wall forever." },
+  { id: "minefield", name: "Minefield", icon: "✦",  color: "#ea580c", desc: "Mines litter the battlefield — every step counts." },
+];
+
+// Map-seeding keys — includes campaign's shared battlefield in addition to the 3 modes above
+const MAP_KEYS = [...MODES.map(m => m.id), "campaign"];
 
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+  const [mode,        setMode]        = useState(null);
+  const [mission,     setMission]     = useState(null);
+  const [view,        setView]        = useState("home"); // "home" | "admin" | "campaign"
+  const [loginKey,    setLoginKey]    = useState(0);
+  const [currentUser, setCurrentUser] = useState(null);
+  // null = not yet checked (avoids hydration mismatch)
+  const [mapStatus, setMapStatus] = useState(null);
+
+  // After mount: seed missing maps (including campaign's shared battlefield) with default terrain, then read status
+  useEffect(() => {
+    const defaultGrid = makeDefaultGrid();
+    const status = {};
+    MAP_KEYS.forEach(id => {
+      if (!localStorage.getItem(`rpg_map_${id}`)) {
+        localStorage.setItem(`rpg_map_${id}`, JSON.stringify(defaultGrid));
+      }
+      status[id] = true; // all seeded → all ready
+    });
+    setMapStatus(status);
+  }, []);
+
+  // Re-check map status whenever we return to home (admin may have changed maps)
+  useEffect(() => {
+    if (view === "home" && !mode && mapStatus !== null) {
+      const status = {};
+      MODES.forEach(m => { status[m.id] = !!localStorage.getItem(`rpg_map_${m.id}`); });
+      setMapStatus(status);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, mode]);
+
+  // Track logged-in user
+  useEffect(() => {
+    const read = () => setCurrentUser(localStorage.getItem("rpg_username") || null);
+    read();
+    window.addEventListener("rpg_profile_updated", read);
+    return () => window.removeEventListener("rpg_profile_updated", read);
+  }, []);
+
+  // Browser back/forward → return to home + re-show login
+  useEffect(() => {
+    const onPop = () => { setMode(null); setView("home"); setLoginKey(k => k + 1); };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  function enterGame(modeId) {
+    history.pushState({ inGame: true }, "");
+    setMode(modeId);
+  }
+
+  function enterMission(m) {
+    setMission(m);
+    enterGame("campaign");
+  }
+
+  function goHome() {
+    setMode(null);
+    setMission(null);
+    setView("home");
+    setLoginKey(k => k + 1);
+  }
+
+  // From an in-progress mission, "back" returns to the mission list rather than all the way home
+  function backToCampaign() {
+    setMode(null);
+    setMission(null);
+    setView("campaign");
+  }
+
+  // ── Admin view ──
+  if (view === "admin") {
+    return (
+      <div className="bg-zinc-950 h-screen overflow-hidden">
+        <AdminPanel
+          currentUser={currentUser}
+          onBack={() => setView("home")}
+          onMapChange={() => {
+            // Re-read map status after admin edits
+            const status = {};
+            MODES.forEach(m => { status[m.id] = !!localStorage.getItem(`rpg_map_${m.id}`); });
+            setMapStatus(status);
+          }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+      </div>
+    );
+  }
+
+  // ── Campaign mission-select view ──
+  if (view === "campaign" && !mode) {
+    return (
+      <div className="bg-zinc-950 h-screen overflow-hidden flex flex-col">
+        <Navbar onAdmin={() => setView("admin")} />
+        <div className="flex-1 overflow-y-auto">
+          <CampaignSelect onSelectMission={enterMission} onBack={() => setView("home")} />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-zinc-950 h-screen overflow-hidden flex flex-col">
+      {/* Navbar only on home */}
+      {!mode && <Navbar onAdmin={() => setView("admin")} />}
+
+      {!mode ? (
+        /* ── Mode select ── */
+        <div className="flex-1 overflow-y-auto px-8 py-10">
+          <OnboardingModal key={loginKey} />
+
+          <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-10 items-center">
+
+            {/* Quests — left half of the page, centered within that half */}
+            <div className="flex justify-center order-2 lg:order-1 mt-12 lg:mt-0">
+              <div className="w-full max-w-[640px] flex flex-col gap-4">
+                <QuestPanel type="daily" />
+                <QuestPanel type="weekly" />
+              </div>
+            </div>
+
+            {/* Modes — right half of the page, centered within that half */}
+            <div className="flex justify-center order-1 lg:order-2">
+              <div className="flex flex-col items-center gap-8">
+                <div className="text-center">
+                  <h1 className="text-5xl font-black text-white tracking-tight mb-2">WAR MAP</h1>
+                  <p className="text-zinc-500 text-sm">Choose a battle mode to deploy your forces</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-5 w-full max-w-xl">
+                  {MODES.map(m => {
+                    // mapStatus is null on first SSR render → treat as "loading/ready" so server+client match
+                    const isReady = mapStatus === null ? true : (mapStatus[m.id] ?? false);
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => isReady && enterGame(m.id)}
+                        disabled={!isReady}
+                        className={`group relative flex flex-col items-center justify-center gap-3 text-center border rounded-2xl p-6 h-52 transition-all duration-200 shadow-xl overflow-hidden ${
+                          isReady
+                            ? "bg-zinc-900 border-zinc-700 hover:bg-zinc-800 hover:border-zinc-500 hover:scale-[1.03] hover:-translate-y-1 active:scale-[0.98] cursor-pointer"
+                            : "bg-zinc-900/40 border-zinc-800 cursor-not-allowed opacity-50"
+                        }`}
+                      >
+                        <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: isReady ? m.color : "#3f3f46" }} />
+                        {!isReady && mapStatus !== null && (
+                          <span className="absolute top-3 right-3 text-[10px] font-bold text-red-400 bg-red-950 border border-red-800 px-1.5 py-0.5 rounded-full">
+                            No Map
+                          </span>
+                        )}
+                        <span className="text-5xl font-black" style={{ color: isReady ? m.color : "#52525b", fontFamily: "monospace" }}>
+                          {isReady ? m.icon : "🔒"}
+                        </span>
+                        <span className="text-white font-black text-lg">{m.name}</span>
+                        <span className="text-zinc-400 text-xs leading-snug px-1">
+                          {(!isReady && mapStatus !== null) ? "Admin must create a map for this mode." : m.desc}
+                        </span>
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    onClick={() => setView("campaign")}
+                    className="group relative flex flex-col items-center justify-center gap-3 text-center border rounded-2xl p-6 h-52 col-span-2 transition-all duration-200 shadow-xl overflow-hidden bg-gradient-to-br from-zinc-900 to-amber-950/30 border-amber-800/60 hover:border-amber-500 hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98] cursor-pointer"
+                  >
+                    <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: "#f59e0b" }} />
+                    <span className="text-5xl">🎖️</span>
+                    <span className="text-white font-black text-lg">Campaign</span>
+                    <span className="text-zinc-400 text-xs leading-snug px-1">Win scripted missions — some require capturing enemy troops alive.</span>
+                  </button>
+                </div>
+
+                <p className="text-zinc-700 text-xs text-center">
+                  100 mana · 50 oil starting resources · Place a Factory to generate mana per second
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
+      ) : (
+        /* ── Game ── */
+        <div className="flex-1 overflow-hidden">
+          <WarMap
+            key={mode + (mission?.id || "")}
+            mode={mode}
+            mission={mission}
+            onBack={mode === "campaign" ? backToCampaign : goHome}
+            onNextMission={enterMission}
+          />
+        </div>
+      )}
     </div>
   );
 }
