@@ -152,11 +152,38 @@ export function awardOil(amount) {
   window.dispatchEvent(new CustomEvent("rpg_currency_updated"));
 }
 
-// ── Backward compat ───────────────────────────────────────────────────────────
-export function awardCoins(amount) { awardMana(amount); }
-export function getCoins()         { return getMana(); }
-export const LEVEL_REWARDS         = [];
-export const STARTING_COINS        = STARTING_MANA;
+// ── Coins ─────────────────────────────────────────────────────────────────────
+export const STARTING_COINS = 500;
+
+export function getCoins() {
+  if (typeof window === "undefined") return STARTING_COINS;
+  const u = localStorage.getItem("rpg_username");
+  if (!u) return 0;
+  const raw = localStorage.getItem(`rpg_coins_${u}`);
+  return raw !== null ? (parseInt(raw) || 0) : STARTING_COINS;
+}
+
+export function spendCoins(amount) {
+  if (typeof window === "undefined") return false;
+  const u = localStorage.getItem("rpg_username");
+  if (!u) return false;
+  const cur = parseInt(localStorage.getItem(`rpg_coins_${u}`) ?? String(STARTING_COINS));
+  if (cur < amount) return false;
+  localStorage.setItem(`rpg_coins_${u}`, String(cur - amount));
+  window.dispatchEvent(new CustomEvent("rpg_currency_updated"));
+  return true;
+}
+
+export function awardCoins(amount) {
+  if (typeof window === "undefined") return;
+  const u = localStorage.getItem("rpg_username");
+  if (!u) return;
+  const cur = parseInt(localStorage.getItem(`rpg_coins_${u}`) ?? String(STARTING_COINS));
+  localStorage.setItem(`rpg_coins_${u}`, String(cur + amount));
+  window.dispatchEvent(new CustomEvent("rpg_currency_updated"));
+}
+
+export const LEVEL_REWARDS = [];
 
 // ── Post-battle reward helper ─────────────────────────────────────────────────
 export function awardPostBattle(baseMana, baseGems = BASE_GEMS_PER_WIN) {

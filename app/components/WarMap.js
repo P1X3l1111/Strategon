@@ -8,6 +8,7 @@ import {
 } from "../data/troops";
 import { bumpQuestStat } from "../data/quests";
 import { completeMission, getNextMission } from "../data/campaign";
+import { GENERALS, applyGeneralBoost } from "../data/generals";
 
 // ── Grid ──────────────────────────────────────────────────────────────────────
 const COLS = 32, ROWS = 18;
@@ -64,14 +65,36 @@ const CAT_LABELS = { struct:'Struct', infantry:'Inf', armor:'Armor', artillery:'
 const MODES = [
   { id:'classic', name:'Classic', color:'#6366f1' },
   { id:'endless', name:'Endless', color:'#16a34a' },
+  { id:'siege',   name:'Siege',   color:'#dc2626' },
+  { id:'turns',   name:'Turns',   color:'#0ea5e9' },
 ];
 
-// Enemy AI: ordered list of what to buy and at what wave of spending
-const ENEMY_BUILD_QUEUE = [
-  'factory','inf_light','inf_light','inf_assault','barricade',
-  'commandos','inf_motor','armor_car','artillery','tank_light',
-  'tank_heavy','howitzer','rocket',
-];
+// Enemy AI: tiers of what it reaches for as the battle drags on, so it grows its army
+// like a human would (cheap chaff early, better hardware once its economy can support it)
+// instead of looping the same single unit forever.
+const ENEMY_TIER_EARLY = ['inf_light','inf_assault','barricade'];
+const ENEMY_TIER_MID   = ['commandos','inf_motor','armor_car','artillery'];
+const ENEMY_TIER_LATE  = ['tank_light','tank_heavy','howitzer','rocket'];
+const ENEMY_MAX_FACTORIES = 4;
+
+// Decides what the enemy should build next, or null to save up. `elapsed` is a rough
+// clock (ticks in real-time modes, turn number in turns mode) used to widen the troop
+// pool and grow the factory count over the course of the battle.
+function enemyDecideBuild(cur, mana, elapsed) {
+  const enemyFactories = cur.filter(u=>u.faction==='enemy'&&u.type==='factory'&&u.hp>0).length;
+  const factoryTarget = Math.min(ENEMY_MAX_FACTORIES, 1 + Math.floor(elapsed/40));
+  if (enemyFactories < factoryTarget && mana >= UD.factory.mana) return 'factory';
+
+  const pool = elapsed<15 ? ENEMY_TIER_EARLY
+             : elapsed<35 ? [...ENEMY_TIER_EARLY, ...ENEMY_TIER_MID]
+             : [...ENEMY_TIER_EARLY, ...ENEMY_TIER_MID, ...ENEMY_TIER_LATE];
+  const affordable = pool.filter(t=>UD[t].mana<=mana);
+  if (!affordable.length) return null;
+  // Lean towards the pricier/stronger options among what it can afford, not always the cheapest.
+  affordable.sort((a,b)=>UD[b].mana-UD[a].mana);
+  const top = affordable.slice(0, Math.max(1, Math.ceil(affordable.length/2)));
+  return top[Math.floor(Math.random()*top.length)];
+}
 
 // ── Multi-cell helpers ────────────────────────────────────────────────────────
 function unitCells(u) {
@@ -140,6 +163,43 @@ function getInRange(attacker, allUnits) {
 }
 function rollDmg(atk) { return Math.max(1, atk-2+Math.floor(Math.random()*5)); }
 
+// ── Turns-mode helpers ──────────────────────────────────────────────────────────
+// All cells a unit could stop on this turn, BFS-limited to its `mov` stat.
+function getReachableCells(unit, allUnits, grid) {
+  if (!unit.mov) return [];
+  const occ = new Set(
+    allUnits.filter(u => u.id!==unit.id && u.hp>0).flatMap(u => unitCells(u).map(([c,r]) => `${c},${r}`))
+  );
+  const visited = new Set([`${unit.col},${unit.row}`]);
+  const queue = [{col:unit.col, row:unit.row, steps:0}];
+  const result = [];
+  while (queue.length) {
+    const {col,row,steps} = queue.shift();
+    if (steps>0 && !occ.has(`${col},${row}`)) result.push({col,row});
+    if (steps>=unit.mov) continue;
+    for (const [dc,dr] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+      const nc=col+dc, nr=row+dr, nk=`${nc},${nr}`;
+      if (nc<0||nc>=COLS||nr<0||nr>=ROWS||visited.has(nk)) continue;
+      if (!TR[grid[nr]?.[nc]]?.pass) continue;
+      visited.add(nk);
+      queue.push({col:nc, row:nr, steps:steps+1});
+    }
+  }
+  return result;
+}
+// Walks up to `mov` single steps toward a target, stopping early once in range —
+// used for the enemy AI's turn so it uses its full movement in one animated glide.
+function computeMultiStepDestination(unit, targetCol, targetRow, allUnits, grid) {
+  let col = unit.col, row = unit.row;
+  for (let i=0; i<unit.mov; i++) {
+    if (Math.abs(col-targetCol)+Math.abs(row-targetRow) <= unit.range) break;
+    const step = findNextStep(col, row, targetCol, targetRow, allUnits, grid, unit.id);
+    if (!step) break;
+    col = step.col; row = step.row;
+  }
+  return { col, row };
+}
+
 let UID = 1;
 function mkUD(type, col, row, faction) {
   const def = UD[type];
@@ -154,6 +214,20 @@ function mkUD(type, col, row, faction) {
 
 
 function makeInitialUnits(mode, mission) {
+  if (mode === 'siege') {
+    // Castle sits in the middle of the player's own half, already encircled —
+    // no enemy HQ to push toward, just a garrison to break on every side.
+    return [
+      { id:`b${UID++}`, type:'base_main', size:2, faction:'player', col:7,  row:8,  name:'Command Post', hp:1000, maxHp:1000, atk:5, mov:0, range:3, opm:0, mpt:0, opt:0, behavior:'defend_spot' },
+      { id:`b${UID++}`, type:'base_fort', size:1, faction:'player', col:5,  row:9,  name:'Outpost',      hp:250,  maxHp:250,  atk:8, mov:0, range:3, opm:0, mpt:0, opt:0, behavior:'defend_spot' },
+      { id:`b${UID++}`, type:'base_fort', size:1, faction:'player', col:10, row:9,  name:'Outpost',      hp:250,  maxHp:250,  atk:8, mov:0, range:3, opm:0, mpt:0, opt:0, behavior:'defend_spot' },
+      mkUD('inf_light',   7, 2, 'enemy'), mkUD('inf_light',   8, 2, 'enemy'), mkUD('artillery',   9, 2, 'enemy'),  // north
+      mkUD('inf_assault', 6, 15,'enemy'), mkUD('tank_light',  7, 15,'enemy'), mkUD('inf_light',  10, 15,'enemy'), // south
+      mkUD('armor_car',  13, 8, 'enemy'), mkUD('inf_assault',13, 9, 'enemy'), mkUD('artillery',  13, 10,'enemy'), // east
+      mkUD('inf_light',   3, 8, 'enemy'), mkUD('commandos',   3, 9, 'enemy'), mkUD('tank_light',  3, 10,'enemy'), // west
+    ];
+  }
+
   const units = [
     { id:`b${UID++}`, type:'base_main', size:2, faction:'player', col:1, row:8,  name:'Command Post', hp:1000, maxHp:1000, atk:5, mov:0, range:3, opm:0, mpt:0, opt:0, behavior:'defend_spot' },
     { id:`b${UID++}`, type:'base_fort', size:1, faction:'player', col:2, row:4,  name:'Outpost',      hp:250,  maxHp:250,  atk:8, mov:0, range:3, opm:0, mpt:0, opt:0, behavior:'defend_spot' },
@@ -207,7 +281,7 @@ function UShape({ type, color='#3b82f6', size=38 }) {
 // Troops render as small round tokens and glide continuously toward their
 // logical grid cell (via rAF) instead of snapping cell-to-cell; combat,
 // pathfinding and occupancy all still key off the logical col/row untouched.
-function UnitSprite({ u, C, isSel, isShaking, onSelect }) {
+function UnitSprite({ u, C, isSel, isShaking, isActed, onSelect }) {
   const posRef = useRef({ col: u.col, row: u.row });
   const rafRef = useRef(null);
   const [, bump] = useState(0);
@@ -252,6 +326,7 @@ function UnitSprite({ u, C, isSel, isShaking, onSelect }) {
         position: 'absolute', left: col * C, top: row * C, width: w, height: h,
         zIndex: 10, cursor: 'pointer', boxSizing: 'border-box',
         outline: isSel ? '2px solid #818cf8' : u.capture ? '2px dashed #facc15' : 'none', outlineOffset: '-2px',
+        boxShadow: u.general ? '0 0 0 2px #f59e0b, 0 0 6px 1px rgba(245,158,11,0.7)' : 'none',
       }}>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {isTroop
@@ -276,6 +351,14 @@ function UnitSprite({ u, C, isSel, isShaking, onSelect }) {
         }}>
           {u.behavior === 'attack' ? 'ATK' : u.behavior === 'defend_castle' ? 'DEF' : 'IDLE'}
         </div>
+      )}
+      {isActed && (
+        <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.55)', borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', pointerEvents:'none' }}>
+          <span style={{ fontSize:7, fontWeight:900, color:'#a1a1aa', textTransform:'uppercase', letterSpacing:'0.05em' }}>done</span>
+        </div>
+      )}
+      {u.general && (
+        <div style={{ position:'absolute', top:-6, left:'50%', transform:'translateX(-50%)', fontSize:10, lineHeight:1, pointerEvents:'none' }}>⭐</div>
       )}
     </div>
   );
@@ -340,8 +423,24 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
 
   // Enemy AI state
   const enemyManaRef     = useRef(STARTING_MANA);
-  const enemyBuildIdx    = useRef(0);
   const enemyAITimer     = useRef(0);
+
+  // Turns-mode state — the real-time loop below is skipped entirely for mode==='turns'
+  const [turnPhase, setTurnPhase]   = useState('player'); // 'player' | 'enemy'
+  const turnNumberRef = useRef(1);
+  const [turnNumber, setTurnNumberRaw] = useState(1);
+  function setTurnNumber(n) { turnNumberRef.current = n; setTurnNumberRaw(n); }
+  const actedIdsRef = useRef(new Set());
+  const [actedIds, setActedIdsRaw] = useState(new Set());
+  function setActedIds(s) { actedIdsRef.current = s; setActedIdsRaw(s); }
+  const [moveTargets, setMoveTargets]     = useState([]); // [{col,row}]
+  const [attackTargets, setAttackTargets] = useState([]); // [{col,row,id}]
+  const enemyTurnRunningRef = useRef(false);
+
+  // Generals — pick one, assign it to exactly one troop, exactly once per battle
+  const [selectedGeneral, setSelectedGeneral] = useState(null); // armed general awaiting a target click
+  const [generalUsed, setGeneralUsed]         = useState(false);
+  const [generalUnitId, setGeneralUnitId]     = useState(null);
 
   // Placement hover — track which cell cursor is over during pending placement
   const [hoverCell, setHoverCell] = useState(null);
@@ -362,7 +461,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
   const [dmgPopups,  setDmgPopups]  = useState([]);
   const dmgKey = useRef(0);
 
-  const [log, setLog] = useState(['Deploy your Factory, then Start Battle.']);
+  const [log, setLog] = useState(['Deploy your Factory — the battle begins the instant you place it.']);
   const addLog = useCallback((msg) => setLog(p => [msg,...p].slice(0,20)), []);
 
   function flashCell(col, row) {
@@ -385,9 +484,9 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
   const oilPumpPlaced = units.some(u=>u.type==='oil_pump'&&u.faction==='player'&&u.hp>0);
   const G = activeGrid; // shorthand — null means no map configured
 
-  // ── Game loop ──────────────────────────────────────────────────────────────
+  // ── Game loop (real-time modes only — turns mode uses the turn engine below) ──
   useEffect(() => {
-    if (phase !== 'battle') return;
+    if (phase !== 'battle' || mode === 'turns') return;
     let tick = 0;
     const id = setInterval(() => {
       if (phaseRef.current !== 'battle') return;
@@ -405,20 +504,17 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
       const enemyFactories = cur.filter(u=>u.faction==='enemy'&&u.type==='factory'&&u.hp>0).length;
       enemyManaRef.current += enemyFactories * 5;
 
-      // Enemy AI: try to buy and place something every 6 ticks (scripted campaign garrisons don't reinforce)
+      // Enemy AI: try to buy and place something every 6 ticks (scripted garrisons — campaign missions and the siege — don't reinforce)
       enemyAITimer.current++;
-      if (!mission && enemyAITimer.current >= 6) {
+      if (!mission && mode!=='siege' && enemyAITimer.current >= 6) {
         enemyAITimer.current = 0;
-        const idx = enemyBuildIdx.current % ENEMY_BUILD_QUEUE.length;
-        const buildType = ENEMY_BUILD_QUEUE[idx];
-        const cost = UD[buildType]?.mana || 999;
-        if (enemyManaRef.current >= cost) {
+        const buildType = enemyDecideBuild(cur, enemyManaRef.current, tick);
+        if (buildType) {
           const spot = findEnemySpot(cur, G);
           if (spot) {
             const nu = mkUD(buildType, spot.col, spot.row, 'enemy');
             cur = [...cur, nu];
-            enemyManaRef.current -= cost;
-            enemyBuildIdx.current++;
+            enemyManaRef.current -= UD[buildType].mana;
             addLog(`Enemy built ${UD[buildType].name}!`);
           }
         }
@@ -496,6 +592,13 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
           completeMission(mission.id);
           addLog(`🎖️ ${mission.name} complete — Victory!`);return;
         }
+      } else if (mode==='siege') {
+        if (cur.filter(u=>u.faction==='enemy'&&u.hp>0).length===0) {
+          setPhase('won');unitsRef.current=cur;setUnitsRaw(cur);
+          awardMana(220);awardGems(15);setMana(m=>m+220);
+          bumpQuestStat('battlesWon');bumpQuestStat('manaEarned',220);
+          addLog('Siege broken — Victory!');return;
+        }
       } else if (mode!=='endless') {
         const enemyHQ=cur.find(u=>u.type==='enemy_hq');
         if (!enemyHQ||enemyHQ.hp<=0) {
@@ -512,12 +615,194 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
     return ()=>clearInterval(id);
   }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Turn engine (mode === 'turns') ────────────────────────────────────────
+  function checkTurnsWinLose(cur) {
+    const playerHQ = cur.find(u=>u.type==='base_main');
+    if (!playerHQ || playerHQ.hp<=0) {
+      setPhase('lost'); addLog('Command Post destroyed — Defeat!');
+      return true;
+    }
+    const enemyHQ = cur.find(u=>u.type==='enemy_hq');
+    if (!enemyHQ || enemyHQ.hp<=0) {
+      setPhase('won');
+      awardMana(200); awardGems(10); setMana(m=>m+200);
+      bumpQuestStat('battlesWon'); bumpQuestStat('manaEarned',200);
+      addLog('Enemy HQ destroyed — Victory!');
+      return true;
+    }
+    return false;
+  }
+
+  function collectTurnIncome() {
+    const cur = unitsRef.current;
+    const playerFactories = cur.filter(u=>u.faction==='player'&&u.type==='factory'&&u.hp>0).length;
+    const playerPumps     = cur.filter(u=>u.faction==='player'&&u.type==='oil_pump'&&u.hp>0).length;
+    if (playerFactories) { awardMana(playerFactories*10); setMana(m=>m+playerFactories*10); bumpQuestStat('manaEarned', playerFactories*10); }
+    if (playerPumps)     { awardOil(playerPumps*6);       setOil(v=>v+playerPumps*6);        bumpQuestStat('oilEarned', playerPumps*6);      }
+    const enemyFactories = cur.filter(u=>u.faction==='enemy'&&u.type==='factory'&&u.hp>0).length;
+    enemyManaRef.current += enemyFactories*10;
+  }
+
+  // Stationary turrets (structures) fire once per side per round — no manual action needed.
+  function structuresVolley(faction) {
+    let cur = unitsRef.current.map(u=>({...u}));
+    const events = [];
+    for (const att of cur.filter(u=>u.faction===faction&&u.hp>0&&!u.mov&&u.atk>0&&u.range>0)) {
+      const live = cur.find(u=>u.id===att.id);
+      if (!live||live.hp<=0) continue;
+      const foes = cur.filter(u=>u.faction!==faction&&u.hp>0&&unitDist(live,u)<=live.range);
+      if (!foes.length) continue;
+      const t = foes[0];
+      const dmg = rollDmg(live.atk);
+      cur = cur.map(u=>u.id===t.id?{...u,hp:Math.max(0,u.hp-dmg)}:u);
+      events.push({id:t.id,col:t.col,row:t.row,dmg});
+      if (faction==='player' && t.hp>0 && t.hp-dmg<=0) bumpQuestStat('enemiesKilled');
+    }
+    setUnits(cur);
+    events.forEach(({col,row,id,dmg})=>{flashCell(col,row);shakeUnit(id);popDmg(col,row,dmg);});
+    return cur;
+  }
+
+  function startPlayerTurn() {
+    collectTurnIncome();
+    const cur = structuresVolley('player');
+    if (checkTurnsWinLose(cur)) return;
+    setActedIds(new Set());
+    setTurnPhase('player');
+    addLog(`Turn ${turnNumberRef.current} — your move.`);
+  }
+
+  function endPlayerTurn() {
+    if (turnPhase!=='player' || enemyTurnRunningRef.current) return;
+    setSelectedIds(new Set()); setMoveTargets([]); setAttackTargets([]);
+    runEnemyTurn();
+  }
+
+  function markActed(id) {
+    const next = new Set(actedIdsRef.current); next.add(id);
+    setActedIds(next);
+    setSelectedIds(new Set()); setMoveTargets([]); setAttackTargets([]);
+    const stillToAct = unitsRef.current.some(u=>u.faction==='player'&&u.hp>0&&u.mov>0&&!next.has(u.id));
+    if (!stillToAct) runEnemyTurn();
+  }
+
+  function runEnemyTurn() {
+    if (enemyTurnRunningRef.current) return;
+    enemyTurnRunningRef.current = true;
+    setTurnPhase('enemy');
+    setSelectedIds(new Set()); setMoveTargets([]); setAttackTargets([]);
+    addLog('Enemy turn...');
+
+    // Enemy attempts one purchase per turn, same tiered logic as real-time modes
+    let cur = unitsRef.current.map(u=>({...u}));
+    const buildType = enemyDecideBuild(cur, enemyManaRef.current, turnNumberRef.current);
+    if (buildType) {
+      const spot = findEnemySpot(cur, G);
+      if (spot) {
+        cur = [...cur, mkUD(buildType, spot.col, spot.row, 'enemy')];
+        enemyManaRef.current -= UD[buildType].mana;
+        addLog(`Enemy built ${UD[buildType].name}!`);
+      }
+    }
+    setUnits(cur);
+
+    cur = structuresVolley('enemy');
+    if (checkTurnsWinLose(cur)) { enemyTurnRunningRef.current = false; return; }
+
+    const mobileEnemyIds = cur.filter(u=>u.faction==='enemy'&&u.hp>0&&u.mov>0).map(u=>u.id);
+    processEnemyUnit(mobileEnemyIds, 0);
+  }
+
+  // Resolves one enemy unit's move+attack per call, then schedules the next after a
+  // short delay — the delay is what makes each unit's glide (via UnitSprite) visible
+  // one at a time instead of everything jumping at once.
+  function processEnemyUnit(ids, idx) {
+    if (idx >= ids.length) {
+      if (checkTurnsWinLose(unitsRef.current)) { enemyTurnRunningRef.current = false; return; }
+      enemyTurnRunningRef.current = false;
+      setTurnNumber(turnNumberRef.current + 1);
+      startPlayerTurn();
+      return;
+    }
+    setTimeout(() => {
+      let cur = unitsRef.current.map(u=>({...u}));
+      const en = cur.find(u=>u.id===ids[idx]);
+      if (!en || en.hp<=0) { processEnemyUnit(ids, idx+1); return; }
+      const friends = cur.filter(u=>u.faction==='player'&&u.hp>0);
+      if (!friends.length) { processEnemyUnit(ids, idx+1); return; }
+      const nearest = friends.reduce((best,t)=>{const d=unitDist(en,t);return d<best.d?{d,t}:best;},{d:Infinity,t:null}).t;
+
+      if (unitDist(en,nearest) > en.range) {
+        const dest = computeMultiStepDestination(en, nearest.col, nearest.row, cur, G);
+        if (dest.col!==en.col || dest.row!==en.row) {
+          cur = cur.map(u=>u.id===en.id?{...u,col:dest.col,row:dest.row}:u);
+        }
+      }
+      const moved = cur.find(u=>u.id===en.id);
+      if (moved.atk>0) {
+        const foes = cur.filter(u=>u.faction==='player'&&u.hp>0&&unitDist(moved,u)<=moved.range);
+        if (foes.length) {
+          const t = foes[0];
+          const dmg = rollDmg(moved.atk);
+          cur = cur.map(u=>u.id===t.id?{...u,hp:Math.max(0,u.hp-dmg)}:u);
+          flashCell(t.col,t.row); shakeUnit(t.id); popDmg(t.col,t.row,dmg);
+        }
+      }
+      setUnits(cur);
+      processEnemyUnit(ids, idx+1);
+    }, 650);
+  }
+
+  function handleTurnsClick(col, row) {
+    if (turnPhase!=='player' || enemyTurnRunningRef.current) return;
+    const all = unitsRef.current;
+    const clicked = all.find(u=>u.hp>0 && unitCells(u).some(([c,r])=>c===col&&r===row));
+    const selId = [...selectedIds][0];
+
+    if (clicked && clicked.faction==='player') {
+      if (actedIdsRef.current.has(clicked.id)) return;
+      if (clicked.id===selId) { markActed(clicked.id); return; }
+      if (!clicked.mov) return; // stationary structures/turrets act automatically each round
+      setSelectedIds(new Set([clicked.id]));
+      setMoveTargets(clicked.mov>0 ? getReachableCells(clicked, all, G) : []);
+      setAttackTargets(clicked.range>0 ? getInRange(clicked, all).map(u=>({col:u.col,row:u.row,id:u.id})) : []);
+      return;
+    }
+
+    if (!selId || actedIdsRef.current.has(selId)) return;
+    const selUnit = all.find(u=>u.id===selId);
+    if (!selUnit) return;
+
+    if (clicked && clicked.faction==='enemy') {
+      if (!attackTargets.find(t=>t.id===clicked.id)) return;
+      const dmg = rollDmg(selUnit.atk);
+      const wasAlive = clicked.hp>0;
+      const next = all.map(u=>u.id===clicked.id?{...u,hp:Math.max(0,u.hp-dmg)}:u);
+      addLog(`${selUnit.name} attacks ${clicked.name}: -${dmg}`);
+      flashCell(col,row); shakeUnit(clicked.id); popDmg(col,row,dmg);
+      if (wasAlive && clicked.hp-dmg<=0) bumpQuestStat('enemiesKilled');
+      setUnits(next);
+      if (checkTurnsWinLose(next)) return;
+      markActed(selId);
+      return;
+    }
+
+    const dest = moveTargets.find(m=>m.col===col&&m.row===row);
+    if (dest) {
+      const next = all.map(u=>u.id===selId?{...u,col,row}:u);
+      setUnits(next);
+      setMoveTargets([]);
+      setAttackTargets(selUnit.range>0 ? getInRange({...selUnit,col,row}, next).map(u=>({col:u.col,row:u.row,id:u.id})) : []);
+    }
+  }
+
   // ── Shop ──────────────────────────────────────────────────────────────────
   function tryBuy(type) {
     const def=UD[type];if(!def)return;
     if(!factoryPlaced&&type!=='factory'){addLog('Build Factory first!');return;}
     if(mana<def.mana){addLog(`Need ${def.mana} mana.`);return;}
     spendMana(def.mana);setMana(m=>m-def.mana);
+    setSelectedGeneral(null);
     setPending(type);addLog(`${def.name} — click map to place.`);
   }
   function cancelPending() {
@@ -533,30 +818,39 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
     const nu=mkUD(pendingType,col,row,'player');
     setUnits([...unitsRef.current,nu]);
     setPending(null);setHoverCell(null);addLog(`${nu.name} deployed.`);
-    if(pendingType==='factory')addLog('Factory active — +5 mana/sec.');
     if(UD[pendingType]?.cat==='struct') bumpQuestStat('structuresBuilt');
     else if(nu.mov>0) bumpQuestStat('troopsDeployed');
+    if(pendingType==='factory'){addLog('Factory active — +5 mana/sec.');startBattle();}
   }
   function startBattle() {
-    if(!factoryPlaced){addLog('Place a Factory first!');return;}
-    const allUnits=[...unitsRef.current];
-    setUnits(allUnits);setPhase('battle');
+    if(!unitsRef.current.some(u=>u.type==='factory'&&u.faction==='player'&&u.hp>0)){addLog('Place a Factory first!');return;}
+    setPhase('battle');
     enemyManaRef.current=STARTING_MANA;
-    enemyBuildIdx.current=0;
     enemyAITimer.current=0;
     bumpQuestStat('battlesPlayed');
     addLog(`${mission ? mission.name : modeConfig?.name} — Battle begins!`);
+    if(mode==='turns'){
+      enemyTurnRunningRef.current=false;
+      turnNumberRef.current=1;setTurnNumberRaw(1);
+      setActedIds(new Set());setTurnPhase('player');
+      setMoveTargets([]);setAttackTargets([]);
+    }
   }
   function resetGame() {
     const init=makeInitialUnits(mode, mission);
     unitsRef.current=init;setUnitsRaw(init);
     setPhase('setup');
+    setSelectedGeneral(null);setGeneralUsed(false);setGeneralUnitId(null);
     setPending(null);setHoverCell(null);setSelectedIds(new Set());
-    setLog(['Deploy your Factory, then Start Battle.']);
+    setLog(['Deploy your Factory — the battle begins the instant you place it.']);
     enemyManaRef.current=STARTING_MANA;
-    enemyBuildIdx.current=0;enemyAITimer.current=0;
+    enemyAITimer.current=0;
     capturedRef.current=0;setCapturedCount(0);
     setMana(STARTING_MANA);setOil(STARTING_OIL);
+    enemyTurnRunningRef.current=false;
+    turnNumberRef.current=1;setTurnNumberRaw(1);
+    setActedIds(new Set());setTurnPhase('player');
+    setMoveTargets([]);setAttackTargets([]);
   }
 
   // ── Selection & behavior ──────────────────────────────────────────────────
@@ -569,9 +863,36 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
     if(ids.size>=2) bumpQuestStat('multiUnitCommands');
   }
 
+  // ── Generals — arm one, then click a troop to bind it (single use per battle) ──
+  function chooseGeneral(id) {
+    if(generalUsed)return;
+    const g=GENERALS.find(x=>x.id===id);
+    if(!g)return;
+    setPending(null);setHoverCell(null);
+    setSelectedGeneral(g);
+    addLog(`${g.name} ready — click one of your troops to assign.`);
+  }
+  function cancelGeneral() {
+    setSelectedGeneral(null);
+  }
+  function assignGeneralToUnit(unitId) {
+    const u=unitsRef.current.find(x=>x.id===unitId);
+    if(!u||u.faction!=='player'||u.hp<=0||!(u.mov>0)){addLog('Generals can only lead a mobile troop.');return;}
+    const boosted=applyGeneralBoost(u,selectedGeneral);
+    setUnits(unitsRef.current.map(x=>x.id===unitId?boosted:x));
+    setGeneralUsed(true);setGeneralUnitId(unitId);setSelectedGeneral(null);
+    addLog(`⭐ ${selectedGeneral.name} now leads ${u.name}!`);
+  }
+
   // ── Click handler (no manual movement) ───────────────────────────────────
   function handleCellClick(col, row) {
+    if(selectedGeneral){
+      const hit=unitsRef.current.find(u=>unitCells(u).some(([c,r])=>c===col&&r===row)&&u.hp>0);
+      if(hit&&hit.faction==='player')assignGeneralToUnit(hit.id);
+      return;
+    }
     if(pendingType){tryPlace(col,row);return;}
+    if(mode==='turns'&&phase==='battle'){handleTurnsClick(col,row);return;}
     const hit=unitsRef.current.find(u=>unitCells(u).some(([c,r])=>c===col&&r===row)&&u.hp>0);
     if(hit&&hit.faction==='player'){
       if(selectedIds.has(hit.id)&&selectedIds.size===1)setSelectedIds(new Set());
@@ -583,7 +904,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
 
   // ── Drag-select ───────────────────────────────────────────────────────────
   function onMapPointerDown(e) {
-    if(pendingType||e.button!==0)return;
+    if(pendingType||selectedGeneral||e.button!==0||(mode==='turns'&&phase==='battle'))return;
     const rect=gridRef.current?.getBoundingClientRect();
     if(!rect)return;
     const x=e.clientX-rect.left, y=e.clientY-rect.top;
@@ -651,9 +972,24 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
           </button>
           <div className="flex items-center justify-between">
             <span className="text-sm font-black" style={{color:mission?'#f59e0b':modeConfig?.color}}>{mission?mission.name:modeConfig?.name}</span>
-            {phase==='battle'&&<div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"/><span className="text-green-400 text-[10px] font-bold">LIVE</span></div>}
+            {phase==='battle'&&mode==='turns'&&(
+              <div className="flex items-center gap-1.5">
+                <div className={`w-2 h-2 rounded-full animate-pulse ${turnPhase==='player'?'bg-sky-400':'bg-red-400'}`}/>
+                <span className={`text-[10px] font-bold ${turnPhase==='player'?'text-sky-400':'text-red-400'}`}>{turnPhase==='player'?'YOUR TURN':'ENEMY TURN'}</span>
+              </div>
+            )}
+            {phase==='battle'&&mode!=='turns'&&<div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"/><span className="text-green-400 text-[10px] font-bold">LIVE</span></div>}
           </div>
         </div>
+
+        {/* Turns objective */}
+        {mode==='turns'&&(
+          <div className="px-3 py-2 border-b border-zinc-700 shrink-0 bg-sky-950/30">
+            <p className="text-sky-300 text-[10px] font-bold uppercase tracking-widest mb-1">♟️ Turn {turnNumber}</p>
+            <p className="text-zinc-400 text-[10px] leading-snug mb-1.5">Move each unit, then end your turn — the AI answers move for move.</p>
+            <p className="text-sky-200 text-xs font-bold">{units.filter(u=>u.faction==='enemy'&&u.hp>0).length} enemies remaining</p>
+          </div>
+        )}
 
         {/* Campaign objective */}
         {mission&&(
@@ -670,26 +1006,71 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
           </div>
         )}
 
+        {/* Siege objective */}
+        {!mission&&mode==='siege'&&(
+          <div className="px-3 py-2 border-b border-zinc-700 shrink-0 bg-red-950/30">
+            <p className="text-red-300 text-[10px] font-bold uppercase tracking-widest mb-1">🏯 Break the Siege</p>
+            <p className="text-zinc-400 text-[10px] leading-snug mb-1.5">Your castle is surrounded on every side. Defeat every attacker to win.</p>
+            <p className="text-red-200 text-xs font-bold">{units.filter(u=>u.faction==='enemy'&&u.hp>0).length} enemies remaining</p>
+          </div>
+        )}
+
         {/* Resources */}
         <div className="px-3 py-2 border-b border-zinc-700 shrink-0 flex flex-col gap-1.5">
           <div className="flex items-center gap-2 bg-purple-950 border border-purple-700 rounded-lg px-3 py-1.5">
             <span className="text-purple-300 font-black text-base leading-none">{mana}</span>
             <span className="text-purple-400 text-xs flex-1">Mana</span>
-            {factoryPlaced&&<span className="text-green-400 text-[10px] font-bold">+5/s</span>}
+            {factoryPlaced&&<span className="text-green-400 text-[10px] font-bold">{mode==='turns'?'+10/turn':'+5/s'}</span>}
           </div>
           <div className="flex items-center gap-2 bg-amber-950 border border-amber-700 rounded-lg px-3 py-1.5">
             <span className="text-amber-300 font-black text-base leading-none">{oil}</span>
             <span className="text-amber-400 text-xs flex-1">Oil</span>
-            {oilPumpPlaced&&<span className="text-green-400 text-[10px] font-bold">+3/s</span>}
+            {oilPumpPlaced&&<span className="text-green-400 text-[10px] font-bold">{mode==='turns'?'+6/turn':'+3/s'}</span>}
           </div>
+        </div>
+
+        {/* General — pick one, assign to one troop, once per battle */}
+        <div className="px-3 py-2 border-b border-zinc-700 shrink-0">
+          <p className="text-zinc-400 text-[10px] uppercase tracking-widest font-semibold mb-1.5">General</p>
+          {generalUsed ? (
+            (() => {
+              const leadUnit = units.find(u=>u.id===generalUnitId);
+              const g = GENERALS.find(x=>x.id===leadUnit?.general);
+              return leadUnit ? (
+                <div className="rounded-lg border px-2 py-1.5" style={{borderColor:g?.color||'#52525b',background:`${g?.color||'#52525b'}22`}}>
+                  <p className="text-xs font-bold" style={{color:g?.color||'#e5e7eb'}}>{g?.icon} {g?.name}</p>
+                  <p className="text-zinc-400 text-[9px]">leads {leadUnit.name}</p>
+                </div>
+              ) : (
+                <p className="text-zinc-600 text-[10px]">General was assigned but that unit has fallen.</p>
+              );
+            })()
+          ) : selectedGeneral ? (
+            <div className="rounded-lg border px-2 py-1.5 flex items-center justify-between gap-2" style={{borderColor:selectedGeneral.color,background:`${selectedGeneral.color}22`}}>
+              <p className="text-[10px] font-bold" style={{color:selectedGeneral.color}}>Click a troop to assign {selectedGeneral.name}</p>
+              <button onClick={cancelGeneral} className="text-zinc-400 hover:text-red-400 text-xs font-bold shrink-0">✕</button>
+            </div>
+          ) : (
+            <div className="flex gap-1.5 flex-wrap">
+              {GENERALS.map(g=>(
+                <button key={g.id} onClick={()=>chooseGeneral(g.id)} title={`${g.name} — ${g.desc}`}
+                  className="w-8 h-8 rounded-lg border border-zinc-700 bg-zinc-800/60 hover:bg-zinc-700 flex items-center justify-center text-base transition-all active:scale-95">
+                  {g.icon}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Battle button */}
         <div className="px-3 py-2 border-b border-zinc-700 shrink-0">
           {phase==='setup'&&(
-            <button onClick={startBattle} disabled={!factoryPlaced}
-              className={`w-full py-2 rounded-lg text-sm font-bold transition-all ${factoryPlaced?'bg-green-600 hover:bg-green-500 text-white border border-green-400':'bg-zinc-700 text-zinc-500 border border-zinc-600 cursor-not-allowed'}`}>
-              {factoryPlaced?'▶ Start Battle':'Place Factory First'}
+            <p className="text-center text-zinc-500 text-xs font-semibold py-1">Place your Factory to begin — the battle starts instantly.</p>
+          )}
+          {phase==='battle'&&mode==='turns'&&(
+            <button onClick={endPlayerTurn} disabled={turnPhase!=='player'}
+              className={`w-full py-2 rounded-lg text-sm font-bold transition-all ${turnPhase==='player'?'bg-sky-600 hover:bg-sky-500 text-white border border-sky-400':'bg-zinc-700 text-zinc-500 border border-zinc-600 cursor-not-allowed'}`}>
+              {turnPhase==='player'?'End Turn →':'Enemy acting…'}
             </button>
           )}
           {(phase==='won'||phase==='lost')&&(
@@ -751,11 +1132,11 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
         <div className="h-32 border-t border-zinc-700 overflow-y-auto p-1.5 flex flex-col gap-0.5 shrink-0">
           <p className="text-zinc-500 text-[9px] uppercase font-bold px-1 mb-0.5">Your Units</p>
           {units.filter(u=>u.faction==='player'&&u.hp>0).map(u=>(
-            <div key={u.id} onClick={()=>selectUnit(u.id)}
+            <div key={u.id} onClick={()=>selectedGeneral?assignGeneralToUnit(u.id):selectUnit(u.id)}
               className={`flex items-center gap-1.5 rounded p-1 cursor-pointer transition-all ${selectedIds.has(u.id)?'bg-indigo-900/60 border border-indigo-500':'bg-zinc-800/50 border border-transparent hover:bg-zinc-800'}`}>
               <UShape type={u.type} color={selectedIds.has(u.id)?'#818cf8':'#3b82f6'} size={13}/>
               <div className="flex-1 min-w-0">
-                <p className="text-white text-[9px] font-bold truncate">{u.name}</p>
+                <p className="text-white text-[9px] font-bold truncate">{u.general&&'⭐ '}{u.name}</p>
                 {u.mov>0&&<span style={{fontSize:7,color:u.behavior==='attack'?'#f87171':u.behavior==='defend_castle'?'#67e8f9':'#86efac'}}>
                   {u.behavior==='attack'?'ATK':u.behavior==='defend_castle'?'DEF':u.behavior==='defend_spot'?'HOLD':'IDLE'}
                 </span>}
@@ -792,6 +1173,8 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
             const isFlash=flashCells.has(key);
             const isHover=pendingType&&hoverCell?.col===col&&hoverCell?.row===row;
             const canPlace=isHover&&ts.pass&&!cellOccupied(col,row,units)&&col<PLAYER_MAX_COL;
+            const isMoveTarget=mode==='turns'&&moveTargets.some(m=>m.col===col&&m.row===row);
+            const isAttackTarget=mode==='turns'&&attackTargets.some(t=>t.col===col&&t.row===row);
             return (
               <div key={key}
                 onClick={()=>handleCellClick(col,row)}
@@ -810,6 +1193,8 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
                   background:canPlace?'rgba(255,255,255,0.18)':'rgba(239,68,68,0.25)',
                   boxShadow:canPlace?'inset 0 0 0 2px rgba(255,255,255,0.5)':'inset 0 0 0 2px rgba(239,68,68,0.7)'
                 }}/>}
+                {isMoveTarget&&<div style={{position:'absolute',inset:0,pointerEvents:'none',background:'rgba(56,189,248,0.28)',boxShadow:'inset 0 0 0 2px rgba(56,189,248,0.7)'}}/>}
+                {isAttackTarget&&<div style={{position:'absolute',inset:0,pointerEvents:'none',background:'rgba(239,68,68,0.32)',boxShadow:'inset 0 0 0 2px rgba(239,68,68,0.8)'}}/>}
               </div>
             );
           }))}
@@ -834,6 +1219,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
               C={C}
               isSel={selectedIds.has(u.id)}
               isShaking={shakingIds.has(u.id)}
+              isActed={mode==='turns'&&phase==='battle'&&u.faction==='player'&&u.mov>0&&actedIds.has(u.id)}
               onSelect={handleCellClick}
             />
           ))}
@@ -870,7 +1256,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
         )}
 
         {/* Drag-select hint — shown until the player has selected units at least once */}
-        {selList.length===0&&!pendingType&&(
+        {mode!=='turns'&&selList.length===0&&!pendingType&&(
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-zinc-900/90 border border-zinc-700 rounded-xl px-4 py-2 flex items-center gap-2 z-20 shadow-xl pointer-events-none">
             <span className="text-sm">🖱️</span>
             <span className="text-zinc-300 text-xs font-semibold">Click-drag on the grid to box-select multiple units, then command them together</span>
@@ -910,8 +1296,8 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
               </div>
             )}
 
-            {/* AI behavior — show if any selected units are mobile player units */}
-            {selMobile.length>0&&(
+            {/* AI behavior — real-time modes only; turns mode uses click-to-move/attack instead */}
+            {mode!=='turns'&&selMobile.length>0&&(
               <div>
                 <p className="text-zinc-400 text-[10px] uppercase font-bold mb-1.5">Behavior</p>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -932,6 +1318,17 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
                   })}
                 </div>
               </div>
+            )}
+
+            {/* Turns mode — click a highlighted cell to move, or an enemy in red to attack */}
+            {mode==='turns'&&primarySel&&primarySel.faction==='player'&&(
+              <p className="text-sky-300 text-[10px] leading-snug">
+                {actedIds.has(primarySel.id)
+                  ? 'This unit has acted this turn.'
+                  : moveTargets.length||attackTargets.length
+                    ? 'Click a blue cell to move, or a red enemy to attack. Click this unit again to end its turn.'
+                    : 'No moves or targets available. Click this unit again to end its turn.'}
+              </p>
             )}
 
             {/* Deselect */}

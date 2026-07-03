@@ -1,5 +1,6 @@
 // Daily quests, weekly quests, and the daily-login reward streak.
-import { awardMana, awardGems, awardOil } from "./troops";
+// Rewards pay out in coins/gems only — mana and oil are earned in battle, not from quests.
+import { awardCoins, awardGems } from "./troops";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -7,13 +8,19 @@ function todayKey(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 function weekNumber(d = new Date()) { return Math.floor(d.getTime() / (7 * DAY_MS)); }
-function weekKey(d = new Date())    { return String(weekNumber(d)); }
 
-// A perpetually increasing week counter for display ("Week 5", "Week 6"...).
-// The weekly quest *content* below no longer rotates with this — it's just
-// flavor progress so returning players see the week count tick forward.
-const WEEK_EPOCH = Math.floor(new Date("2026-01-01T00:00:00Z").getTime() / (7 * DAY_MS));
-export function getActiveWeekIndex() { return weekNumber() - WEEK_EPOCH + 1; }
+// A 4-week cycle: within a cycle, week N's quests stay visible when week N+1's
+// are revealed (nothing disappears). Once week 4 passes, a new cycle begins —
+// the whole pool reshuffles into fresh week-buckets and progress resets.
+const CYCLE_EPOCH = Math.floor(new Date("2026-01-01T00:00:00Z").getTime() / (7 * DAY_MS));
+function absoluteWeek(d = new Date()) { return weekNumber(d) - CYCLE_EPOCH; }
+function cycleIndex(d = new Date())   { return Math.floor(absoluteWeek(d) / 4); }
+function cycleKey(d = new Date())     { return String(cycleIndex(d)); }
+// Which week (1-4) of the current cycle we're in.
+export function getActiveWeekIndex(d = new Date()) {
+  const w = absoluteWeek(d) % 4;
+  return (w < 0 ? w + 4 : w) + 1;
+}
 
 function currentUser() {
   if (typeof window === "undefined") return null;
@@ -54,18 +61,18 @@ export const STAT_META = {
 
 // ── Daily quests — easy, 3 drawn from this pool each day ──────────────────────
 const DAILY_POOL = [
-  { id: "d_win1",    statKey: "battlesWon",        target: 1,   desc: "Win 1 battle",                rewardMana: 40, rewardGems: 0  },
-  { id: "d_win2",    statKey: "battlesWon",        target: 2,   desc: "Win 2 battles",                rewardMana: 60, rewardGems: 0  },
-  { id: "d_play1",   statKey: "battlesPlayed",     target: 1,   desc: "Play 1 battle",                rewardMana: 15, rewardGems: 0  },
-  { id: "d_deploy3", statKey: "troopsDeployed",    target: 3,   desc: "Deploy 3 troops",              rewardMana: 30, rewardGems: 0  },
-  { id: "d_deploy5", statKey: "troopsDeployed",    target: 5,   desc: "Deploy 5 troops",               rewardMana: 45, rewardGems: 0  },
-  { id: "d_kill5",   statKey: "enemiesKilled",     target: 5,   desc: "Defeat 5 enemies",             rewardMana: 35, rewardGems: 0  },
-  { id: "d_kill10",  statKey: "enemiesKilled",     target: 10,  desc: "Defeat 10 enemies",            rewardMana: 50, rewardGems: 0  },
-  { id: "d_build1",  statKey: "structuresBuilt",   target: 1,   desc: "Build 1 structure",            rewardMana: 25, rewardGems: 0  },
-  { id: "d_mana100", statKey: "manaEarned",        target: 100, desc: "Earn 100 mana",                rewardMana: 0,  rewardGems: 10 },
-  { id: "d_mana200", statKey: "manaEarned",        target: 200, desc: "Earn 200 mana",                rewardMana: 0,  rewardGems: 15 },
-  { id: "d_oil20",   statKey: "oilEarned",         target: 20,  desc: "Collect 20 oil",               rewardMana: 0,  rewardGems: 10 },
-  { id: "d_squad2",  statKey: "multiUnitCommands", target: 1,   desc: "Command 2+ units together",    rewardMana: 20, rewardGems: 5  },
+  { id: "d_win1",    statKey: "battlesWon",        target: 1,   desc: "Win 1 battle",                rewardCoins: 40, rewardGems: 0  },
+  { id: "d_win2",    statKey: "battlesWon",        target: 2,   desc: "Win 2 battles",                rewardCoins: 60, rewardGems: 0  },
+  { id: "d_play1",   statKey: "battlesPlayed",     target: 1,   desc: "Play 1 battle",                rewardCoins: 15, rewardGems: 0  },
+  { id: "d_deploy3", statKey: "troopsDeployed",    target: 3,   desc: "Deploy 3 troops",              rewardCoins: 30, rewardGems: 0  },
+  { id: "d_deploy5", statKey: "troopsDeployed",    target: 5,   desc: "Deploy 5 troops",               rewardCoins: 45, rewardGems: 0  },
+  { id: "d_kill5",   statKey: "enemiesKilled",     target: 5,   desc: "Defeat 5 enemies",             rewardCoins: 35, rewardGems: 0  },
+  { id: "d_kill10",  statKey: "enemiesKilled",     target: 10,  desc: "Defeat 10 enemies",            rewardCoins: 50, rewardGems: 0  },
+  { id: "d_build1",  statKey: "structuresBuilt",   target: 1,   desc: "Build 1 structure",            rewardCoins: 25, rewardGems: 0  },
+  { id: "d_mana100", statKey: "manaEarned",        target: 100, desc: "Earn 100 mana",                rewardCoins: 0,  rewardGems: 10 },
+  { id: "d_mana200", statKey: "manaEarned",        target: 200, desc: "Earn 200 mana",                rewardCoins: 0,  rewardGems: 15 },
+  { id: "d_oil20",   statKey: "oilEarned",         target: 20,  desc: "Collect 20 oil",               rewardCoins: 0,  rewardGems: 10 },
+  { id: "d_squad2",  statKey: "multiUnitCommands", target: 1,   desc: "Command 2+ units together",    rewardCoins: 20, rewardGems: 5  },
 ];
 const DAILY_COUNT = 3;
 
@@ -84,25 +91,47 @@ export function getActiveDailyQuests() {
   return chosen;
 }
 
-// ── Weekly quests — harder, 9 per week (fits a 3x3 grid). Same 9 quests every
-// week (progress and claims still reset weekly) so returning players always
-// know what's on offer instead of a new set appearing each time.
-function buildWeekSet(w) {
-  const mult = 1 + (w - 1) * 0.4; // week 4 pays ~2.2x week 1
-  const R = (mana = 0, gems = 0) => ({ rewardMana: Math.round(mana * mult), rewardGems: Math.round(gems * mult) });
-  return [
-    { id: `w${w}_win`,     statKey: "battlesWon",        target: 2 * w + 1,   desc: `Win ${2 * w + 1} battles`,                ...R(150) },
-    { id: `w${w}_winbig`,  statKey: "battlesWon",        target: 3 * w + 2,   desc: `Win ${3 * w + 2} battles (Champion)`,     ...R(0, 40) },
-    { id: `w${w}_play`,    statKey: "battlesPlayed",     target: 4 * w + 3,   desc: `Play ${4 * w + 3} battles`,               ...R(90) },
-    { id: `w${w}_deploy`,  statKey: "troopsDeployed",    target: 10 * w + 5,  desc: `Deploy ${10 * w + 5} troops`,             ...R(120) },
-    { id: `w${w}_kill`,    statKey: "enemiesKilled",     target: 15 * w + 15, desc: `Defeat ${15 * w + 15} enemies`,           ...R(150) },
-    { id: `w${w}_mana`,    statKey: "manaEarned",        target: 300 * w + 200, desc: `Earn ${300 * w + 200} mana`,            ...R(0, 40) },
-    { id: `w${w}_oil`,     statKey: "oilEarned",         target: 50 * w + 50, desc: `Collect ${50 * w + 50} oil`,              ...R(0, 35) },
-    { id: `w${w}_build`,   statKey: "structuresBuilt",   target: 2 * w + 1,   desc: `Build ${2 * w + 1} structures`,           ...R(100) },
-    { id: `w${w}_squad`,   statKey: "multiUnitCommands", target: 3 * w + 2,   desc: `Issue ${3 * w + 2} group commands`,       ...R(90) },
-  ];
+// ── Weekly quests — 15 hard quests total, revealed cumulatively across a
+// 4-week cycle: week 2's quests are added on top of week 1's (nothing already
+// unlocked disappears), and so on through week 4. Once the cycle completes,
+// the whole pool is reshuffled into new week-buckets and progress resets.
+const WEEKLY_POOL = [
+  { id: "wk_win5",     statKey: "battlesWon",        target: 5,    desc: "Win 5 battles",               rewardCoins: 150, rewardGems: 0  },
+  { id: "wk_win10",    statKey: "battlesWon",        target: 10,   desc: "Win 10 battles (Champion)",   rewardCoins: 0,   rewardGems: 40 },
+  { id: "wk_play15",   statKey: "battlesPlayed",     target: 15,   desc: "Play 15 battles",             rewardCoins: 120, rewardGems: 0  },
+  { id: "wk_deploy30", statKey: "troopsDeployed",    target: 30,   desc: "Deploy 30 troops",            rewardCoins: 150, rewardGems: 0  },
+  { id: "wk_deploy60", statKey: "troopsDeployed",    target: 60,   desc: "Deploy 60 troops",            rewardCoins: 0,   rewardGems: 35 },
+  { id: "wk_kill50",   statKey: "enemiesKilled",     target: 50,   desc: "Defeat 50 enemies",           rewardCoins: 180, rewardGems: 0  },
+  { id: "wk_kill100",  statKey: "enemiesKilled",     target: 100,  desc: "Defeat 100 enemies (Slayer)", rewardCoins: 0,   rewardGems: 50 },
+  { id: "wk_mana1000", statKey: "manaEarned",        target: 1000, desc: "Earn 1000 mana",              rewardCoins: 0,   rewardGems: 45 },
+  { id: "wk_mana2000", statKey: "manaEarned",        target: 2000, desc: "Earn 2000 mana",              rewardCoins: 200, rewardGems: 0  },
+  { id: "wk_oil200",   statKey: "oilEarned",         target: 200,  desc: "Collect 200 oil",             rewardCoins: 0,   rewardGems: 35 },
+  { id: "wk_oil400",   statKey: "oilEarned",         target: 400,  desc: "Collect 400 oil",             rewardCoins: 220, rewardGems: 0  },
+  { id: "wk_build5",   statKey: "structuresBuilt",   target: 5,    desc: "Build 5 structures",          rewardCoins: 130, rewardGems: 0  },
+  { id: "wk_build10",  statKey: "structuresBuilt",   target: 10,   desc: "Build 10 structures",         rewardCoins: 0,   rewardGems: 30 },
+  { id: "wk_squad10",  statKey: "multiUnitCommands", target: 10,   desc: "Issue 10 group commands",     rewardCoins: 120, rewardGems: 0  },
+  { id: "wk_squad20",  statKey: "multiUnitCommands", target: 20,   desc: "Issue 20 group commands",     rewardCoins: 0,   rewardGems: 35 },
+];
+const WEEK_BUCKET_SIZES = [4, 4, 4, 3]; // 15 quests split across the 4 reveal-weeks
+
+function chunkBySizes(arr, sizes) {
+  const out = [];
+  let i = 0;
+  for (const n of sizes) { out.push(arr.slice(i, i + n)); i += n; }
+  return out;
 }
-export function getActiveWeeklyQuests() { return buildWeekSet(1); }
+
+// The 15 quests shuffled into 4 week-buckets for a given cycle — deterministic
+// per cycle so the grouping is stable across reloads and the same for everyone.
+function getWeekBuckets(cycleIdx) {
+  const shuffled = pickN(WEEKLY_POOL, WEEKLY_POOL.length, `weekly-cycle|${cycleIdx}`);
+  return chunkBySizes(shuffled, WEEK_BUCKET_SIZES);
+}
+
+export function getActiveWeeklyQuests() {
+  const buckets = getWeekBuckets(cycleIndex());
+  return buckets.slice(0, getActiveWeekIndex()).flat();
+}
 
 // ── Progress state (per user, resets on day/week rollover) ────────────────────
 const QS_KEY = (u) => `rpg_quest_state_${u}`;
@@ -111,9 +140,10 @@ function loadState(user) {
   let raw;
   try { raw = JSON.parse(localStorage.getItem(QS_KEY(user)) || "null"); } catch { raw = null; }
   if (!raw) raw = {};
-  const day = todayKey(), week = weekKey();
-  if (raw.day !== day)   { raw.day = day;   raw.dailyStats = {};  raw.dailyClaimed = [];  }
-  if (raw.week !== week) { raw.week = week; raw.weeklyStats = {}; raw.weeklyClaimed = []; }
+  const day = todayKey(), cycle = cycleKey();
+  if (raw.day !== day)     { raw.day = day;     raw.dailyStats = {};  raw.dailyClaimed = [];  }
+  // Weekly progress persists across all 4 weeks of a cycle — only a new cycle resets it.
+  if (raw.cycle !== cycle) { raw.cycle = cycle; raw.weeklyStats = {}; raw.weeklyClaimed = []; }
   raw.dailyStats    ||= {};
   raw.dailyClaimed  ||= [];
   raw.weeklyStats   ||= {};
@@ -149,8 +179,8 @@ export function claimDailyQuest(id) {
   if (!quest || (state.dailyStats[quest.statKey] || 0) < quest.target) return false;
   state.dailyClaimed.push(id);
   saveState(user, state);
-  if (quest.rewardMana) awardMana(quest.rewardMana);
-  if (quest.rewardGems) awardGems(quest.rewardGems);
+  if (quest.rewardCoins) awardCoins(quest.rewardCoins);
+  if (quest.rewardGems)  awardGems(quest.rewardGems);
   return true;
 }
 
@@ -163,8 +193,8 @@ export function claimWeeklyQuest(id) {
   if (!quest || (state.weeklyStats[quest.statKey] || 0) < quest.target) return false;
   state.weeklyClaimed.push(id);
   saveState(user, state);
-  if (quest.rewardMana) awardMana(quest.rewardMana);
-  if (quest.rewardGems) awardGems(quest.rewardGems);
+  if (quest.rewardCoins) awardCoins(quest.rewardCoins);
+  if (quest.rewardGems)  awardGems(quest.rewardGems);
   return true;
 }
 
@@ -172,13 +202,13 @@ export function claimWeeklyQuest(id) {
 const DR_KEY = (u) => `rpg_daily_reward_${u}`;
 
 export const DAILY_REWARD_TIERS = [
-  { day: 1, mana: 20,  gems: 0,  oil: 0  },
-  { day: 2, mana: 30,  gems: 0,  oil: 10 },
-  { day: 3, mana: 0,   gems: 5,  oil: 15 },
-  { day: 4, mana: 50,  gems: 0,  oil: 0  },
-  { day: 5, mana: 0,   gems: 8,  oil: 20 },
-  { day: 6, mana: 80,  gems: 0,  oil: 0  },
-  { day: 7, mana: 150, gems: 25, oil: 30 },
+  { day: 1, coins: 20,  gems: 0  },
+  { day: 2, coins: 30,  gems: 0  },
+  { day: 3, coins: 0,   gems: 5  },
+  { day: 4, coins: 50,  gems: 0  },
+  { day: 5, coins: 0,   gems: 8  },
+  { day: 6, coins: 80,  gems: 0  },
+  { day: 7, coins: 150, gems: 25 },
 ];
 
 function loadDailyReward(user) {
@@ -219,25 +249,9 @@ export function claimDailyReward() {
   state.lastClaim = todayKey();
   saveDailyReward(user, state);
   const { tier } = status;
-  if (tier.mana) awardMana(tier.mana);
-  if (tier.gems) awardGems(tier.gems);
-  if (tier.oil)  awardOil(tier.oil);
+  if (tier.coins) awardCoins(tier.coins);
+  if (tier.gems)  awardGems(tier.gems);
   return tier;
-}
-
-// ── Badge count for nav UI ─────────────────────────────────────────────────────
-export function getClaimableCount() {
-  const user = currentUser();
-  if (!user) return 0;
-  const state = loadState(user);
-  const daily = getActiveDailyQuests().filter(
-    (q) => !state.dailyClaimed.includes(q.id) && (state.dailyStats[q.statKey] || 0) >= q.target
-  ).length;
-  const weekly = getActiveWeeklyQuests().filter(
-    (q) => !state.weeklyClaimed.includes(q.id) && (state.weeklyStats[q.statKey] || 0) >= q.target
-  ).length;
-  const reward = getDailyRewardStatus();
-  return daily + weekly + (reward && !reward.claimedToday ? 1 : 0);
 }
 
 // ── Reset countdown helpers for UI ─────────────────────────────────────────────

@@ -9,8 +9,7 @@ import {
 } from "../data/quests";
 
 // Self-contained daily/weekly quest list — reads its own progress, claims its
-// own rewards, and refreshes on "rpg_quests_updated". Used both inline on the
-// home screen and inside QuestsModal so the two never drift apart.
+// own rewards, and refreshes on "rpg_quests_updated". Rendered inline on the home screen.
 export default function QuestPanel({ type }) {
   const isDaily = type === "daily";
   // Both the quest selection and progress are seeded/keyed off localStorage (the
@@ -37,13 +36,17 @@ export default function QuestPanel({ type }) {
 
   const stats       = (isDaily ? state?.dailyStats   : state?.weeklyStats)   || {};
   const claimed     = (isDaily ? state?.dailyClaimed : state?.weeklyClaimed) || [];
-  const resetLabel  = isDaily ? `Resets in ${hoursUntilDailyReset()}h` : `New set in ${daysUntilWeeklyReset()}d`;
   const weekIdx     = getActiveWeekIndex();
+  const resetLabel  = isDaily
+    ? `Resets in ${hoursUntilDailyReset()}h`
+    : weekIdx < 4
+      ? `More unlock in ${daysUntilWeeklyReset()}d`
+      : `New cycle in ${daysUntilWeeklyReset()}d`;
 
   function handleClaim(q) {
     const ok = isDaily ? claimDailyQuest(q.id) : claimWeeklyQuest(q.id);
     if (ok) {
-      setFlash(`+${q.rewardMana || 0}💜${q.rewardGems ? ` +${q.rewardGems}💎` : ""}`);
+      setFlash(`+${q.rewardCoins || 0}💰${q.rewardGems ? ` +${q.rewardGems}💎` : ""}`);
       setTimeout(() => setFlash(null), 1600);
     }
   }
@@ -53,7 +56,7 @@ export default function QuestPanel({ type }) {
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-white font-black text-sm flex items-center gap-1.5 whitespace-nowrap">
           {isDaily ? "📅 Daily Quests" : "🗓️ Weekly Quests"}
-          {!isDaily && <span className="text-amber-400 text-[10px] font-bold bg-amber-950 border border-amber-800 rounded-full px-1.5 py-0.5">Week {weekIdx}</span>}
+          {!isDaily && <span className="text-amber-400 text-[10px] font-bold bg-amber-950 border border-amber-800 rounded-full px-1.5 py-0.5">Week {weekIdx}/4</span>}
         </h3>
         <span className="text-zinc-600 text-[9px] font-semibold shrink-0">{resetLabel}</span>
       </div>
@@ -83,7 +86,7 @@ export default function QuestPanel({ type }) {
                 />
               </div>
               <p className="text-zinc-500 text-[9px]">
-                {progress}/{q.target} · +{q.rewardMana || 0}💜{q.rewardGems ? ` +${q.rewardGems}💎` : ""}
+                {progress}/{q.target} · +{q.rewardCoins || 0}💰{q.rewardGems ? ` +${q.rewardGems}💎` : ""}
               </p>
               <button
                 onClick={() => handleClaim(q)}

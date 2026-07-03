@@ -4,8 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import ReportBugModal from "./modals/ReportBugModal";
 import SuggestionModal from "./modals/SuggestionModal";
 import AdminApplicationModal from "./modals/AdminApplicationModal";
-import QuestsModal from "./modals/QuestsModal";
-import { getClaimableCount } from "../data/quests";
+import ShopModal from "./modals/ShopModal";
 
 const XP_MAX = 1000;
 
@@ -43,7 +42,6 @@ export default function Navbar({ onAdmin }) {
   const [xp]                        = useState(0);
   const [lockerOpen, setLockerOpen] = useState(false);
   const [modal,      setModal]      = useState(null);
-  const [claimable,  setClaimable]  = useState(0);
   const lockerRef    = useRef(null);
   const sessionStart = useRef(Date.now());
 
@@ -53,7 +51,6 @@ export default function Navbar({ onAdmin }) {
     setGems(readGems(u));
     setKills(readKills(u));
     setOnlineTime(readOnlineTime(u));
-    setClaimable(getClaimableCount());
   }
 
   useEffect(() => {
@@ -62,15 +59,12 @@ export default function Navbar({ onAdmin }) {
 
     const onProfile  = () => { const u2 = localStorage.getItem("rpg_username"); if (u2) loadUser(u2); };
     const onCurrency = () => { const u2 = localStorage.getItem("rpg_username"); if (u2) { setCoins(readCoins(u2)); setGems(readGems(u2)); } };
-    const onQuests   = () => setClaimable(getClaimableCount());
 
     window.addEventListener("rpg_profile_updated",  onProfile);
     window.addEventListener("rpg_currency_updated", onCurrency);
-    window.addEventListener("rpg_quests_updated",   onQuests);
     return () => {
       window.removeEventListener("rpg_profile_updated",  onProfile);
       window.removeEventListener("rpg_currency_updated", onCurrency);
-      window.removeEventListener("rpg_quests_updated",   onQuests);
     };
   }, []);
 
@@ -151,19 +145,14 @@ export default function Navbar({ onAdmin }) {
 
             <div className="flex-1" />
 
-            {/* Quests & rewards */}
+            {/* Shop */}
             <button
-              onClick={() => setModal("quests")}
-              className="relative flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-indigo-500 rounded-full px-4 py-1.5 text-sm font-semibold transition-all"
-              title="Quests & daily rewards"
+              onClick={() => setModal("shop")}
+              className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-indigo-500 rounded-full px-4 py-1.5 text-sm font-semibold transition-all"
+              title="Shop"
             >
-              <span className="text-base">🎯</span>
-              <span className="text-zinc-300 hidden sm:inline">Quests</span>
-              {claimable > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                  {claimable}
-                </span>
-              )}
+              <span className="text-base">🛒</span>
+              <span className="text-zinc-300 hidden sm:inline">Shop</span>
             </button>
 
             {/* Locker button + dropdown */}
@@ -221,7 +210,7 @@ export default function Navbar({ onAdmin }) {
       {modal === "bug"        && <ReportBugModal        onClose={() => setModal(null)} />}
       {modal === "suggestion" && <SuggestionModal       onClose={() => setModal(null)} />}
       {modal === "admin"      && <AdminApplicationModal onClose={() => setModal(null)} />}
-      {modal === "quests"     && <QuestsModal            onClose={() => { setModal(null); setClaimable(getClaimableCount()); }} />}
+      {modal === "shop"       && <ShopModal             onClose={() => setModal(null)} />}
     </>
   );
 }

@@ -3,8 +3,10 @@ import { useState, useEffect } from "react";
 import MapEditor, { makeDefaultGrid } from "./MapEditor";
 
 const MODES = [
-  { id:'classic', name:'Classic', color:'#6366f1', icon:'⚔', desc:'Clear all enemy buildings.' },
-  { id:'endless', name:'Endless', color:'#16a34a', icon:'∞', desc:'Enemies storm from the right wall.' },
+  { id:'classic', name:'Classic', color:'#6366f1', icon:'⚔',  desc:'Clear all enemy buildings.' },
+  { id:'endless', name:'Endless', color:'#16a34a', icon:'∞',  desc:'Enemies storm from the right wall.' },
+  { id:'siege',   name:'Siege',   color:'#dc2626', icon:'🏯', desc:'Castle surrounded on every side.' },
+  { id:'turns',   name:'Turns',   color:'#0ea5e9', icon:'♟️', desc:'Turn-based tactics battlefield.' },
 ];
 
 const ACCOUNTS_KEY = 'rpg_accounts';

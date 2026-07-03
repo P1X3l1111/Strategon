@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { getDailyRewardStatus, claimDailyReward, DAILY_REWARD_TIERS } from "../data/quests";
 
-// Self-contained daily-login streak panel — mirrors QuestPanel's pattern so it
-// can sit inline on the home screen and inside QuestsModal without drifting.
+// Self-contained daily-login streak panel — mirrors QuestPanel's pattern.
+// Rendered inline on the home screen.
 export default function DailyRewardPanel() {
   const [reward, setReward] = useState(null);
   const [flash, setFlash] = useState(null);
@@ -58,7 +58,7 @@ export default function DailyRewardPanel() {
               }`}
             >
               <span className="text-[8px] uppercase font-bold text-zinc-500">D{tier.day}</span>
-              <span className="text-sm">{isDone ? "✅" : tier.gems ? "💎" : tier.oil && !tier.mana ? "🛢️" : "💜"}</span>
+              <span className="text-sm">{isDone ? "✅" : tier.gems ? "💎" : "💰"}</span>
             </div>
           );
         })}
