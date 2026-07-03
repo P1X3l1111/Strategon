@@ -95,14 +95,14 @@ export default function QuestPanel({ type }) {
         </div>
       )}
 
-      <div className={`grid grid-cols-3 gap-1.5 ${isDaily ? "" : "sm:grid-cols-5"}`}>
+      <div className="grid grid-cols-3 gap-1">
         {quests.map((q) => {
           const progress   = Math.min(stats[q.statKey] || 0, q.target);
           const isClaimed  = claimed.includes(q.id);
           const isComplete = progress >= q.target;
           const meta       = STAT_META[q.statKey];
           return (
-            <div key={q.id} className={`rounded-xl border p-1.5 flex flex-col gap-0.5 h-[88px] ${isClaimed ? "border-zinc-800 bg-zinc-900/40 opacity-50" : "border-zinc-700 bg-zinc-800/50"}`}>
+            <div key={q.id} className={`rounded-xl border p-1.5 flex flex-col gap-0.5 h-[78px] ${isClaimed ? "border-zinc-800 bg-zinc-900/40 opacity-50" : "border-zinc-700 bg-zinc-800/50"}`}>
               <div className="flex items-start gap-1.5">
                 <span className="text-sm shrink-0 leading-none">{meta?.icon || "⭐"}</span>
                 <p className="text-white text-[10px] font-bold leading-snug line-clamp-2">{q.desc}</p>
