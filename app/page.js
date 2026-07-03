@@ -127,22 +127,23 @@ export default function Home() {
 
       {!mode ? (
         /* ── Mode select ── */
-        <div className="flex-1 overflow-y-auto px-8 py-4">
+        <div className="flex-1 overflow-hidden px-8 py-4 flex">
           <OnboardingModal key={loginKey} />
 
-          <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-10 items-center">
+          <div className="w-full h-full grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-10 items-stretch">
 
-            {/* Quests — pinned fully to the left, Daily Reward sits above Daily Quests */}
-            <div className="flex justify-start order-2 lg:order-1 mt-12 lg:mt-0">
-              <div className="w-full max-w-[640px] flex flex-col gap-3">
+            {/* Quests — pinned fully to the left, Daily Reward sits above Daily Quests;
+                Weekly Quests grows to fill whatever height is left over. */}
+            <div className="flex justify-start order-2 lg:order-1 mt-12 lg:mt-0 h-full min-h-0">
+              <div className="w-full max-w-[640px] h-full flex flex-col gap-3 min-h-0">
                 <DailyRewardPanel />
                 <QuestPanel type="daily" />
-                <QuestPanel type="weekly" />
+                <QuestPanel type="weekly" fill />
               </div>
             </div>
 
-            {/* Modes — right half of the page, kept toward the left of that half */}
-            <div className="flex justify-start order-1 lg:order-2">
+            {/* Modes — right half of the page, kept toward the left of that half, centered vertically */}
+            <div className="flex justify-start items-center order-1 lg:order-2 h-full">
               <div className="flex flex-col items-center gap-8">
                 <div className="text-center">
                   <h1 className="text-5xl font-black text-white tracking-tight mb-2">MODES</h1>

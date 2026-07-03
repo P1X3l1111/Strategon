@@ -12,7 +12,9 @@ const WEEK_COUNT = 4;
 
 // Self-contained daily/weekly quest list — reads its own progress, claims its
 // own rewards, and refreshes on "rpg_quests_updated". Rendered inline on the home screen.
-export default function QuestPanel({ type }) {
+// `fill`: stretch to fill the remaining height of its flex column (used for
+// Weekly Quests so it grows on tall screens instead of staying pinned small).
+export default function QuestPanel({ type, fill = false }) {
   const isDaily = type === "daily";
   const weekIdx = getActiveWeekIndex(); // how many weeks are unlocked this cycle (1-4)
   // Both the quest selection and progress are seeded/keyed off localStorage (the
@@ -54,9 +56,11 @@ export default function QuestPanel({ type }) {
     }
   }
 
+  const rows = Math.ceil(quests.length / 3) || 1;
+
   return (
-    <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-3 flex flex-col gap-2 w-full">
-      <div className="flex items-center justify-between gap-2">
+    <div className={`bg-zinc-900 border border-zinc-700 rounded-2xl p-4 flex flex-col gap-3 w-full ${fill ? "flex-1 min-h-0" : "shrink-0"}`}>
+      <div className="flex items-center justify-between gap-2 shrink-0">
         <h3 className="text-white font-black text-sm flex items-center gap-1.5 whitespace-nowrap">
           {isDaily ? "📅 Daily Quests" : "🗓️ Weekly Quests"}
         </h3>
@@ -65,7 +69,7 @@ export default function QuestPanel({ type }) {
 
       {/* Week tabs — a button per week, highlighted once that week has unlocked */}
       {!isDaily && (
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0">
           {Array.from({ length: WEEK_COUNT }, (_, i) => i + 1).map((w) => {
             const unlocked = w <= weekIdx;
             const isSelected = w === selectedWeek;
@@ -74,7 +78,7 @@ export default function QuestPanel({ type }) {
                 key={w}
                 onClick={() => unlocked && setSelectedWeek(w)}
                 disabled={!unlocked}
-                className={`flex-1 py-1 rounded-lg text-[11px] font-bold border transition-all ${
+                className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all ${
                   !unlocked
                     ? "border-zinc-800 text-zinc-600 bg-zinc-900/40 cursor-not-allowed"
                     : isSelected
@@ -90,36 +94,39 @@ export default function QuestPanel({ type }) {
       )}
 
       {flash && (
-        <div className="bg-green-900/60 border border-green-700 text-green-300 text-[11px] font-bold rounded-lg px-2 py-1 text-center">
+        <div className="bg-green-900/60 border border-green-700 text-green-300 text-[11px] font-bold rounded-lg px-2 py-1 text-center shrink-0">
           {flash}
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-1">
+      <div
+        className={`grid grid-cols-3 gap-2.5 ${fill ? "flex-1 min-h-0" : ""}`}
+        style={fill ? { gridTemplateRows: `repeat(${rows}, minmax(60px, 1fr))` } : undefined}
+      >
         {quests.map((q) => {
           const progress   = Math.min(stats[q.statKey] || 0, q.target);
           const isClaimed  = claimed.includes(q.id);
           const isComplete = progress >= q.target;
           const meta       = STAT_META[q.statKey];
           return (
-            <div key={q.id} className={`rounded-xl border p-1.5 flex flex-col gap-0.5 h-[78px] ${isClaimed ? "border-zinc-800 bg-zinc-900/40 opacity-50" : "border-zinc-700 bg-zinc-800/50"}`}>
+            <div key={q.id} className={`rounded-xl border p-3 flex flex-col gap-1.5 overflow-hidden ${fill ? "h-full" : "h-[110px]"} ${isClaimed ? "border-zinc-800 bg-zinc-900/40 opacity-50" : "border-zinc-700 bg-zinc-800/50"}`}>
               <div className="flex items-start gap-1.5">
-                <span className="text-sm shrink-0 leading-none">{meta?.icon || "⭐"}</span>
-                <p className="text-white text-[10px] font-bold leading-snug line-clamp-2">{q.desc}</p>
+                <span className="text-lg shrink-0 leading-none">{meta?.icon || "⭐"}</span>
+                <p className="text-white text-[11px] font-bold leading-snug line-clamp-2">{q.desc}</p>
               </div>
-              <div className="h-1 bg-zinc-700 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-zinc-700 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-300 ${isComplete ? "bg-green-500" : "bg-indigo-500"}`}
                   style={{ width: `${Math.max(0, (progress / q.target) * 100)}%` }}
                 />
               </div>
-              <p className="text-zinc-500 text-[8px]">
+              <p className="text-zinc-500 text-[9px]">
                 {progress}/{q.target} · +{q.rewardCoins || 0}💰{q.rewardGems ? ` +${q.rewardGems}💎` : ""}
               </p>
               <button
                 onClick={() => handleClaim(q)}
                 disabled={!isComplete || isClaimed}
-                className={`mt-auto w-full py-1 rounded-lg text-[9px] font-bold transition-all active:scale-95 ${
+                className={`mt-auto w-full py-1.5 rounded-lg text-[10px] font-bold transition-all active:scale-95 ${
                   isClaimed
                     ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
                     : isComplete

@@ -34,7 +34,7 @@ export default function DailyRewardPanel() {
   const cyclePos = (reward.nextStreak - 1) % 7; // 0-indexed slot about to be claimed/just claimed
 
   return (
-    <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-3 flex flex-col gap-2 w-full">
+    <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-3 flex flex-col gap-2 w-full shrink-0">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-white font-black text-sm whitespace-nowrap">🎁 Daily Reward</h3>
         <span className="text-amber-300 text-xs font-bold flex items-center gap-1 shrink-0">🔥 {reward.streak}-day streak</span>
