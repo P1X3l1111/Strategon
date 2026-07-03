@@ -91,28 +91,89 @@ export function getActiveDailyQuests() {
   return chosen;
 }
 
-// ── Weekly quests — 15 hard quests total, revealed cumulatively across a
-// 4-week cycle: week 2's quests are added on top of week 1's (nothing already
-// unlocked disappears), and so on through week 4. Once the cycle completes,
-// the whole pool is reshuffled into new week-buckets and progress resets.
+// ── Weekly quests — 15 hard quests per week, 60 total across a 4-week cycle.
+// Each week's 15 are revealed on top of the previous weeks' (nothing already
+// unlocked disappears), so by week 4 all 60 are visible at once. Once the
+// cycle completes, the whole pool is reshuffled into new week-buckets and
+// progress resets.
 const WEEKLY_POOL = [
-  { id: "wk_win5",     statKey: "battlesWon",        target: 5,    desc: "Win 5 battles",               rewardCoins: 150, rewardGems: 0  },
-  { id: "wk_win10",    statKey: "battlesWon",        target: 10,   desc: "Win 10 battles (Champion)",   rewardCoins: 0,   rewardGems: 40 },
-  { id: "wk_play15",   statKey: "battlesPlayed",     target: 15,   desc: "Play 15 battles",             rewardCoins: 120, rewardGems: 0  },
-  { id: "wk_deploy30", statKey: "troopsDeployed",    target: 30,   desc: "Deploy 30 troops",            rewardCoins: 150, rewardGems: 0  },
-  { id: "wk_deploy60", statKey: "troopsDeployed",    target: 60,   desc: "Deploy 60 troops",            rewardCoins: 0,   rewardGems: 35 },
-  { id: "wk_kill50",   statKey: "enemiesKilled",     target: 50,   desc: "Defeat 50 enemies",           rewardCoins: 180, rewardGems: 0  },
-  { id: "wk_kill100",  statKey: "enemiesKilled",     target: 100,  desc: "Defeat 100 enemies (Slayer)", rewardCoins: 0,   rewardGems: 50 },
-  { id: "wk_mana1000", statKey: "manaEarned",        target: 1000, desc: "Earn 1000 mana",              rewardCoins: 0,   rewardGems: 45 },
-  { id: "wk_mana2000", statKey: "manaEarned",        target: 2000, desc: "Earn 2000 mana",              rewardCoins: 200, rewardGems: 0  },
-  { id: "wk_oil200",   statKey: "oilEarned",         target: 200,  desc: "Collect 200 oil",             rewardCoins: 0,   rewardGems: 35 },
-  { id: "wk_oil400",   statKey: "oilEarned",         target: 400,  desc: "Collect 400 oil",             rewardCoins: 220, rewardGems: 0  },
-  { id: "wk_build5",   statKey: "structuresBuilt",   target: 5,    desc: "Build 5 structures",          rewardCoins: 130, rewardGems: 0  },
-  { id: "wk_build10",  statKey: "structuresBuilt",   target: 10,   desc: "Build 10 structures",         rewardCoins: 0,   rewardGems: 30 },
-  { id: "wk_squad10",  statKey: "multiUnitCommands", target: 10,   desc: "Issue 10 group commands",     rewardCoins: 120, rewardGems: 0  },
-  { id: "wk_squad20",  statKey: "multiUnitCommands", target: 20,   desc: "Issue 20 group commands",     rewardCoins: 0,   rewardGems: 35 },
+  // battlesWon
+  { id: "wk_win5",   statKey: "battlesWon", target: 5,  desc: "Win 5 battles",               rewardCoins: 150, rewardGems: 0  },
+  { id: "wk_win8",   statKey: "battlesWon", target: 8,  desc: "Win 8 battles",               rewardCoins: 0,   rewardGems: 30 },
+  { id: "wk_win10",  statKey: "battlesWon", target: 10, desc: "Win 10 battles (Champion)",   rewardCoins: 220, rewardGems: 0  },
+  { id: "wk_win12",  statKey: "battlesWon", target: 12, desc: "Win 12 battles",              rewardCoins: 0,   rewardGems: 40 },
+  { id: "wk_win15",  statKey: "battlesWon", target: 15, desc: "Win 15 battles",              rewardCoins: 280, rewardGems: 0  },
+  { id: "wk_win18",  statKey: "battlesWon", target: 18, desc: "Win 18 battles",              rewardCoins: 0,   rewardGems: 55 },
+  { id: "wk_win20",  statKey: "battlesWon", target: 20, desc: "Win 20 battles (Warlord)",    rewardCoins: 340, rewardGems: 0  },
+  { id: "wk_win25",  statKey: "battlesWon", target: 25, desc: "Win 25 battles",              rewardCoins: 0,   rewardGems: 70 },
+
+  // battlesPlayed
+  { id: "wk_play10", statKey: "battlesPlayed", target: 10, desc: "Play 10 battles",          rewardCoins: 120, rewardGems: 0  },
+  { id: "wk_play15", statKey: "battlesPlayed", target: 15, desc: "Play 15 battles",          rewardCoins: 0,   rewardGems: 25 },
+  { id: "wk_play20", statKey: "battlesPlayed", target: 20, desc: "Play 20 battles",          rewardCoins: 180, rewardGems: 0  },
+  { id: "wk_play25", statKey: "battlesPlayed", target: 25, desc: "Play 25 battles",          rewardCoins: 0,   rewardGems: 35 },
+  { id: "wk_play30", statKey: "battlesPlayed", target: 30, desc: "Play 30 battles",          rewardCoins: 240, rewardGems: 0  },
+  { id: "wk_play35", statKey: "battlesPlayed", target: 35, desc: "Play 35 battles",          rewardCoins: 0,   rewardGems: 45 },
+  { id: "wk_play40", statKey: "battlesPlayed", target: 40, desc: "Play 40 battles",          rewardCoins: 300, rewardGems: 0  },
+
+  // troopsDeployed
+  { id: "wk_deploy20",  statKey: "troopsDeployed", target: 20,  desc: "Deploy 20 troops",             rewardCoins: 130, rewardGems: 0  },
+  { id: "wk_deploy30",  statKey: "troopsDeployed", target: 30,  desc: "Deploy 30 troops",             rewardCoins: 0,   rewardGems: 25 },
+  { id: "wk_deploy40",  statKey: "troopsDeployed", target: 40,  desc: "Deploy 40 troops",             rewardCoins: 170, rewardGems: 0  },
+  { id: "wk_deploy50",  statKey: "troopsDeployed", target: 50,  desc: "Deploy 50 troops",             rewardCoins: 0,   rewardGems: 35 },
+  { id: "wk_deploy60",  statKey: "troopsDeployed", target: 60,  desc: "Deploy 60 troops",             rewardCoins: 210, rewardGems: 0  },
+  { id: "wk_deploy80",  statKey: "troopsDeployed", target: 80,  desc: "Deploy 80 troops",             rewardCoins: 0,   rewardGems: 45 },
+  { id: "wk_deploy100", statKey: "troopsDeployed", target: 100, desc: "Deploy 100 troops",            rewardCoins: 260, rewardGems: 0  },
+  { id: "wk_deploy120", statKey: "troopsDeployed", target: 120, desc: "Deploy 120 troops (Quartermaster)", rewardCoins: 0, rewardGems: 60 },
+
+  // enemiesKilled
+  { id: "wk_kill30",  statKey: "enemiesKilled", target: 30,  desc: "Defeat 30 enemies",            rewardCoins: 160, rewardGems: 0  },
+  { id: "wk_kill50",  statKey: "enemiesKilled", target: 50,  desc: "Defeat 50 enemies",            rewardCoins: 0,   rewardGems: 30 },
+  { id: "wk_kill75",  statKey: "enemiesKilled", target: 75,  desc: "Defeat 75 enemies",            rewardCoins: 210, rewardGems: 0  },
+  { id: "wk_kill100", statKey: "enemiesKilled", target: 100, desc: "Defeat 100 enemies (Slayer)",  rewardCoins: 0,   rewardGems: 45 },
+  { id: "wk_kill125", statKey: "enemiesKilled", target: 125, desc: "Defeat 125 enemies",           rewardCoins: 260, rewardGems: 0  },
+  { id: "wk_kill150", statKey: "enemiesKilled", target: 150, desc: "Defeat 150 enemies",           rewardCoins: 0,   rewardGems: 55 },
+  { id: "wk_kill175", statKey: "enemiesKilled", target: 175, desc: "Defeat 175 enemies",           rewardCoins: 310, rewardGems: 0  },
+  { id: "wk_kill200", statKey: "enemiesKilled", target: 200, desc: "Defeat 200 enemies (Warmonger)", rewardCoins: 0, rewardGems: 70 },
+
+  // manaEarned
+  { id: "wk_mana500",  statKey: "manaEarned", target: 500,  desc: "Earn 500 mana",   rewardCoins: 140, rewardGems: 0  },
+  { id: "wk_mana1000", statKey: "manaEarned", target: 1000, desc: "Earn 1000 mana",  rewardCoins: 0,   rewardGems: 30 },
+  { id: "wk_mana1500", statKey: "manaEarned", target: 1500, desc: "Earn 1500 mana",  rewardCoins: 190, rewardGems: 0  },
+  { id: "wk_mana2000", statKey: "manaEarned", target: 2000, desc: "Earn 2000 mana",  rewardCoins: 0,   rewardGems: 40 },
+  { id: "wk_mana2500", statKey: "manaEarned", target: 2500, desc: "Earn 2500 mana",  rewardCoins: 240, rewardGems: 0  },
+  { id: "wk_mana3000", statKey: "manaEarned", target: 3000, desc: "Earn 3000 mana",  rewardCoins: 0,   rewardGems: 50 },
+  { id: "wk_mana4000", statKey: "manaEarned", target: 4000, desc: "Earn 4000 mana",  rewardCoins: 300, rewardGems: 0  },
+
+  // oilEarned
+  { id: "wk_oil100", statKey: "oilEarned", target: 100, desc: "Collect 100 oil", rewardCoins: 130, rewardGems: 0  },
+  { id: "wk_oil200", statKey: "oilEarned", target: 200, desc: "Collect 200 oil", rewardCoins: 0,   rewardGems: 25 },
+  { id: "wk_oil300", statKey: "oilEarned", target: 300, desc: "Collect 300 oil", rewardCoins: 170, rewardGems: 0  },
+  { id: "wk_oil400", statKey: "oilEarned", target: 400, desc: "Collect 400 oil", rewardCoins: 0,   rewardGems: 35 },
+  { id: "wk_oil500", statKey: "oilEarned", target: 500, desc: "Collect 500 oil", rewardCoins: 210, rewardGems: 0  },
+  { id: "wk_oil600", statKey: "oilEarned", target: 600, desc: "Collect 600 oil", rewardCoins: 0,   rewardGems: 45 },
+  { id: "wk_oil800", statKey: "oilEarned", target: 800, desc: "Collect 800 oil", rewardCoins: 270, rewardGems: 0  },
+
+  // structuresBuilt
+  { id: "wk_build3",  statKey: "structuresBuilt", target: 3,  desc: "Build 3 structures",             rewardCoins: 110, rewardGems: 0  },
+  { id: "wk_build5",  statKey: "structuresBuilt", target: 5,  desc: "Build 5 structures",             rewardCoins: 0,   rewardGems: 20 },
+  { id: "wk_build7",  statKey: "structuresBuilt", target: 7,  desc: "Build 7 structures",             rewardCoins: 150, rewardGems: 0  },
+  { id: "wk_build10", statKey: "structuresBuilt", target: 10, desc: "Build 10 structures",            rewardCoins: 0,   rewardGems: 30 },
+  { id: "wk_build12", statKey: "structuresBuilt", target: 12, desc: "Build 12 structures",            rewardCoins: 190, rewardGems: 0  },
+  { id: "wk_build15", statKey: "structuresBuilt", target: 15, desc: "Build 15 structures",            rewardCoins: 0,   rewardGems: 40 },
+  { id: "wk_build18", statKey: "structuresBuilt", target: 18, desc: "Build 18 structures",            rewardCoins: 230, rewardGems: 0  },
+  { id: "wk_build20", statKey: "structuresBuilt", target: 20, desc: "Build 20 structures (Engineer)", rewardCoins: 0,   rewardGems: 50 },
+
+  // multiUnitCommands
+  { id: "wk_squad5",  statKey: "multiUnitCommands", target: 5,  desc: "Issue 5 group commands",             rewardCoins: 100, rewardGems: 0  },
+  { id: "wk_squad10", statKey: "multiUnitCommands", target: 10, desc: "Issue 10 group commands",            rewardCoins: 0,   rewardGems: 20 },
+  { id: "wk_squad15", statKey: "multiUnitCommands", target: 15, desc: "Issue 15 group commands",            rewardCoins: 150, rewardGems: 0  },
+  { id: "wk_squad20", statKey: "multiUnitCommands", target: 20, desc: "Issue 20 group commands",            rewardCoins: 0,   rewardGems: 30 },
+  { id: "wk_squad25", statKey: "multiUnitCommands", target: 25, desc: "Issue 25 group commands",            rewardCoins: 200, rewardGems: 0  },
+  { id: "wk_squad30", statKey: "multiUnitCommands", target: 30, desc: "Issue 30 group commands",            rewardCoins: 0,   rewardGems: 40 },
+  { id: "wk_squad40", statKey: "multiUnitCommands", target: 40, desc: "Issue 40 group commands (Tactician)", rewardCoins: 260, rewardGems: 0 },
 ];
-const WEEK_BUCKET_SIZES = [4, 4, 4, 3]; // 15 quests split across the 4 reveal-weeks
+const WEEK_BUCKET_SIZES = [15, 15, 15, 15]; // 60 quests split evenly across the 4 reveal-weeks
 
 function chunkBySizes(arr, sizes) {
   const out = [];
