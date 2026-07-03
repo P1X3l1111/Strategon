@@ -149,25 +149,34 @@ export default function Home() {
                   <p className="text-zinc-500 text-sm">Choose a battle mode to deploy your forces</p>
                 </div>
 
-                {/* Classic and Campaign are the two default/primary modes, shown side by side;
-                    Siege and Turns follow in their own row; Endless spans the full width as a line. */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-2xl">
-                  <ModeCard m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} />
+                {/* Row 1: Classic and Campaign are the two default/primary modes, shown side by side.
+                    Row 2: Endless spans the full width as a line.
+                    Row 3: every other mode, evenly sized as if there were 3 columns — if there are
+                    fewer than 3, they stay centered instead of stretching to fill the row. */}
+                <div className="flex flex-col gap-5 w-full max-w-2xl">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <ModeCard m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} />
 
-                  <button
-                    onClick={() => setView("campaign")}
-                    className="group relative flex flex-col items-center justify-center gap-3 text-center border rounded-2xl p-6 h-56 transition-all duration-200 shadow-xl overflow-hidden bg-gradient-to-br from-zinc-900 to-amber-950/30 border-amber-800/60 hover:border-amber-500 hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98] cursor-pointer"
-                  >
-                    <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: "#f59e0b" }} />
-                    <span className="text-6xl">🎖️</span>
-                    <span className="text-white font-black text-2xl">Campaign</span>
-                    <span className="text-zinc-400 text-sm leading-snug px-2">Win scripted missions — some require capturing enemy troops alive.</span>
-                  </button>
-
-                  <ModeCard m={MODES.find(m => m.id === "siege")} isReady={isModeReady("siege", mapStatus)} onClick={() => enterGame("siege")} />
-                  <ModeCard m={MODES.find(m => m.id === "turns")} isReady={isModeReady("turns", mapStatus)} onClick={() => enterGame("turns")} />
+                    <button
+                      onClick={() => setView("campaign")}
+                      className="group relative flex flex-col items-center justify-center gap-3 text-center border rounded-2xl p-6 h-56 transition-all duration-200 shadow-xl overflow-hidden bg-gradient-to-br from-zinc-900 to-amber-950/30 border-amber-800/60 hover:border-amber-500 hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98] cursor-pointer"
+                    >
+                      <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: "#f59e0b" }} />
+                      <span className="text-6xl">🎖️</span>
+                      <span className="text-white font-black text-2xl">Campaign</span>
+                      <span className="text-zinc-400 text-sm leading-snug px-2">Win scripted missions — some require capturing enemy troops alive.</span>
+                    </button>
+                  </div>
 
                   <ModeLine m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} />
+
+                  <div className="flex flex-wrap justify-center gap-5">
+                    {MODES.filter(m => m.id !== "classic" && m.id !== "endless").map(m => (
+                      <div key={m.id} className="w-full sm:w-[calc((100%-2.5rem)/3)] flex-none">
+                        <ModeCard m={m} isReady={isModeReady(m.id, mapStatus)} onClick={() => enterGame(m.id)} />
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <p className="text-zinc-700 text-xs text-center">
