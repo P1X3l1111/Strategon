@@ -27,6 +27,10 @@ export default function Home() {
   const [currentUser, setCurrentUser] = useState(null);
   // null = not yet checked (avoids hydration mismatch)
   const [mapStatus, setMapStatus] = useState(null);
+  // Lifted up so the home screen's Profile/Shop/Commanders shortcut cards can
+  // trigger the same navbar modal/dropdown as the navbar's own buttons.
+  const [navModal,       setNavModal]       = useState(null);
+  const [navLockerOpen,  setNavLockerOpen]  = useState(false);
 
   // After mount: seed missing maps (including campaign's shared battlefield) with default terrain, then read status
   useEffect(() => {
@@ -123,28 +127,34 @@ export default function Home() {
   return (
     <div className="bg-zinc-950 h-screen overflow-hidden flex flex-col">
       {/* Navbar only on home */}
-      {!mode && <Navbar onAdmin={() => setView("admin")} />}
+      {!mode && (
+        <Navbar
+          onAdmin={() => setView("admin")}
+          modal={navModal} setModal={setNavModal}
+          lockerOpen={navLockerOpen} setLockerOpen={setNavLockerOpen}
+        />
+      )}
 
       {!mode ? (
-        /* ── Mode select ── */
+        /* ── Mode select — 3 columns: Quests | Modes (centered) | Profile/Shop/Commanders ── */
         <div className="flex-1 overflow-hidden px-8 py-4 flex">
           <OnboardingModal key={loginKey} />
 
-          <div className="w-full h-full grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-10 items-stretch">
+          <div className="w-full h-full flex flex-col lg:flex-row gap-6 items-stretch">
 
-            {/* Quests — pinned fully to the left, Daily Reward sits above Daily Quests;
-                Weekly Quests grows to fill whatever height is left over. */}
-            <div className="flex justify-start order-2 lg:order-1 mt-12 lg:mt-0 h-full min-h-0">
-              <div className="w-full max-w-[640px] h-full flex flex-col gap-3 min-h-0">
+            {/* Quests — Daily Reward sits above Daily Quests; Weekly Quests grows to
+                fill whatever height is left over. */}
+            <div className="flex justify-start mt-12 lg:mt-0 h-full min-h-0 lg:flex-1 lg:max-w-[420px]">
+              <div className="w-full h-full flex flex-col gap-3 min-h-0">
                 <DailyRewardPanel />
                 <QuestPanel type="daily" />
                 <QuestPanel type="weekly" fill />
               </div>
             </div>
 
-            {/* Modes — right half of the page, kept toward the left of that half, centered vertically */}
-            <div className="flex justify-start items-center order-1 lg:order-2 h-full">
-              <div className="flex flex-col items-center gap-8">
+            {/* Modes — centered in the middle column, the widest section */}
+            <div className="flex justify-center items-center h-full lg:flex-[1.6] min-w-0">
+              <div className="flex flex-col items-center gap-8 w-full max-w-2xl">
                 <div className="text-center">
                   <h1 className="text-5xl font-black text-white tracking-tight mb-2">MODES</h1>
                   <p className="text-zinc-500 text-sm">Choose a battle mode to deploy your forces</p>
@@ -152,8 +162,7 @@ export default function Home() {
 
                 {/* Row 1: Classic and Campaign are the two default/primary modes, shown side by side.
                     Row 2: Endless spans the full width as a line.
-                    Row 3: every other mode, evenly sized as if there were 3 columns — if there are
-                    fewer than 3, they stay centered instead of stretching to fill the row. */}
+                    Row 3: every other mode plus an "Other" placeholder, evenly split into 3 columns. */}
                 <div className="flex flex-col gap-5 w-full max-w-2xl">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <ModeCard m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} />
@@ -171,12 +180,11 @@ export default function Home() {
 
                   <ModeLine m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} />
 
-                  <div className="flex flex-wrap justify-center gap-5">
+                  <div className="grid grid-cols-3 gap-5">
                     {MODES.filter(m => m.id !== "classic" && m.id !== "endless").map(m => (
-                      <div key={m.id} className="w-full sm:w-[calc((100%-1.25rem)/2)] flex-none">
-                        <ModeCard m={m} isReady={isModeReady(m.id, mapStatus)} onClick={() => enterGame(m.id)} compact />
-                      </div>
+                      <ModeCard key={m.id} m={m} isReady={isModeReady(m.id, mapStatus)} onClick={() => enterGame(m.id)} compact />
                     ))}
+                    <OtherModeCard />
                   </div>
                 </div>
 
@@ -184,6 +192,13 @@ export default function Home() {
                   100 mana · 50 oil starting resources · Place a Factory to generate mana per second
                 </p>
               </div>
+            </div>
+
+            {/* Profile / Shop / Commanders — quick-access shortcut cards */}
+            <div className="flex flex-col gap-4 h-full lg:w-[260px] lg:flex-none">
+              <SideCard onClick={() => setNavLockerOpen(o => !o)} icon="🔒" label="Profile" caret={navLockerOpen} />
+              <SideCard onClick={() => setNavModal("shop")} icon="🛒" label="Shop" />
+              <SideCard onClick={() => setNavModal("generals")} icon="⭐" label="Commanders" />
             </div>
           </div>
         </div>
@@ -236,6 +251,35 @@ function ModeCard({ m, isReady, onClick, compact = false }) {
           {isReady ? m.desc : "Admin must create a map for this mode."}
         </span>
       )}
+    </button>
+  );
+}
+
+// A placeholder tile completing Row 3's 3-column split until a real third mode exists.
+function OtherModeCard() {
+  return (
+    <div className="flex flex-col items-center justify-center text-center gap-1.5 border border-dashed border-zinc-800 rounded-2xl p-3 h-28 bg-zinc-900/20">
+      <span className="text-3xl text-zinc-700 font-black">＋</span>
+      <span className="text-zinc-600 font-bold text-sm">Other</span>
+      <span className="text-zinc-700 text-[10px]">More modes soon</span>
+    </div>
+  );
+}
+
+// Big quick-access shortcut card for the right column (Profile / Shop / Commanders).
+function SideCard({ onClick, icon, label, caret }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex-1 flex items-center justify-center bg-zinc-900 border border-zinc-700 hover:border-indigo-500 hover:bg-zinc-800 rounded-2xl transition-all"
+    >
+      <span className="flex items-center gap-2 bg-zinc-800 border border-zinc-700 rounded-full px-4 py-1.5 text-sm font-semibold">
+        <span className="text-base">{icon}</span>
+        <span className="text-zinc-200">{label}</span>
+        {caret !== undefined && (
+          <span className={`text-zinc-500 text-xs transition-transform duration-200 inline-block ${caret ? "rotate-180" : ""}`}>▼</span>
+        )}
+      </span>
     </button>
   );
 }

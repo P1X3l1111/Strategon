@@ -9,11 +9,11 @@ import { spendCoins, spendGems } from "./troops";
 // stat bonuses layered on top).
 
 export const GENERALS = [
-  { id: "iron",     name: "Iron General",     icon: "🛡️", color: "#94a3b8", desc: "+50% max HP",                       boosts: { hpMult: 1.5 } },
-  { id: "blitz",    name: "Blitz Commander",  icon: "⚡",  color: "#0ea5e9", desc: "+3 movement",                       boosts: { movAdd: 3 } },
-  { id: "marksman", name: "Marksman General", icon: "🎯", color: "#ef4444", desc: "+50% attack damage",                boosts: { atkMult: 1.5 } },
-  { id: "guardian", name: "Guardian General", icon: "🏰", color: "#22c55e", desc: "+2 attack range",                   boosts: { rangeAdd: 2 } },
-  { id: "warlord",  name: "Warlord",          icon: "👑", color: "#f59e0b", desc: "+25% HP and +25% attack damage",    boosts: { hpMult: 1.25, atkMult: 1.25 } },
+  { id: "iron",     name: "Iron Commander",     icon: "🛡️", color: "#94a3b8", desc: "+50% max HP",                       boosts: { hpMult: 1.5 } },
+  { id: "blitz",    name: "Blitz Commander",    icon: "⚡",  color: "#0ea5e9", desc: "+3 movement",                       boosts: { movAdd: 3 } },
+  { id: "marksman", name: "Marksman Commander", icon: "🎯", color: "#ef4444", desc: "+50% attack damage",                boosts: { atkMult: 1.5 } },
+  { id: "guardian", name: "Guardian Commander", icon: "🏰", color: "#22c55e", desc: "+2 attack range",                   boosts: { rangeAdd: 2 } },
+  { id: "warlord",  name: "Warlord",            icon: "👑", color: "#f59e0b", desc: "+25% HP and +25% attack damage",    boosts: { hpMult: 1.25, atkMult: 1.25 } },
 ];
 
 // ── Buffs — small extra boosts bought with gems and slotted onto a general ──

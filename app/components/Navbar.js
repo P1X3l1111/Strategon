@@ -34,15 +34,23 @@ function formatTime(seconds) {
   return `${s}s`;
 }
 
-export default function Navbar({ onAdmin }) {
+// `modal`/`setModal` and `lockerOpen`/`setLockerOpen` are optional — pass them
+// down to let something outside the navbar (e.g. home-screen shortcut cards)
+// open the same Shop/Commanders modal or profile dropdown. Omit them and the
+// navbar manages its own state as before.
+export default function Navbar({ onAdmin, modal: modalProp, setModal: setModalProp, lockerOpen: lockerOpenProp, setLockerOpen: setLockerOpenProp }) {
   const [username,   setUsername]   = useState(null);
   const [coins,      setCoins]      = useState(0);
   const [gems,       setGems]       = useState(0);
   const [kills,      setKills]      = useState(0);
   const [onlineTime, setOnlineTime] = useState(0);
   const [xp]                        = useState(0);
-  const [lockerOpen, setLockerOpen] = useState(false);
-  const [modal,      setModal]      = useState(null);
+  const [lockerOpenState, setLockerOpenState] = useState(false);
+  const [modalState,      setModalState]      = useState(null);
+  const lockerOpen = lockerOpenProp !== undefined ? lockerOpenProp : lockerOpenState;
+  const setLockerOpen = setLockerOpenProp || setLockerOpenState;
+  const modal = modalProp !== undefined ? modalProp : modalState;
+  const setModal = setModalProp || setModalState;
   const lockerRef    = useRef(null);
   const sessionStart = useRef(Date.now());
 
@@ -146,14 +154,14 @@ export default function Navbar({ onAdmin }) {
 
             <div className="flex-1" />
 
-            {/* Generals */}
+            {/* Commanders */}
             <button
               onClick={() => setModal("generals")}
               className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-indigo-500 rounded-full px-4 py-1.5 text-sm font-semibold transition-all"
-              title="Generals"
+              title="Commanders"
             >
               <span className="text-base">⭐</span>
-              <span className="text-zinc-300 hidden sm:inline">Generals</span>
+              <span className="text-zinc-300 hidden sm:inline">Commanders</span>
             </button>
 
             {/* Shop */}

@@ -893,7 +893,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
   }
   function assignGeneralToUnit(unitId) {
     const u=unitsRef.current.find(x=>x.id===unitId);
-    if(!u||u.faction!=='player'||u.hp<=0||!(u.mov>0)){addLog('Generals can only lead a mobile troop.');return;}
+    if(!u||u.faction!=='player'||u.hp<=0||!(u.mov>0)){addLog('Commanders can only lead a mobile troop.');return;}
     const boosted=applyGeneralBoost(u,selectedGeneral);
     setUnits(unitsRef.current.map(x=>x.id===unitId?boosted:x));
     setGeneralUsed(true);setGeneralUnitId(unitId);setArmedGeneralLevel(selectedGeneral.level||0);setSelectedGeneral(null);
@@ -1047,7 +1047,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
 
         {/* General — pick one, assign to one troop, once per battle */}
         <div className="px-3 py-2 border-b border-zinc-700 shrink-0">
-          <p className="text-zinc-400 text-[10px] uppercase tracking-widest font-semibold mb-1.5">General</p>
+          <p className="text-zinc-400 text-[10px] uppercase tracking-widest font-semibold mb-1.5">Commander</p>
           {generalUsed ? (
             (() => {
               const leadUnit = units.find(u=>u.id===generalUnitId);
@@ -1059,7 +1059,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
                   <p className="text-zinc-400 text-[9px]">leads {leadUnit.name}</p>
                 </div>
               ) : (
-                <p className="text-zinc-600 text-[10px]">General was assigned but that unit has fallen.</p>
+                <p className="text-zinc-600 text-[10px]">Commander was assigned but that unit has fallen.</p>
               );
             })()
           ) : selectedGeneral ? (

@@ -24,12 +24,12 @@ const SECTIONS = {
     ],
   },
   generals: {
-    label: "Generals", icon: "⭐",
+    label: "Commanders", icon: "⭐",
     items: [
-      { id: "gen_slot",   icon: "🔓", name: "Instant Buff Slot",   desc: "Unlock an extra buff slot on any one general, instantly.",     price: "$3.99" },
-      { id: "gen_levels", icon: "📈", name: "Veteran Bundle",      desc: "+2 instant levels for any one general of your choice.",         price: "$6.99", tag: "Popular" },
-      { id: "gen_chest",  icon: "🎖️", name: "General's Warchest",  desc: "+1,500 Coins and a free buff for any one general.",             price: "$9.99", tag: "Best Value" },
-      { id: "gen_legion", icon: "🏰", name: "Legion Commander Pass", desc: "Every general instantly boosted to level 3.",                 price: "$14.99", tag: "Ultimate" },
+      { id: "gen_slot",   icon: "🔓", name: "Instant Buff Slot",     desc: "Unlock an extra buff slot on any one commander, instantly.",  price: "$3.99" },
+      { id: "gen_levels", icon: "📈", name: "Veteran Bundle",        desc: "+2 instant levels for any one commander of your choice.",      price: "$6.99", tag: "Popular" },
+      { id: "gen_chest",  icon: "🎖️", name: "Commander's Warchest",  desc: "+1,500 Coins and a free buff for any one commander.",          price: "$9.99", tag: "Best Value" },
+      { id: "gen_legion", icon: "🏰", name: "Legion Commander Pass", desc: "Every commander instantly boosted to level 3.",                price: "$14.99", tag: "Ultimate" },
     ],
   },
 };

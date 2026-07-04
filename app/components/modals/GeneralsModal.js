@@ -66,7 +66,7 @@ export default function GeneralsModal({ onClose }) {
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-zinc-800 shrink-0">
-          <h2 className="text-xl font-bold text-white">⭐ Generals</h2>
+          <h2 className="text-xl font-bold text-white">⭐ Commanders</h2>
           <div className="flex items-center gap-3">
             <span className="text-yellow-400 text-sm font-bold">💰 {coins.toLocaleString()}</span>
             <span className="text-cyan-400 text-sm font-bold">💎 {gems.toLocaleString()}</span>
@@ -83,7 +83,7 @@ export default function GeneralsModal({ onClose }) {
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 pt-4">
           <p className="text-zinc-500 text-xs mb-4">
-            Level up generals with coins for stronger boosts, and spend gems on buff slots (max {MAX_BUFF_SLOTS}) plus the buffs that fill them.
+            Level up commanders with coins for stronger boosts, and spend gems on buff slots (max {MAX_BUFF_SLOTS}) plus the buffs that fill them.
           </p>
           <div className="flex flex-col gap-4">
             {GENERALS.map((g) => {
