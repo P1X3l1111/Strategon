@@ -70,6 +70,15 @@ const MODES = [
   { id:'turns',   name:'Turns',   color:'#0ea5e9' },
 ];
 
+// Victory rewards for non-mission modes (Campaign missions define their own
+// rewardMana/rewardGems/rewardOil instead). Every win pays out all three so
+// oil doesn't lag behind mana as an income source between battles.
+const WIN_REWARDS = {
+  classic: { mana: 200, gems: 10, oil: 100 },
+  siege:   { mana: 220, gems: 15, oil: 110 },
+  turns:   { mana: 200, gems: 10, oil: 100 },
+};
+
 // Enemy AI: tiers of what it reaches for as the battle drags on, so it grows its army
 // like a human would (cheap chaff early, better hardware once its economy can support it)
 // instead of looping the same single unit forever.
@@ -457,6 +466,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
   const [generalUsed, setGeneralUsed]         = useState(false);
   const [generalUnitId, setGeneralUnitId]     = useState(null);
   const [armedGeneralLevel, setArmedGeneralLevel] = useState(0);
+  const [winReward, setWinReward] = useState(null); // non-mission victory payout, shown on the win overlay
 
   // Placement hover — track which cell cursor is over during pending placement
   const [hoverCell, setHoverCell] = useState(null);
@@ -603,24 +613,30 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
           awardMana(mission.rewardMana||0);awardGems(mission.rewardGems||0);
           if (mission.rewardOil) awardOil(mission.rewardOil);
           setMana(m=>m+(mission.rewardMana||0));
+          setOil(o=>o+(mission.rewardOil||0));
           bumpQuestStat('battlesWon');
           if (mission.rewardMana) bumpQuestStat('manaEarned',mission.rewardMana);
+          if (mission.rewardOil) bumpQuestStat('oilEarned',mission.rewardOil);
           completeMission(mission.id);
           addLog(`🎖️ ${mission.name} complete — Victory!`);return;
         }
       } else if (mode==='siege') {
         if (cur.filter(u=>u.faction==='enemy'&&u.hp>0).length===0) {
           setPhase('won');unitsRef.current=cur;setUnitsRaw(cur);
-          awardMana(220);awardGems(15);setMana(m=>m+220);
-          bumpQuestStat('battlesWon');bumpQuestStat('manaEarned',220);
+          const r=WIN_REWARDS.siege;
+          awardMana(r.mana);awardGems(r.gems);awardOil(r.oil);setMana(m=>m+r.mana);setOil(o=>o+r.oil);
+          bumpQuestStat('battlesWon');bumpQuestStat('manaEarned',r.mana);bumpQuestStat('oilEarned',r.oil);
+          setWinReward(r);
           addLog('Siege broken — Victory!');return;
         }
       } else if (mode!=='endless') {
         const enemyHQ=cur.find(u=>u.type==='enemy_hq');
         if (!enemyHQ||enemyHQ.hp<=0) {
           setPhase('won');unitsRef.current=cur;setUnitsRaw(cur);
-          awardMana(200);awardGems(10);setMana(m=>m+200);
-          bumpQuestStat('battlesWon');bumpQuestStat('manaEarned',200);
+          const r=WIN_REWARDS.classic;
+          awardMana(r.mana);awardGems(r.gems);awardOil(r.oil);setMana(m=>m+r.mana);setOil(o=>o+r.oil);
+          bumpQuestStat('battlesWon');bumpQuestStat('manaEarned',r.mana);bumpQuestStat('oilEarned',r.oil);
+          setWinReward(r);
           addLog('Enemy HQ destroyed — Victory!');return;
         }
       }
@@ -641,8 +657,10 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
     const enemyHQ = cur.find(u=>u.type==='enemy_hq');
     if (!enemyHQ || enemyHQ.hp<=0) {
       setPhase('won');
-      awardMana(200); awardGems(10); setMana(m=>m+200);
-      bumpQuestStat('battlesWon'); bumpQuestStat('manaEarned',200);
+      const r=WIN_REWARDS.turns;
+      awardMana(r.mana); awardGems(r.gems); awardOil(r.oil); setMana(m=>m+r.mana); setOil(o=>o+r.oil);
+      bumpQuestStat('battlesWon'); bumpQuestStat('manaEarned',r.mana); bumpQuestStat('oilEarned',r.oil);
+      setWinReward(r);
       addLog('Enemy HQ destroyed — Victory!');
       return true;
     }
@@ -856,7 +874,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
     const init=makeInitialUnits(mode, mission, mapData);
     unitsRef.current=init;setUnitsRaw(init);
     setPhase('setup');
-    setSelectedGeneral(null);setGeneralUsed(false);setGeneralUnitId(null);setArmedGeneralLevel(0);
+    setSelectedGeneral(null);setGeneralUsed(false);setGeneralUnitId(null);setArmedGeneralLevel(0);setWinReward(null);
     setPending(null);setHoverCell(null);setSelectedIds(new Set());
     setLog(['Deploy your Factory — the battle begins the instant you place it.']);
     enemyManaRef.current=STARTING_MANA;
@@ -1374,6 +1392,11 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
             {mission&&phase==='won'&&(
               <div className="flex items-center gap-2 bg-amber-950/50 border border-amber-800 rounded-xl px-4 py-2 text-xs font-bold text-amber-200">
                 +{mission.rewardMana}💜{mission.rewardGems?` +${mission.rewardGems}💎`:''}{mission.rewardOil?` +${mission.rewardOil}🛢️`:''}
+              </div>
+            )}
+            {!mission&&phase==='won'&&winReward&&(
+              <div className="flex items-center gap-2 bg-amber-950/50 border border-amber-800 rounded-xl px-4 py-2 text-xs font-bold text-amber-200">
+                +{winReward.mana}💜 +{winReward.oil}🛢️{winReward.gems?` +${winReward.gems}💎`:''}
               </div>
             )}
             <div className="flex gap-3 flex-wrap justify-center">
