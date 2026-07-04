@@ -6,8 +6,8 @@ import SuggestionModal from "./modals/SuggestionModal";
 import AdminApplicationModal from "./modals/AdminApplicationModal";
 import ShopModal from "./modals/ShopModal";
 import GeneralsModal from "./modals/GeneralsModal";
-
-const XP_MAX = 1000;
+import StrategonPassModal from "./modals/StrategonPassModal";
+import { getPassState, getPassLevel, PASS_LEVEL_XP, PASS_MAX_LEVEL } from "../data/quests";
 
 function readCoins(u) {
   const raw = localStorage.getItem(`rpg_coins_${u}`);
@@ -44,7 +44,7 @@ export default function Navbar({ onAdmin, modal: modalProp, setModal: setModalPr
   const [gems,       setGems]       = useState(0);
   const [kills,      setKills]      = useState(0);
   const [onlineTime, setOnlineTime] = useState(0);
-  const [xp]                        = useState(0);
+  const [passXp,     setPassXp]     = useState(0);
   const [lockerOpenState, setLockerOpenState] = useState(false);
   const [modalState,      setModalState]      = useState(null);
   const lockerOpen = lockerOpenProp !== undefined ? lockerOpenProp : lockerOpenState;
@@ -59,6 +59,7 @@ export default function Navbar({ onAdmin, modal: modalProp, setModal: setModalPr
     setGems(readGems(u));
     setKills(readKills(u));
     setOnlineTime(readOnlineTime(u));
+    setPassXp(getPassState()?.xp || 0);
   }
 
   useEffect(() => {
@@ -67,12 +68,15 @@ export default function Navbar({ onAdmin, modal: modalProp, setModal: setModalPr
 
     const onProfile  = () => { const u2 = localStorage.getItem("rpg_username"); if (u2) loadUser(u2); };
     const onCurrency = () => { const u2 = localStorage.getItem("rpg_username"); if (u2) { setCoins(readCoins(u2)); setGems(readGems(u2)); } };
+    const onPass     = () => setPassXp(getPassState()?.xp || 0);
 
     window.addEventListener("rpg_profile_updated",  onProfile);
     window.addEventListener("rpg_currency_updated", onCurrency);
+    window.addEventListener("rpg_pass_updated",     onPass);
     return () => {
       window.removeEventListener("rpg_profile_updated",  onProfile);
       window.removeEventListener("rpg_currency_updated", onCurrency);
+      window.removeEventListener("rpg_pass_updated",     onPass);
     };
   }, []);
 
@@ -88,7 +92,9 @@ export default function Navbar({ onAdmin, modal: modalProp, setModal: setModalPr
     return () => clearInterval(interval);
   }, [username]);
 
-  const xpPercent = Math.min((xp / XP_MAX) * 100, 100);
+  const passLevel = getPassLevel(passXp);
+  const intoLevel = passXp - passLevel * PASS_LEVEL_XP;
+  const xpPercent = passLevel >= PASS_MAX_LEVEL ? 100 : Math.min(100, (intoLevel / PASS_LEVEL_XP) * 100);
 
   return (
     <>
@@ -128,15 +134,15 @@ export default function Navbar({ onAdmin, modal: modalProp, setModal: setModalPr
               </span>
             </div>
 
-            {/* XP bar */}
+            {/* Pass XP bar */}
             <div className="flex flex-col gap-0.5 flex-1 max-w-xs">
               <div className="flex justify-between text-[10px] text-zinc-400">
-                <span>XP</span>
-                <span>{xp} / {XP_MAX}</span>
+                <span>Pass Lv.{passLevel}{passLevel >= PASS_MAX_LEVEL ? " (MAX)" : ""}</span>
+                <span>{passLevel >= PASS_MAX_LEVEL ? passXp : `${intoLevel} / ${PASS_LEVEL_XP}`} XP</span>
               </div>
               <div className="w-full h-2 bg-zinc-700 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-500"
                   style={{ width: `${xpPercent}%` }}
                 />
               </div>
@@ -161,7 +167,7 @@ export default function Navbar({ onAdmin, modal: modalProp, setModal: setModalPr
                   </div>
                   <div>
                     <div className="text-white font-bold text-sm">{username || "Guest"}</div>
-                    <div className="text-zinc-400 text-xs">Adventure rank · LVL 1</div>
+                    <div className="text-zinc-400 text-xs">Pass Level {passLevel}{passLevel >= PASS_MAX_LEVEL ? " (MAX)" : ""}</div>
                   </div>
                 </div>
                 <button onClick={() => setLockerOpen(false)} className="text-zinc-500 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded hover:bg-zinc-800">✕</button>
@@ -173,7 +179,7 @@ export default function Navbar({ onAdmin, modal: modalProp, setModal: setModalPr
                 <StatRow icon="💀" label="Mobs Killed"  value={kills.toLocaleString()} />
                 <StatRow icon="💰" label="Coins"        value={coins.toLocaleString()} color="text-yellow-400" />
                 <StatRow icon="💎" label="Gems"         value={gems.toLocaleString()}  color="text-cyan-400" />
-                <StatRow icon="📊" label="XP"           value={`${xp} / ${XP_MAX}`}   color="text-indigo-400" />
+                <StatRow icon="🎫" label="Pass XP"      value={passXp.toLocaleString()} color="text-amber-400" />
                 <div className="pt-2 border-t border-zinc-800">
                   <StatRow icon="🕐" label="Session time" value={formatTime(Math.floor((Date.now() - sessionStart.current) / 1000))} color="text-zinc-400" />
                 </div>
@@ -194,6 +200,7 @@ export default function Navbar({ onAdmin, modal: modalProp, setModal: setModalPr
       {modal === "admin"      && <AdminApplicationModal onClose={() => setModal(null)} />}
       {modal === "shop"       && <ShopModal             onClose={() => setModal(null)} />}
       {modal === "generals"   && <GeneralsModal         onClose={() => setModal(null)} />}
+      {modal === "pass"       && <StrategonPassModal    onClose={() => setModal(null)} />}
     </>
   );
 }

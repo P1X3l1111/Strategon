@@ -264,6 +264,75 @@ export function claimWeeklyQuest(id) {
   saveState(user, state);
   if (quest.rewardCoins) awardCoins(quest.rewardCoins);
   if (quest.rewardGems)  awardGems(quest.rewardGems);
+  addPassXP(PASS_XP_PER_WEEKLY_CLAIM); // weekly quests are the only source of Pass XP
+  return true;
+}
+
+// ── Strategon Pass — a seasonal reward track fed entirely by weekly-quest XP.
+// Claiming a weekly quest also grants Pass XP; every PASS_LEVEL_XP banked unlocks
+// the next level's reward. Resets alongside the weekly quest cycle.
+export const PASS_XP_PER_WEEKLY_CLAIM = 100;
+export const PASS_LEVEL_XP            = 1000;
+export const PASS_MAX_LEVEL           = 10;
+
+export const PASS_REWARDS = [
+  { level: 1,  rewardCoins: 100, rewardGems: 0  },
+  { level: 2,  rewardCoins: 0,   rewardGems: 20 },
+  { level: 3,  rewardCoins: 150, rewardGems: 0  },
+  { level: 4,  rewardCoins: 0,   rewardGems: 25 },
+  { level: 5,  rewardCoins: 200, rewardGems: 0  },
+  { level: 6,  rewardCoins: 0,   rewardGems: 30 },
+  { level: 7,  rewardCoins: 250, rewardGems: 0  },
+  { level: 8,  rewardCoins: 0,   rewardGems: 40 },
+  { level: 9,  rewardCoins: 300, rewardGems: 0  },
+  { level: 10, rewardCoins: 500, rewardGems: 60 },
+];
+
+const PASS_KEY = (u) => `rpg_pass_${u}`;
+
+function loadPassState(user) {
+  let raw;
+  try { raw = JSON.parse(localStorage.getItem(PASS_KEY(user)) || "null"); } catch { raw = null; }
+  if (!raw) raw = {};
+  const cycle = cycleKey();
+  if (raw.cycle !== cycle) { raw.cycle = cycle; raw.xp = 0; raw.claimed = []; }
+  raw.xp      ||= 0;
+  raw.claimed ||= [];
+  return raw;
+}
+function savePassState(user, state) {
+  localStorage.setItem(PASS_KEY(user), JSON.stringify(state));
+  window.dispatchEvent(new CustomEvent("rpg_pass_updated"));
+}
+
+function addPassXP(amount) {
+  const user = currentUser();
+  if (!user) return;
+  const state = loadPassState(user);
+  state.xp += amount;
+  savePassState(user, state);
+}
+
+export function getPassState() {
+  const user = currentUser();
+  return user ? loadPassState(user) : null;
+}
+
+export function getPassLevel(xp) {
+  return Math.min(PASS_MAX_LEVEL, Math.floor(xp / PASS_LEVEL_XP));
+}
+
+export function claimPassReward(level) {
+  const user = currentUser();
+  if (!user) return false;
+  const state = loadPassState(user);
+  const reward = PASS_REWARDS.find((r) => r.level === level);
+  if (!reward || state.claimed.includes(level)) return false;
+  if (getPassLevel(state.xp) < level) return false;
+  state.claimed.push(level);
+  savePassState(user, state);
+  if (reward.rewardCoins) awardCoins(reward.rewardCoins);
+  if (reward.rewardGems)  awardGems(reward.rewardGems);
   return true;
 }
 

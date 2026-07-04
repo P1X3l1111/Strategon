@@ -194,13 +194,13 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Profile / Shop / Commanders — quick-access shortcut cards, centered in
-                half the column's height instead of stretched top-to-bottom */}
+            {/* Profile / Shop / Commanders / Strategon Pass — quick-access shortcut cards */}
             <div className="flex flex-col justify-center h-full lg:w-[340px] lg:flex-none">
-              <div className="flex flex-col gap-4 h-1/2">
+              <div className="flex flex-col gap-4 h-2/3">
                 <SideCard onClick={() => setNavLockerOpen(o => !o)} icon="🔒" label="Profile" caret={navLockerOpen} />
                 <SideCard onClick={() => setNavModal("shop")} icon="🛒" label="Shop" />
                 <SideCard onClick={() => setNavModal("generals")} icon="⭐" label="Commanders" />
+                <SideCard onClick={() => setNavModal("pass")} icon="🎫" label="Strategon Pass" />
               </div>
             </div>
           </div>
