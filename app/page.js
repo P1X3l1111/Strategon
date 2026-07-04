@@ -144,7 +144,7 @@ export default function Home() {
 
             {/* Quests — Daily Reward sits above Daily Quests; Weekly Quests grows to
                 fill whatever height is left over. */}
-            <div className="flex justify-start mt-12 lg:mt-0 h-full min-h-0 lg:flex-1 lg:max-w-[560px]">
+            <div className="flex justify-start mt-12 lg:mt-0 h-full min-h-0 lg:flex-1 lg:max-w-[680px]">
               <div className="w-full h-full flex flex-col gap-3 min-h-0">
                 <DailyRewardPanel />
                 <QuestPanel type="daily" />
@@ -194,11 +194,14 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Profile / Shop / Commanders — quick-access shortcut cards */}
-            <div className="flex flex-col gap-4 h-full lg:w-[340px] lg:flex-none">
-              <SideCard onClick={() => setNavLockerOpen(o => !o)} icon="🔒" label="Profile" caret={navLockerOpen} />
-              <SideCard onClick={() => setNavModal("shop")} icon="🛒" label="Shop" />
-              <SideCard onClick={() => setNavModal("generals")} icon="⭐" label="Commanders" />
+            {/* Profile / Shop / Commanders — quick-access shortcut cards, centered in
+                half the column's height instead of stretched top-to-bottom */}
+            <div className="flex flex-col justify-center h-full lg:w-[340px] lg:flex-none">
+              <div className="flex flex-col gap-4 h-1/2">
+                <SideCard onClick={() => setNavLockerOpen(o => !o)} icon="🔒" label="Profile" caret={navLockerOpen} />
+                <SideCard onClick={() => setNavModal("shop")} icon="🛒" label="Shop" />
+                <SideCard onClick={() => setNavModal("generals")} icon="⭐" label="Commanders" />
+              </div>
             </div>
           </div>
         </div>
