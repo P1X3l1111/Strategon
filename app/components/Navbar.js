@@ -51,7 +51,6 @@ export default function Navbar({ onAdmin, modal: modalProp, setModal: setModalPr
   const setLockerOpen = setLockerOpenProp || setLockerOpenState;
   const modal = modalProp !== undefined ? modalProp : modalState;
   const setModal = setModalProp || setModalState;
-  const lockerRef    = useRef(null);
   const sessionStart = useRef(Date.now());
 
   function loadUser(u) {
@@ -88,15 +87,6 @@ export default function Navbar({ onAdmin, modal: modalProp, setModal: setModalPr
     }, 60000);
     return () => clearInterval(interval);
   }, [username]);
-
-  // Close locker when clicking outside
-  useEffect(() => {
-    function handle(e) {
-      if (lockerRef.current && !lockerRef.current.contains(e.target)) setLockerOpen(false);
-    }
-    document.addEventListener("mousedown", handle);
-    return () => document.removeEventListener("mousedown", handle);
-  }, []);
 
   const xpPercent = Math.min((xp / XP_MAX) * 100, 100);
 
@@ -153,41 +143,44 @@ export default function Navbar({ onAdmin, modal: modalProp, setModal: setModalPr
             </div>
 
             <div className="flex-1" />
-
-            {/* Profile dropdown — no navbar button anymore (opened from the home screen's
-                Profile card instead), but still renders here, anchored to the viewport. */}
-            <div ref={lockerRef}>
-              {lockerOpen && (
-                <div className="fixed top-20 right-6 w-72 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl shadow-black/60 z-50 overflow-hidden">
-                  {/* Header */}
-                  <div className="px-4 pt-4 pb-3 bg-zinc-800/60 border-b border-zinc-700">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-indigo-700 flex items-center justify-center text-xl font-bold">
-                        {username ? username[0].toUpperCase() : "?"}
-                      </div>
-                      <div>
-                        <div className="text-white font-bold text-sm">{username || "Guest"}</div>
-                        <div className="text-zinc-400 text-xs">Adventure rank · LVL 1</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Stats */}
-                  <div className="p-4 flex flex-col gap-2.5">
-                    <StatRow icon="⏱️" label="Time Online"  value={formatTime(onlineTime)} />
-                    <StatRow icon="💀" label="Mobs Killed"  value={kills.toLocaleString()} />
-                    <StatRow icon="💰" label="Coins"        value={coins.toLocaleString()} color="text-yellow-400" />
-                    <StatRow icon="💎" label="Gems"         value={gems.toLocaleString()}  color="text-cyan-400" />
-                    <StatRow icon="📊" label="XP"           value={`${xp} / ${XP_MAX}`}   color="text-indigo-400" />
-                    <div className="pt-2 border-t border-zinc-800">
-                      <StatRow icon="🕐" label="Session time" value={formatTime(Math.floor((Date.now() - sessionStart.current) / 1000))} color="text-zinc-400" />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
         </div>
+
+        {/* Profile panel — opened from the home screen's Profile card, centered on screen */}
+        {lockerOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            onClick={(e) => e.target === e.currentTarget && setLockerOpen(false)}
+          >
+            <div className="w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-zinc-800/60 border-b border-zinc-700">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-indigo-700 flex items-center justify-center text-xl font-bold">
+                    {username ? username[0].toUpperCase() : "?"}
+                  </div>
+                  <div>
+                    <div className="text-white font-bold text-sm">{username || "Guest"}</div>
+                    <div className="text-zinc-400 text-xs">Adventure rank · LVL 1</div>
+                  </div>
+                </div>
+                <button onClick={() => setLockerOpen(false)} className="text-zinc-500 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded hover:bg-zinc-800">✕</button>
+              </div>
+
+              {/* Stats */}
+              <div className="p-4 flex flex-col gap-2.5">
+                <StatRow icon="⏱️" label="Time Online"  value={formatTime(onlineTime)} />
+                <StatRow icon="💀" label="Mobs Killed"  value={kills.toLocaleString()} />
+                <StatRow icon="💰" label="Coins"        value={coins.toLocaleString()} color="text-yellow-400" />
+                <StatRow icon="💎" label="Gems"         value={gems.toLocaleString()}  color="text-cyan-400" />
+                <StatRow icon="📊" label="XP"           value={`${xp} / ${XP_MAX}`}   color="text-indigo-400" />
+                <div className="pt-2 border-t border-zinc-800">
+                  <StatRow icon="🕐" label="Session time" value={formatTime(Math.floor((Date.now() - sessionStart.current) / 1000))} color="text-zinc-400" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Row 3: currency ── */}
         <div className="mx-auto w-full max-w-[1400px] flex items-center justify-end px-6 py-2 gap-3">
