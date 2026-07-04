@@ -154,41 +154,11 @@ export default function Navbar({ onAdmin, modal: modalProp, setModal: setModalPr
 
             <div className="flex-1" />
 
-            {/* Commanders */}
-            <button
-              onClick={() => setModal("generals")}
-              className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-indigo-500 rounded-full px-4 py-1.5 text-sm font-semibold transition-all"
-              title="Commanders"
-            >
-              <span className="text-base">⭐</span>
-              <span className="text-zinc-300 hidden sm:inline">Commanders</span>
-            </button>
-
-            {/* Shop */}
-            <button
-              onClick={() => setModal("shop")}
-              className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-indigo-500 rounded-full px-4 py-1.5 text-sm font-semibold transition-all"
-              title="Shop"
-            >
-              <span className="text-base">🛒</span>
-              <span className="text-zinc-300 hidden sm:inline">Shop</span>
-            </button>
-
-            {/* Locker button + dropdown */}
-            <div className="relative" ref={lockerRef}>
-              <button
-                onClick={() => setLockerOpen(o => !o)}
-                className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-indigo-500 rounded-full px-4 py-1.5 text-sm font-semibold transition-all"
-                title="Player profile"
-              >
-                <span className="text-base">🔒</span>
-                <span className="text-zinc-300 hidden sm:inline">Profile</span>
-                <span className={`text-zinc-500 text-xs transition-transform duration-200 inline-block ${lockerOpen ? "rotate-180" : ""}`}>▼</span>
-              </button>
-
-              {/* Locker dropdown */}
+            {/* Profile dropdown — no navbar button anymore (opened from the home screen's
+                Profile card instead), but still renders here, anchored to the viewport. */}
+            <div ref={lockerRef}>
               {lockerOpen && (
-                <div className="absolute right-0 top-full mt-2 w-72 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl shadow-black/60 z-50 overflow-hidden">
+                <div className="fixed top-20 right-6 w-72 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl shadow-black/60 z-50 overflow-hidden">
                   {/* Header */}
                   <div className="px-4 pt-4 pb-3 bg-zinc-800/60 border-b border-zinc-700">
                     <div className="flex items-center gap-3">
