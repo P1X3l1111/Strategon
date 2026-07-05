@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar";
 import WarMap from "./components/WarMap";
 import AdminPanel from "./components/AdminPanel";
 import CampaignSelect from "./components/CampaignSelect";
+import RankedSelect from "./components/RankedSelect";
 import QuestPanel from "./components/QuestPanel";
 import DailyRewardPanel from "./components/DailyRewardPanel";
 import { makeDefaultGrid } from "./components/MapEditor";
@@ -15,6 +16,8 @@ const MODES = [
   { id: "siege",   name: "Siege",   icon: "🏯", color: "#dc2626", desc: "Your castle is surrounded — hold the line from every side." },
   { id: "turns",   name: "Turns",   icon: "♟️", color: "#0ea5e9", desc: "Move your troops manually, then watch the AI answer." },
 ];
+
+const RANKED_MODE = { id: "ranked", name: "Ranked", icon: "🏆", color: "#f59e0b", desc: "Queue up against a similarly-skilled real opponent." };
 
 // Map-seeding keys — includes campaign's shared battlefield in addition to the 3 modes above
 const MAP_KEYS = [...MODES.map(m => m.id), "campaign"];
@@ -124,6 +127,18 @@ export default function Home() {
     );
   }
 
+  // ── Ranked matchmaking view ──
+  if (view === "ranked" && !mode) {
+    return (
+      <div className="bg-zinc-950 h-screen overflow-hidden flex flex-col">
+        <Navbar onAdmin={() => setView("admin")} />
+        <div className="flex-1 overflow-hidden">
+          <RankedSelect onBack={() => setView("home")} onMatchFound={() => {}} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-zinc-950 h-screen overflow-hidden flex flex-col">
       {/* Navbar only on home */}
@@ -184,7 +199,7 @@ export default function Home() {
                     {MODES.filter(m => m.id !== "classic" && m.id !== "endless").map(m => (
                       <ModeCard key={m.id} m={m} isReady={isModeReady(m.id, mapStatus)} onClick={() => enterGame(m.id)} compact />
                     ))}
-                    <OtherModeCard />
+                    <ModeCard m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} compact />
                   </div>
                 </div>
 
@@ -255,17 +270,6 @@ function ModeCard({ m, isReady, onClick, compact = false }) {
         </span>
       )}
     </button>
-  );
-}
-
-// A placeholder tile completing Row 3's 3-column split until a real third mode exists.
-function OtherModeCard() {
-  return (
-    <div className="flex flex-col items-center justify-center text-center gap-1.5 border border-dashed border-zinc-800 rounded-2xl p-3 h-28 bg-zinc-900/20">
-      <span className="text-3xl text-zinc-700 font-black">＋</span>
-      <span className="text-zinc-600 font-bold text-sm">Other</span>
-      <span className="text-zinc-700 text-[10px]">More modes soon</span>
-    </div>
   );
 }
 
