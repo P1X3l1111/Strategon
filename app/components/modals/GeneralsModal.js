@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import {
-  GENERALS, BUFFS, MAX_GENERAL_LEVEL, MAX_BUFF_SLOTS,
+  GENERALS, BUFFS, MAX_GENERAL_LEVEL, MAX_BUFF_SLOTS, MAX_BATTLE_SLOTS,
   getGeneralProgress, getUpgradeCost, getSlotCost,
-  upgradeGeneral, buyGeneralSlot, buyGeneralBuff,
+  upgradeGeneral, buyGeneralSlot, buyGeneralBuff, buyCommander,
+  getBattleSlotCount, getBattleSlotCost, buyBattleSlot,
 } from "../../data/generals";
 import { getCoins, getGems } from "../../data/troops";
 
@@ -12,12 +13,14 @@ export default function GeneralsModal({ onClose }) {
   const [coins, setCoins] = useState(0);
   const [gems, setGems] = useState(0);
   const [progress, setProgress] = useState({});
+  const [battleSlots, setBattleSlots] = useState(1);
   const [toast, setToast] = useState(null);
   const [pickingFor, setPickingFor] = useState(null); // generalId currently choosing a buff
 
   function refresh() {
     setCoins(getCoins());
     setGems(getGems());
+    setBattleSlots(getBattleSlotCount());
     const p = {};
     GENERALS.forEach(g => { p[g.id] = getGeneralProgress(g.id); });
     setProgress(p);
@@ -35,6 +38,18 @@ export default function GeneralsModal({ onClose }) {
   }, []);
 
   function flash(msg) { setToast(msg); setTimeout(() => setToast(null), 2200); }
+
+  function handleBuyCommander(g) {
+    if (gems < g.price) { flash(`Need ${g.price} gems to unlock ${g.name}.`); return; }
+    if (buyCommander(g.id)) flash(`${g.name} unlocked!`);
+  }
+
+  function handleBuyBattleSlot() {
+    if (battleSlots >= MAX_BATTLE_SLOTS) return;
+    const cost = getBattleSlotCost(battleSlots + 1);
+    if (gems < cost) { flash(`Need ${cost} gems for battle slot ${battleSlots + 1}.`); return; }
+    if (buyBattleSlot()) flash(`Battle slot ${battleSlots + 1} unlocked — bring more commanders into one battle!`);
+  }
 
   function handleUpgrade(g) {
     const prog = progress[g.id];
@@ -56,6 +71,8 @@ export default function GeneralsModal({ onClose }) {
     if (gems < buff.cost) { flash(`Need ${buff.cost} gems for ${buff.name}.`); return; }
     if (buyGeneralBuff(g.id, buff.id)) { flash(`${buff.name} equipped on ${g.name}!`); setPickingFor(null); }
   }
+
+  const ownedCount = Object.values(progress).filter(p => p.owned).length;
 
   return (
     <div
@@ -80,14 +97,56 @@ export default function GeneralsModal({ onClose }) {
           </div>
         )}
 
+        {/* Battle slots — account-wide cap on commanders per battle */}
+        <div className="mx-6 mt-4 p-3 rounded-xl border border-indigo-800 bg-indigo-950/30 flex items-center justify-between gap-3 shrink-0">
+          <div>
+            <p className="text-white text-sm font-bold">🎖️ Battle Slots — {battleSlots}/{MAX_BATTLE_SLOTS}</p>
+            <p className="text-zinc-400 text-[11px]">How many different commanders you can lead troops with in one battle.</p>
+          </div>
+          <button
+            onClick={handleBuyBattleSlot}
+            disabled={battleSlots >= MAX_BATTLE_SLOTS || gems < getBattleSlotCost(battleSlots + 1)}
+            className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              battleSlots >= MAX_BATTLE_SLOTS ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+              : gems < getBattleSlotCost(battleSlots + 1) ? "bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed"
+              : "bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95"
+            }`}
+          >
+            {battleSlots >= MAX_BATTLE_SLOTS ? "MAX" : `+1 Slot — 💎${getBattleSlotCost(battleSlots + 1)}`}
+          </button>
+        </div>
+
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 pt-4">
           <p className="text-zinc-500 text-xs mb-4">
-            Level up commanders with coins for stronger boosts, and spend gems on buff slots (max {MAX_BUFF_SLOTS}) plus the buffs that fill them.
+            Own {ownedCount}/{GENERALS.length} commanders. Level up owned commanders with coins for stronger boosts, and spend gems on buff slots (max {MAX_BUFF_SLOTS}) plus the buffs that fill them.
           </p>
           <div className="flex flex-col gap-4">
             {GENERALS.map((g) => {
-              const prog = progress[g.id] || { level: 0, slots: 1, buffs: [] };
+              const prog = progress[g.id] || { owned: g.price === 0, level: 0, slots: 1, buffs: [] };
+
+              if (!prog.owned) {
+                return (
+                  <div key={g.id} className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 flex items-center gap-3">
+                    <span className="text-3xl grayscale opacity-60">{g.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-zinc-300 font-black text-sm">🔒 {g.name}</p>
+                      <p className="text-zinc-500 text-xs">{g.desc}</p>
+                    </div>
+                    <button
+                      onClick={() => handleBuyCommander(g)}
+                      disabled={gems < g.price}
+                      className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        gems < g.price ? "bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed"
+                        : "bg-cyan-600 hover:bg-cyan-500 text-white active:scale-95"
+                      }`}
+                    >
+                      Buy — 💎{g.price}
+                    </button>
+                  </div>
+                );
+              }
+
               const maxed = prog.level >= MAX_GENERAL_LEVEL;
               const upgradeCost = getUpgradeCost(prog.level);
               const equippedBuffs = prog.buffs.map(id => BUFFS.find(b => b.id === id)).filter(Boolean);

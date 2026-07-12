@@ -8,7 +8,7 @@ import {
 } from "../data/troops";
 import { bumpQuestStat } from "../data/quests";
 import { completeMission, getNextMission } from "../data/campaign";
-import { GENERALS, applyGeneralBoost, getEffectiveGeneral } from "../data/generals";
+import { GENERALS, applyGeneralBoost, getEffectiveGeneral, isCommanderOwned, getBattleSlotCount } from "../data/generals";
 import { normalizeMapData } from "./MapEditor";
 
 // ── Grid ──────────────────────────────────────────────────────────────────────
@@ -461,11 +461,11 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
   const [attackTargets, setAttackTargets] = useState([]); // [{col,row,id}]
   const enemyTurnRunningRef = useRef(false);
 
-  // Generals — pick one, assign it to exactly one troop, exactly once per battle
-  const [selectedGeneral, setSelectedGeneral] = useState(null); // armed general awaiting a target click
-  const [generalUsed, setGeneralUsed]         = useState(false);
-  const [generalUnitId, setGeneralUnitId]     = useState(null);
-  const [armedGeneralLevel, setArmedGeneralLevel] = useState(0);
+  // Commanders — arm one at a time, assign each to a different troop, up to
+  // however many battle slots the player has bought (see data/generals.js).
+  const [selectedGeneral, setSelectedGeneral] = useState(null); // armed commander awaiting a target click
+  const [assignedGenerals, setAssignedGenerals] = useState([]); // [{generalId,unitId,level,name,icon,color}]
+  const [battleSlotCount, setBattleSlotCount] = useState(() => getBattleSlotCount());
   const [winReward, setWinReward] = useState(null); // non-mission victory payout, shown on the win overlay
 
   // Placement hover — track which cell cursor is over during pending placement
@@ -859,6 +859,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
   function startBattle() {
     if(!unitsRef.current.some(u=>u.type==='factory'&&u.faction==='player'&&u.hp>0)){addLog('Place a Factory first!');return;}
     setPhase('battle');
+    setBattleSlotCount(getBattleSlotCount());
     enemyManaRef.current=STARTING_MANA;
     enemyAITimer.current=0;
     bumpQuestStat('battlesPlayed');
@@ -874,7 +875,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
     const init=makeInitialUnits(mode, mission, mapData);
     unitsRef.current=init;setUnitsRaw(init);
     setPhase('setup');
-    setSelectedGeneral(null);setGeneralUsed(false);setGeneralUnitId(null);setArmedGeneralLevel(0);setWinReward(null);
+    setSelectedGeneral(null);setAssignedGenerals([]);setBattleSlotCount(getBattleSlotCount());setWinReward(null);
     setPending(null);setHoverCell(null);setSelectedIds(new Set());
     setLog(['Deploy your Factory — the battle begins the instant you place it.']);
     enemyManaRef.current=STARTING_MANA;
@@ -897,9 +898,11 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
     if(ids.size>=2) bumpQuestStat('multiUnitCommands');
   }
 
-  // ── Generals — arm one, then click a troop to bind it (single use per battle) ──
+  // ── Commanders — arm one, then click a troop to bind it (up to battleSlotCount per battle) ──
   function chooseGeneral(id) {
-    if(generalUsed)return;
+    if(assignedGenerals.length>=battleSlotCount)return;
+    if(assignedGenerals.some(a=>a.generalId===id))return;
+    if(!isCommanderOwned(id)){addLog('You don’t own that commander yet.');return;}
     const g=getEffectiveGeneral(id);
     if(!g)return;
     setPending(null);setHoverCell(null);
@@ -910,12 +913,15 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
     setSelectedGeneral(null);
   }
   function assignGeneralToUnit(unitId) {
+    if(assignedGenerals.length>=battleSlotCount)return;
     const u=unitsRef.current.find(x=>x.id===unitId);
     if(!u||u.faction!=='player'||u.hp<=0||!(u.mov>0)){addLog('Commanders can only lead a mobile troop.');return;}
+    if(u.general){addLog('That troop already has a commander.');return;}
     const boosted=applyGeneralBoost(u,selectedGeneral);
     setUnits(unitsRef.current.map(x=>x.id===unitId?boosted:x));
-    setGeneralUsed(true);setGeneralUnitId(unitId);setArmedGeneralLevel(selectedGeneral.level||0);setSelectedGeneral(null);
+    setAssignedGenerals(prev=>[...prev,{generalId:selectedGeneral.id,unitId,level:selectedGeneral.level||0,name:selectedGeneral.name,icon:selectedGeneral.icon,color:selectedGeneral.color}]);
     addLog(`⭐ ${selectedGeneral.name}${selectedGeneral.level>0?` (Lv.${selectedGeneral.level})`:''} now leads ${u.name}!`);
+    setSelectedGeneral(null);
   }
 
   // ── Click handler (no manual movement) ───────────────────────────────────
@@ -1063,38 +1069,48 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
           </div>
         </div>
 
-        {/* General — pick one, assign to one troop, once per battle */}
+        {/* Commanders — up to battleSlotCount, one per troop, each locked in for the rest of the battle */}
         <div className="px-3 py-2 border-b border-zinc-700 shrink-0">
-          <p className="text-zinc-400 text-[10px] uppercase tracking-widest font-semibold mb-1.5">Commander</p>
-          {generalUsed ? (
-            (() => {
-              const leadUnit = units.find(u=>u.id===generalUnitId);
-              const g = GENERALS.find(x=>x.id===leadUnit?.general);
-              const lvl = armedGeneralLevel;
-              return leadUnit ? (
-                <div className="rounded-lg border px-2 py-1.5" style={{borderColor:g?.color||'#52525b',background:`${g?.color||'#52525b'}22`}}>
-                  <p className="text-xs font-bold" style={{color:g?.color||'#e5e7eb'}}>{g?.icon} {g?.name}{lvl>0?` · Lv.${lvl}`:''}</p>
-                  <p className="text-zinc-400 text-[9px]">leads {leadUnit.name}</p>
-                </div>
-              ) : (
-                <p className="text-zinc-600 text-[10px]">Commander was assigned but that unit has fallen.</p>
-              );
-            })()
+          <p className="text-zinc-400 text-[10px] uppercase tracking-widest font-semibold mb-1.5">
+            Commanders — {assignedGenerals.length}/{battleSlotCount}
+          </p>
+
+          {assignedGenerals.length>0 && (
+            <div className="flex flex-col gap-1 mb-1.5">
+              {assignedGenerals.map(a=>{
+                const leadUnit = units.find(u=>u.id===a.unitId);
+                return (
+                  <div key={a.generalId} className="rounded-lg border px-2 py-1.5" style={{borderColor:a.color,background:`${a.color}22`}}>
+                    <p className="text-xs font-bold" style={{color:a.color}}>{a.icon} {a.name}{a.level>0?` · Lv.${a.level}`:''}</p>
+                    <p className="text-zinc-400 text-[9px]">{leadUnit?`leads ${leadUnit.name}`:'that unit has fallen'}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {assignedGenerals.length>=battleSlotCount ? (
+            assignedGenerals.length===0 && <p className="text-zinc-600 text-[10px]">No battle slots — buy some in the Commanders shop.</p>
           ) : selectedGeneral ? (
             <div className="rounded-lg border px-2 py-1.5 flex items-center justify-between gap-2" style={{borderColor:selectedGeneral.color,background:`${selectedGeneral.color}22`}}>
               <p className="text-[10px] font-bold" style={{color:selectedGeneral.color}}>Click a troop to assign {selectedGeneral.name}</p>
               <button onClick={cancelGeneral} className="text-zinc-400 hover:text-red-400 text-xs font-bold shrink-0">✕</button>
             </div>
-          ) : (
-            <div className="flex gap-1.5 flex-wrap">
-              {GENERALS.map(g=>(
-                <button key={g.id} onClick={()=>chooseGeneral(g.id)} title={`${g.name} — ${g.desc}`}
-                  className="w-8 h-8 rounded-lg border border-zinc-700 bg-zinc-800/60 hover:bg-zinc-700 flex items-center justify-center text-base transition-all active:scale-95">
-                  {g.icon}
-                </button>
-              ))}
-            </div>
-          )}
+          ) : (() => {
+            const available = GENERALS.filter(g=>isCommanderOwned(g.id) && !assignedGenerals.some(a=>a.generalId===g.id));
+            return available.length>0 ? (
+              <div className="flex gap-1.5 flex-wrap">
+                {available.map(g=>(
+                  <button key={g.id} onClick={()=>chooseGeneral(g.id)} title={`${g.name} — ${g.desc}`}
+                    className="w-8 h-8 rounded-lg border border-zinc-700 bg-zinc-800/60 hover:bg-zinc-700 flex items-center justify-center text-base transition-all active:scale-95">
+                    {g.icon}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-zinc-600 text-[10px]">No more owned commanders — buy more in the Commanders shop.</p>
+            );
+          })()}
         </div>
 
         {/* Battle button */}
