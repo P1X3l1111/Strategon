@@ -40,11 +40,20 @@ export default function AdminPanel({ currentUser, onBack, onMapChange }) {
   const [tick,        setTick]        = useState(0);
   const [sortBy,      setSortBy]      = useState('name');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  // This panel reads localStorage directly during render (hasMap/readStat), so it
+  // must not render that content until after mount — reachable via a direct /admin
+  // URL now, which means an initial server-rendered pass with no localStorage.
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     setAccounts(getAccounts());
     setAdminList(getAdminList());
   }, [tick]);
+
+  if (!mounted) {
+    return <div className="flex items-center justify-center h-full bg-zinc-950 text-zinc-500 text-sm">Loading…</div>;
+  }
 
   function refresh() { setTick(t => t + 1); }
 
@@ -111,7 +120,7 @@ export default function AdminPanel({ currentUser, onBack, onMapChange }) {
       <div className="flex items-center gap-4 px-6 py-4 bg-zinc-900 border-b border-zinc-800 shrink-0">
         <button onClick={onBack}
           className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm font-semibold transition-all px-3 py-1.5 rounded-lg hover:bg-zinc-800">
-          ← Back to Game
+          ← Back to Home
         </button>
         <div className="w-px h-5 bg-zinc-700"/>
         <h1 className="text-white font-black text-xl flex items-center gap-2">

@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import OnboardingModal from "./components/OnboardingModal";
 import Navbar from "./components/Navbar";
 import WarMap from "./components/WarMap";
-import AdminPanel from "./components/AdminPanel";
 import CampaignSelect from "./components/CampaignSelect";
 import RankedSelect from "./components/RankedSelect";
 import QuestPanel from "./components/QuestPanel";
@@ -25,9 +24,8 @@ const MAP_KEYS = [...MODES.map(m => m.id), "campaign"];
 export default function Home() {
   const [mode,        setMode]        = useState(null);
   const [mission,     setMission]     = useState(null);
-  const [view,        setView]        = useState("home"); // "home" | "admin" | "campaign"
+  const [view,        setView]        = useState("home"); // "home" | "campaign" | "ranked"
   const [loginKey,    setLoginKey]    = useState(0);
-  const [currentUser, setCurrentUser] = useState(null);
   // null = not yet checked (avoids hydration mismatch)
   const [mapStatus, setMapStatus] = useState(null);
   // Lifted up so the home screen's Profile/Shop/Commanders shortcut cards can
@@ -57,14 +55,6 @@ export default function Home() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, mode]);
-
-  // Track logged-in user
-  useEffect(() => {
-    const read = () => setCurrentUser(localStorage.getItem("rpg_username") || null);
-    read();
-    window.addEventListener("rpg_profile_updated", read);
-    return () => window.removeEventListener("rpg_profile_updated", read);
-  }, []);
 
   // Browser back/forward → return to home + re-show login
   useEffect(() => {
@@ -97,29 +87,11 @@ export default function Home() {
     setView("campaign");
   }
 
-  // ── Admin view ──
-  if (view === "admin") {
-    return (
-      <div className="bg-zinc-950 h-screen overflow-hidden">
-        <AdminPanel
-          currentUser={currentUser}
-          onBack={() => setView("home")}
-          onMapChange={() => {
-            // Re-read map status after admin edits
-            const status = {};
-            MODES.forEach(m => { status[m.id] = !!localStorage.getItem(`rpg_map_${m.id}`); });
-            setMapStatus(status);
-          }}
-        />
-      </div>
-    );
-  }
-
   // ── Campaign mission-select view ──
   if (view === "campaign" && !mode) {
     return (
       <div className="bg-zinc-950 h-screen overflow-hidden flex flex-col">
-        <Navbar onAdmin={() => setView("admin")} />
+        <Navbar />
         <div className="flex-1 overflow-y-auto">
           <CampaignSelect onSelectMission={enterMission} onBack={() => setView("home")} />
         </div>
@@ -131,7 +103,7 @@ export default function Home() {
   if (view === "ranked" && !mode) {
     return (
       <div className="bg-zinc-950 h-screen overflow-hidden flex flex-col">
-        <Navbar onAdmin={() => setView("admin")} />
+        <Navbar />
         <div className="flex-1 overflow-hidden">
           <RankedSelect onBack={() => setView("home")} onMatchFound={() => {}} />
         </div>
@@ -144,7 +116,6 @@ export default function Home() {
       {/* Navbar only on home */}
       {!mode && (
         <Navbar
-          onAdmin={() => setView("admin")}
           modal={navModal} setModal={setNavModal}
           lockerOpen={navLockerOpen} setLockerOpen={setNavLockerOpen}
         />

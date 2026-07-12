@@ -37,7 +37,7 @@ function formatTime(seconds) {
 // down to let something outside the navbar (e.g. home-screen shortcut cards)
 // open the same Shop/Commanders modal or profile dropdown. Omit them and the
 // navbar manages its own state as before.
-export default function Navbar({ onAdmin, modal: modalProp, setModal: setModalProp, lockerOpen: lockerOpenProp, setLockerOpen: setLockerOpenProp }) {
+export default function Navbar({ modal: modalProp, setModal: setModalProp, lockerOpen: lockerOpenProp, setLockerOpen: setLockerOpenProp }) {
   const [username,   setUsername]   = useState(null);
   const [coins,      setCoins]      = useState(0);
   const [gems,       setGems]       = useState(0);
@@ -105,14 +105,6 @@ export default function Navbar({ onAdmin, modal: modalProp, setModal: setModalPr
             <TopBarButton onClick={() => setModal("bug")}>Report Bug</TopBarButton>
             <span className="text-zinc-700">|</span>
             <TopBarButton onClick={() => setModal("suggestion")}>Make a Suggestion</TopBarButton>
-            {onAdmin && (
-              <>
-                <span className="text-zinc-700">|</span>
-                <TopBarButton onClick={onAdmin}>
-                  🔑 Admin Panel
-                </TopBarButton>
-              </>
-            )}
           </div>
         </div>
 
