@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import ReportBugModal from "./modals/ReportBugModal";
 import SuggestionModal from "./modals/SuggestionModal";
+import ReportPlayerModal from "./modals/ReportPlayerModal";
 import ShopModal from "./modals/ShopModal";
 import GeneralsModal from "./modals/GeneralsModal";
 import StrategonPassModal from "./modals/StrategonPassModal";
@@ -105,6 +106,8 @@ export default function Navbar({ modal: modalProp, setModal: setModalProp, locke
             <TopBarButton onClick={() => setModal("bug")}>Report Bug</TopBarButton>
             <span className="text-zinc-700">|</span>
             <TopBarButton onClick={() => setModal("suggestion")}>Make a Suggestion</TopBarButton>
+            <span className="text-zinc-700">|</span>
+            <TopBarButton onClick={() => setModal("reportplayer")}>Report a Player</TopBarButton>
           </div>
         </div>
 
@@ -203,6 +206,7 @@ export default function Navbar({ modal: modalProp, setModal: setModalProp, locke
 
       {modal === "bug"        && <ReportBugModal        onClose={() => setModal(null)} />}
       {modal === "suggestion" && <SuggestionModal       onClose={() => setModal(null)} />}
+      {modal === "reportplayer" && <ReportPlayerModal   onClose={() => setModal(null)} />}
       {modal === "shop"       && <ShopModal             onClose={() => setModal(null)} />}
       {modal === "generals"   && <GeneralsModal         onClose={() => setModal(null)} />}
       {modal === "pass"       && <StrategonPassModal    onClose={() => setModal(null)} />}
