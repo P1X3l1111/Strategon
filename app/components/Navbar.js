@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import ReportBugModal from "./modals/ReportBugModal";
 import SuggestionModal from "./modals/SuggestionModal";
-import AdminApplicationModal from "./modals/AdminApplicationModal";
 import ShopModal from "./modals/ShopModal";
 import GeneralsModal from "./modals/GeneralsModal";
 import StrategonPassModal from "./modals/StrategonPassModal";
@@ -106,12 +105,6 @@ export default function Navbar({ onAdmin, modal: modalProp, setModal: setModalPr
             <TopBarButton onClick={() => setModal("bug")}>Report Bug</TopBarButton>
             <span className="text-zinc-700">|</span>
             <TopBarButton onClick={() => setModal("suggestion")}>Make a Suggestion</TopBarButton>
-            <span className="text-zinc-700">|</span>
-            <TopBarButton onClick={() => setModal("admin")}>
-              Apply for Admin
-              <span className="ml-1 text-xs font-semibold bg-red-600 text-white rounded-full px-1.5 py-0.5">LIMITED</span>
-              <span className="ml-1 text-xs font-semibold bg-zinc-600 text-zinc-300 rounded-full px-1.5 py-0.5">No Payment</span>
-            </TopBarButton>
             {onAdmin && (
               <>
                 <span className="text-zinc-700">|</span>
@@ -197,7 +190,6 @@ export default function Navbar({ onAdmin, modal: modalProp, setModal: setModalPr
 
       {modal === "bug"        && <ReportBugModal        onClose={() => setModal(null)} />}
       {modal === "suggestion" && <SuggestionModal       onClose={() => setModal(null)} />}
-      {modal === "admin"      && <AdminApplicationModal onClose={() => setModal(null)} />}
       {modal === "shop"       && <ShopModal             onClose={() => setModal(null)} />}
       {modal === "generals"   && <GeneralsModal         onClose={() => setModal(null)} />}
       {modal === "pass"       && <StrategonPassModal    onClose={() => setModal(null)} />}
