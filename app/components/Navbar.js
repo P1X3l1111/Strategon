@@ -147,26 +147,47 @@ export default function Navbar({ modal: modalProp, setModal: setModalProp, locke
               {/* Header */}
               <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-zinc-800/60 border-b border-zinc-700">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-indigo-700 flex items-center justify-center text-xl font-bold">
+                  <div className="w-11 h-11 rounded-full bg-indigo-700 flex items-center justify-center text-xl font-bold shrink-0">
                     {username ? username[0].toUpperCase() : "?"}
                   </div>
                   <div>
-                    <div className="text-white font-bold text-sm">{username || "Guest"}</div>
-                    <div className="text-zinc-400 text-xs">Pass Level {passLevel}{passLevel >= PASS_MAX_LEVEL ? " (MAX)" : ""}</div>
+                    <div className="text-white font-bold text-base leading-tight">{username || "Guest"}</div>
+                    <div className="text-zinc-500 text-xs">Your account at a glance</div>
                   </div>
                 </div>
-                <button onClick={() => setLockerOpen(false)} className="text-zinc-500 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded hover:bg-zinc-800">✕</button>
+                <button onClick={() => setLockerOpen(false)} className="text-zinc-500 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded hover:bg-zinc-800 shrink-0">✕</button>
               </div>
 
-              {/* Stats */}
-              <div className="p-4 flex flex-col gap-2.5">
-                <StatRow icon="⏱️" label="Time Online"  value={formatTime(onlineTime)} />
-                <StatRow icon="💀" label="Mobs Killed"  value={kills.toLocaleString()} />
-                <StatRow icon="💰" label="Coins"        value={coins.toLocaleString()} color="text-yellow-400" />
-                <StatRow icon="💎" label="Gems"         value={gems.toLocaleString()}  color="text-cyan-400" />
-                <StatRow icon="🎫" label="Pass XP"      value={passXp.toLocaleString()} color="text-amber-400" />
-                <div className="pt-2 border-t border-zinc-800">
-                  <StatRow icon="🕐" label="Session time" value={formatTime(Math.floor((Date.now() - sessionStart.current) / 1000))} color="text-zinc-400" />
+              <div className="p-4 flex flex-col gap-4">
+                {/* Strategon Pass progress — one clear line instead of two disconnected numbers */}
+                <div className="rounded-xl border border-amber-800/50 bg-amber-950/20 p-3">
+                  <div className="flex items-center justify-between text-xs mb-1.5">
+                    <span className="text-amber-300 font-bold flex items-center gap-1.5">🎫 Strategon Pass — Level {passLevel}{passLevel >= PASS_MAX_LEVEL ? " (MAX)" : ""}</span>
+                    <span className="text-zinc-400">{passLevel >= PASS_MAX_LEVEL ? `${passXp.toLocaleString()} XP` : `${intoLevel} / ${PASS_LEVEL_XP} XP`}</span>
+                  </div>
+                  <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-500" style={{ width: `${xpPercent}%` }} />
+                  </div>
+                  <p className="text-zinc-500 text-[10px] mt-1.5">Earned by completing weekly quests — {passLevel >= PASS_MAX_LEVEL ? "you've reached the top level!" : "keep going to unlock the next reward."}</p>
+                </div>
+
+                {/* Currency — the two things you spend, front and center */}
+                <div>
+                  <p className="text-zinc-500 text-[10px] uppercase tracking-widest font-bold mb-1.5">Currency</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <CurrencyTile icon="💰" label="Coins" value={coins} color="text-yellow-400" />
+                    <CurrencyTile icon="💎" label="Gems"  value={gems}  color="text-cyan-400" />
+                  </div>
+                </div>
+
+                {/* Activity — how much you've played */}
+                <div>
+                  <p className="text-zinc-500 text-[10px] uppercase tracking-widest font-bold mb-1.5">Activity</p>
+                  <div className="flex flex-col gap-2">
+                    <StatRow icon="💀" label="Enemies Defeated" value={kills.toLocaleString()} />
+                    <StatRow icon="⏱️" label="Total Time Online" value={formatTime(onlineTime)} />
+                    <StatRow icon="🕐" label="This Session" value={formatTime(Math.floor((Date.now() - sessionStart.current) / 1000))} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -210,9 +231,21 @@ function CurrencyBadge({ icon, label, value, color }) {
   );
 }
 
+function CurrencyTile({ icon, label, value, color }) {
+  return (
+    <div className="flex items-center gap-2.5 bg-zinc-800/60 border border-zinc-700 rounded-xl px-3 py-2.5">
+      <span className="text-2xl leading-none">{icon}</span>
+      <div className="min-w-0">
+        <div className={`font-black text-base leading-tight ${color}`}>{value.toLocaleString()}</div>
+        <div className="text-zinc-500 text-[10px]">{label}</div>
+      </div>
+    </div>
+  );
+}
+
 function StatRow({ icon, label, value, color = "text-zinc-200" }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between bg-zinc-800/40 rounded-lg px-2.5 py-1.5">
       <div className="flex items-center gap-2 text-zinc-400 text-xs">
         <span>{icon}</span>
         <span>{label}</span>
