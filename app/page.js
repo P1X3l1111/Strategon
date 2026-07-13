@@ -18,6 +18,7 @@ const MODES = [
 ];
 
 const RANKED_MODE = { id: "ranked", name: "Ranked", icon: Trophy, color: "#f59e0b", desc: "Queue up against a similarly-skilled real opponent." };
+const CAMPAIGN_MODE = { id: "campaign", name: "Campaign", icon: Medal, color: "#eab308", desc: "Win scripted missions — some require capturing enemy troops alive." };
 
 // Map-seeding keys — includes campaign's shared battlefield in addition to the 3 modes above
 const MAP_KEYS = [...MODES.map(m => m.id), "campaign"];
@@ -147,31 +148,19 @@ export default function Home() {
                   <p className="text-zinc-500 text-sm">Choose a battle mode to deploy your forces</p>
                 </div>
 
-                {/* Row 1: Classic and Campaign are the two default/primary modes, shown side by side.
-                    Row 2: Endless spans the full width as a line.
-                    Row 3: every other mode plus an "Other" placeholder, evenly split into 3 columns. */}
-                <div className="flex flex-col gap-5 w-full max-w-2xl">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <ModeCard m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} />
-
-                    <button
-                      onClick={() => setView("campaign")}
-                      className="group relative flex flex-col items-center justify-center gap-3 text-center border rounded-2xl p-6 h-56 transition-all duration-200 shadow-xl overflow-hidden bg-gradient-to-br from-zinc-900 to-amber-950/30 border-amber-800/60 hover:border-amber-500 hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98] cursor-pointer"
-                    >
-                      <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: "#f59e0b" }} />
-                      <Medal size={56} className="text-amber-500"/>
-                      <span className="text-white font-black text-2xl">Campaign</span>
-                      <span className="text-zinc-400 text-sm leading-snug px-2">Win scripted missions — some require capturing enemy troops alive.</span>
-                    </button>
+                {/* Classic & Ranked anchor the center as tilted diamonds with a soft edge
+                    fade; every other mode fans out below, tilted the opposite way. */}
+                <div className="flex flex-col items-center gap-9 w-full">
+                  <div className="flex items-center justify-center gap-5">
+                    <DiamondCard m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} />
+                    <DiamondCard m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} />
                   </div>
 
-                  <ModeLine m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} />
-
-                  <div className="grid grid-cols-3 gap-5">
-                    {MODES.filter(m => m.id !== "classic" && m.id !== "endless").map(m => (
-                      <ModeCard key={m.id} m={m} isReady={isModeReady(m.id, mapStatus)} onClick={() => enterGame(m.id)} compact />
-                    ))}
-                    <ModeCard m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} compact />
+                  <div className="flex items-center justify-center gap-3 flex-wrap">
+                    <TiltCard m={CAMPAIGN_MODE} isReady={true} onClick={() => setView("campaign")} />
+                    <TiltCard m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} />
+                    <TiltCard m={MODES.find(m => m.id === "siege")} isReady={isModeReady("siege", mapStatus)} onClick={() => enterGame("siege")} />
+                    <TiltCard m={MODES.find(m => m.id === "turns")} isReady={isModeReady("turns", mapStatus)} onClick={() => enterGame("turns")} />
                   </div>
                 </div>
 
@@ -213,32 +202,75 @@ function isModeReady(id, mapStatus) {
   return mapStatus === null ? true : (mapStatus[id] ?? false);
 }
 
-function ModeCard({ m, isReady, onClick, compact = false }) {
+// Center-stage mode card — a rotated diamond with the icon/label counter-rotated
+// upright, and a mask fade toward its two points.
+function DiamondCard({ m, isReady, onClick }) {
   return (
     <button
       onClick={() => isReady && onClick()}
       disabled={!isReady}
-      className={`group relative flex flex-col items-center justify-center text-center border rounded-2xl transition-all duration-200 shadow-xl overflow-hidden w-full ${
-        compact ? "gap-1.5 p-3 h-28" : "gap-3 p-6 h-56"
-      } ${
-        isReady
-          ? "bg-zinc-900 border-zinc-700 hover:bg-zinc-800 hover:border-zinc-500 hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98] cursor-pointer"
-          : "bg-zinc-900/40 border-zinc-800 cursor-not-allowed opacity-50"
-      }`}
+      title={isReady ? m.desc : "Admin must create a map for this mode."}
+      className={`group relative shrink-0 w-[200px] h-[200px] ${isReady ? "cursor-pointer" : "cursor-not-allowed"}`}
     >
-      <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: isReady ? m.color : "#3f3f46" }} />
+      <div
+        className="absolute inset-0 rounded-full blur-2xl transition-opacity duration-200"
+        style={{ background: m.color, opacity: isReady ? 0.22 : 0 }}
+      />
+      <div
+        className={`absolute left-1/2 top-1/2 w-[140px] h-[140px] -translate-x-1/2 -translate-y-1/2 rotate-45 group-hover:scale-105 border rounded-2xl shadow-2xl transition-all duration-200 ${
+          isReady
+            ? "bg-zinc-900 border-zinc-700 group-hover:border-zinc-400"
+            : "bg-zinc-900/40 border-zinc-800 opacity-50"
+        }`}
+        style={{
+          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 24%, black 76%, transparent 100%)",
+          maskImage: "linear-gradient(to bottom, transparent 0%, black 24%, black 76%, transparent 100%)",
+        }}
+      />
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center pointer-events-none">
+        <span style={{ color: isReady ? m.color : "#52525b" }}>
+          {isReady ? <m.icon size={40}/> : <Lock size={40}/>}
+        </span>
+        <span className="text-white font-black text-lg">{m.name}</span>
+      </div>
       {!isReady && (
-        <span className="absolute top-3 right-3 text-[10px] font-bold text-red-400 bg-red-950 border border-red-800 px-1.5 py-0.5 rounded-full">
+        <span className="absolute top-1 right-1 text-[9px] font-bold text-red-400 bg-red-950 border border-red-800 px-1.5 py-0.5 rounded-full z-10">
           No Map
         </span>
       )}
-      <span style={{ color: isReady ? m.color : "#52525b" }}>
-        {isReady ? <m.icon size={compact ? 28 : 52}/> : <Lock size={compact ? 28 : 52}/>}
-      </span>
-      <span className={`text-white font-black ${compact ? "text-base" : "text-2xl"}`}>{m.name}</span>
-      {!compact && (
-        <span className="text-zinc-400 text-sm leading-snug px-2">
-          {isReady ? m.desc : "Admin must create a map for this mode."}
+    </button>
+  );
+}
+
+// Supporting-cast mode card — smaller, tilted the opposite way from DiamondCard.
+function TiltCard({ m, isReady, onClick }) {
+  return (
+    <button
+      onClick={() => isReady && onClick()}
+      disabled={!isReady}
+      title={isReady ? m.desc : "Admin must create a map for this mode."}
+      className={`group relative shrink-0 w-[132px] h-[132px] ${isReady ? "cursor-pointer" : "cursor-not-allowed"}`}
+    >
+      <div
+        className="absolute inset-0 rounded-full blur-xl transition-opacity duration-200"
+        style={{ background: m.color, opacity: isReady ? 0.14 : 0 }}
+      />
+      <div
+        className={`absolute left-1/2 top-1/2 w-[92px] h-[92px] -translate-x-1/2 -translate-y-1/2 -rotate-45 group-hover:scale-105 border rounded-xl shadow-lg transition-all duration-200 ${
+          isReady
+            ? "bg-zinc-900 border-zinc-700 group-hover:border-zinc-500"
+            : "bg-zinc-900/40 border-zinc-800 opacity-50"
+        }`}
+      />
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center pointer-events-none">
+        <span style={{ color: isReady ? m.color : "#52525b" }}>
+          {isReady ? <m.icon size={22}/> : <Lock size={22}/>}
+        </span>
+        <span className="text-white font-bold text-[11px]">{m.name}</span>
+      </div>
+      {!isReady && (
+        <span className="absolute top-0 right-0 text-[8px] font-bold text-red-400 bg-red-950 border border-red-800 px-1 py-0.5 rounded-full z-10">
+          No Map
         </span>
       )}
     </button>
@@ -259,36 +291,6 @@ function SideCard({ onClick, icon: Icon, label, caret }) {
           <span className={`text-zinc-500 text-xs transition-transform duration-200 inline-block ${caret ? "rotate-180" : ""}`}>▼</span>
         )}
       </span>
-    </button>
-  );
-}
-
-function ModeLine({ m, isReady, onClick }) {
-  return (
-    <button
-      onClick={() => isReady && onClick()}
-      disabled={!isReady}
-      className={`group relative col-span-1 sm:col-span-2 flex items-center gap-4 text-left border rounded-2xl px-6 py-5 transition-all duration-200 shadow-xl overflow-hidden ${
-        isReady
-          ? "bg-zinc-900 border-zinc-700 hover:bg-zinc-800 hover:border-zinc-500 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-          : "bg-zinc-900/40 border-zinc-800 cursor-not-allowed opacity-50"
-      }`}
-    >
-      <div className="absolute inset-y-0 left-0 w-1.5" style={{ background: isReady ? m.color : "#3f3f46" }} />
-      {!isReady && (
-        <span className="absolute top-3 right-3 text-[10px] font-bold text-red-400 bg-red-950 border border-red-800 px-1.5 py-0.5 rounded-full">
-          No Map
-        </span>
-      )}
-      <span className="shrink-0" style={{ color: isReady ? m.color : "#52525b" }}>
-        {isReady ? <m.icon size={34}/> : <Lock size={34}/>}
-      </span>
-      <div className="min-w-0">
-        <span className="text-white font-black text-lg block">{m.name}</span>
-        <span className="text-zinc-400 text-xs leading-snug">
-          {isReady ? m.desc : "Admin must create a map for this mode."}
-        </span>
-      </div>
     </button>
   );
 }
