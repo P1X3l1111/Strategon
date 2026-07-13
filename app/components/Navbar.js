@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Swords, X, Ticket, Coins, Gem, Skull, Clock, Timer } from "lucide-react";
+import { Swords, X, Ticket, Coins, Gem, Skull, Clock, Timer, Bug, Lightbulb, Flag } from "lucide-react";
 import ReportBugModal from "./modals/ReportBugModal";
 import SuggestionModal from "./modals/SuggestionModal";
 import ReportPlayerModal from "./modals/ReportPlayerModal";
@@ -99,47 +99,64 @@ export default function Navbar({ modal: modalProp, setModal: setModalProp, locke
 
   return (
     <>
-      <nav className="w-full bg-zinc-900 text-white shadow-lg border-b border-zinc-700 z-40 sticky top-0">
+      <nav className="w-full bg-gradient-to-b from-zinc-900 to-zinc-950 text-white shadow-lg z-40 sticky top-0">
 
         {/* ── Row 1: community buttons ── */}
-        <div className="border-b border-zinc-800">
-          <div className="mx-auto w-full max-w-[1400px] flex items-center justify-center px-6 py-1.5 gap-6">
-            <TopBarButton onClick={() => setModal("bug")}>Report Bug</TopBarButton>
-            <span className="text-zinc-700">|</span>
-            <TopBarButton onClick={() => setModal("suggestion")}>Make a Suggestion</TopBarButton>
-            <span className="text-zinc-700">|</span>
-            <TopBarButton onClick={() => setModal("reportplayer")}>Report a Player</TopBarButton>
+        <div className="border-b border-zinc-800/80 bg-black/20">
+          <div className="mx-auto w-full max-w-[1400px] flex items-center justify-center px-6 py-1.5 gap-2">
+            <TopBarButton icon={Bug} onClick={() => setModal("bug")}>Report Bug</TopBarButton>
+            <span className="text-zinc-800">•</span>
+            <TopBarButton icon={Lightbulb} onClick={() => setModal("suggestion")}>Make a Suggestion</TopBarButton>
+            <span className="text-zinc-800">•</span>
+            <TopBarButton icon={Flag} onClick={() => setModal("reportplayer")}>Report a Player</TopBarButton>
           </div>
         </div>
 
-        {/* ── Row 2: username · xp bar · locker ── */}
-        <div className="border-b border-zinc-800">
-          <div className="mx-auto w-full max-w-[1400px] flex items-center px-6 py-2 gap-4">
-            {/* Username */}
-            <div className="flex items-center gap-2 bg-zinc-800 rounded-full px-4 py-1.5 text-sm font-semibold shrink-0">
-              <Swords size={18}/>
-              <span className="text-zinc-100">
-                {username || <span className="text-zinc-400 italic">No profile</span>}
-              </span>
+        {/* ── Row 2: username · xp bar · currency ── */}
+        <div className="mx-auto w-full max-w-[1400px] flex items-center px-6 py-2.5 gap-4">
+          {/* Username — gradient avatar with an online pulse */}
+          <div className="flex items-center gap-2.5 bg-zinc-800/80 border border-zinc-700 rounded-full pl-1.5 pr-4 py-1 shrink-0">
+            <div className="relative w-7 h-7 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-700 flex items-center justify-center shrink-0 shadow-inner">
+              <Swords size={13} className="text-white"/>
+              {username && (
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-zinc-900 animate-pulse"/>
+              )}
             </div>
+            <span className="text-sm font-semibold text-zinc-100">
+              {username || <span className="text-zinc-400 italic">No profile</span>}
+            </span>
+          </div>
 
-            {/* Pass XP bar */}
-            <div className="flex flex-col gap-0.5 flex-1 max-w-xs">
+          {/* Pass XP bar */}
+          <div className="flex items-center gap-2.5 flex-1 max-w-xs">
+            <div className="w-7 h-7 rounded-full bg-amber-500/10 border border-amber-600/40 flex items-center justify-center shrink-0">
+              <Ticket size={14} className="text-amber-400"/>
+            </div>
+            <div className="flex flex-col gap-0.5 flex-1 min-w-0">
               <div className="flex justify-between text-[10px] text-zinc-400">
                 <span>Pass Lv.{passLevel}{passLevel >= PASS_MAX_LEVEL ? " (MAX)" : ""}</span>
                 <span>{passLevel >= PASS_MAX_LEVEL ? passXp : `${intoLevel} / ${PASS_LEVEL_XP}`} XP</span>
               </div>
-              <div className="w-full h-2 bg-zinc-700 rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-300 rounded-full transition-all duration-500"
                   style={{ width: `${xpPercent}%` }}
                 />
               </div>
             </div>
+          </div>
 
-            <div className="flex-1" />
+          <div className="flex-1" />
+
+          {/* Currency */}
+          <div className="flex items-center gap-3">
+            <CurrencyBadge icon={Coins} label="Coins" value={coins} color="text-yellow-400" />
+            <CurrencyBadge icon={Gem}   label="Gems"  value={gems}  color="text-cyan-400" />
           </div>
         </div>
+
+        {/* Accent line */}
+        <div className="h-[2px] bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-amber-500 opacity-70"/>
 
         {/* Profile panel — opened from the home screen's Profile card, centered on screen */}
         {lockerOpen && (
@@ -197,12 +214,6 @@ export default function Navbar({ modal: modalProp, setModal: setModalProp, locke
             </div>
           </div>
         )}
-
-        {/* ── Row 3: currency ── */}
-        <div className="mx-auto w-full max-w-[1400px] flex items-center justify-end px-6 py-2 gap-3">
-          <CurrencyBadge icon={Coins} label="Coins" value={coins} color="text-yellow-400" />
-          <CurrencyBadge icon={Gem}   label="Gems"  value={gems}  color="text-cyan-400" />
-        </div>
       </nav>
 
       {modal === "bug"        && <ReportBugModal        onClose={() => setModal(null)} />}
@@ -215,12 +226,13 @@ export default function Navbar({ modal: modalProp, setModal: setModalProp, locke
   );
 }
 
-function TopBarButton({ onClick, children }) {
+function TopBarButton({ onClick, icon: Icon, children }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors font-medium"
+      className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white hover:bg-zinc-800 px-2.5 py-1 rounded-full transition-colors font-medium"
     >
+      <Icon size={12}/>
       {children}
     </button>
   );
@@ -228,10 +240,12 @@ function TopBarButton({ onClick, children }) {
 
 function CurrencyBadge({ icon: Icon, label, value, color }) {
   return (
-    <div className="flex items-center gap-2 bg-zinc-800 rounded-full px-4 py-1.5 text-sm" title={label}>
-      <Icon size={15} className={color}/>
+    <div className="group flex items-center gap-2 bg-zinc-800/80 border border-zinc-700 hover:border-zinc-600 rounded-full pl-1.5 pr-4 py-1 text-sm transition-colors" title={label}>
+      <span className="w-6 h-6 rounded-full bg-zinc-900 flex items-center justify-center shrink-0">
+        <Icon size={13} className={color}/>
+      </span>
       <span className={`font-bold ${color}`}>{value.toLocaleString()}</span>
-      <span className="text-zinc-400 text-xs hidden sm:inline">{label}</span>
+      <span className="text-zinc-500 text-xs hidden sm:inline">{label}</span>
     </div>
   );
 }
