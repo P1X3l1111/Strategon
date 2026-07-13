@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Gift, Flame, CheckCircle2, Gem, Coins } from "lucide-react";
 import { getDailyRewardStatus, claimDailyReward, DAILY_REWARD_TIERS } from "../data/quests";
 
 // Self-contained daily-login streak panel — mirrors QuestPanel's pattern.
@@ -28,6 +29,7 @@ export default function DailyRewardPanel() {
     }
   }
 
+
   // Stays empty through SSR/hydration (status depends on localStorage) and while logged out.
   if (!reward) return null;
 
@@ -36,8 +38,8 @@ export default function DailyRewardPanel() {
   return (
     <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-3 flex flex-col gap-2 w-full shrink-0">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-white font-black text-sm whitespace-nowrap">🎁 Daily Reward</h3>
-        <span className="text-amber-300 text-xs font-bold flex items-center gap-1 shrink-0">🔥 {reward.streak}-day streak</span>
+        <h3 className="text-white font-black text-sm whitespace-nowrap flex items-center gap-1.5"><Gift size={15}/> Daily Reward</h3>
+        <span className="text-amber-300 text-xs font-bold flex items-center gap-1 shrink-0"><Flame size={13}/> {reward.streak}-day streak</span>
       </div>
 
       {flash && (
@@ -58,7 +60,9 @@ export default function DailyRewardPanel() {
               }`}
             >
               <span className="text-[8px] uppercase font-bold text-zinc-500">D{tier.day}</span>
-              <span className="text-sm">{isDone ? "✅" : tier.gems ? "💎" : "💰"}</span>
+              <span className={isDone ? "text-green-400" : tier.gems ? "text-cyan-400" : "text-yellow-400"}>
+                {isDone ? <CheckCircle2 size={14}/> : tier.gems ? <Gem size={14}/> : <Coins size={14}/>}
+              </span>
             </div>
           );
         })}
@@ -73,7 +77,7 @@ export default function DailyRewardPanel() {
             : "bg-green-600 hover:bg-green-500 text-white"
         }`}
       >
-        {reward.claimedToday ? "✓ Claimed today" : `Claim Day ${cyclePos + 1} Reward`}
+        {reward.claimedToday ? <span className="flex items-center justify-center gap-1"><CheckCircle2 size={12}/> Claimed today</span> : `Claim Day ${cyclePos + 1} Reward`}
       </button>
     </div>
   );

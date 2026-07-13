@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Bug, CheckCircle2 } from "lucide-react";
 
 export default function ReportBugModal({ onClose }) {
   const [username, setUsername] = useState(
@@ -17,7 +18,7 @@ export default function ReportBugModal({ onClose }) {
 
   return (
     <Overlay onClose={onClose}>
-      <h2 className="text-xl font-bold text-white mb-1">🐛 Report a Bug</h2>
+      <h2 className="text-xl font-bold text-white mb-1 flex items-center gap-2"><Bug size={20}/> Report a Bug</h2>
       <p className="text-zinc-400 text-sm mb-5">Found something broken? Let us know.</p>
 
       {submitted ? (
@@ -81,7 +82,7 @@ export function Field({ label, required, children }) {
 export function SuccessMessage({ message, onClose }) {
   return (
     <div className="flex flex-col items-center gap-4 py-4">
-      <span className="text-4xl">✅</span>
+      <CheckCircle2 size={40} className="text-green-500"/>
       <p className="text-zinc-200 font-medium text-center">{message}</p>
       <button onClick={onClose} className={primaryBtn}>Close</button>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { Trophy, Target, Ban, Search, Swords } from "lucide-react";
 import {
   CALIBRATION_GAMES, getRankForMmr, getRankState, getBanMinutesRemaining, isBanned,
 } from "../data/ranked";
@@ -92,7 +93,7 @@ export default function RankedSelect({ onBack, onMatchFound }) {
       </button>
 
       <div className="text-center">
-        <h1 className="text-5xl font-black text-white tracking-tight mb-2">🏆 RANKED</h1>
+        <h1 className="text-5xl font-black text-white tracking-tight mb-2 flex items-center justify-center gap-3"><Trophy size={40}/> RANKED</h1>
         <p className="text-zinc-500 text-sm">Queue up against a similarly-skilled real opponent</p>
       </div>
 
@@ -101,13 +102,13 @@ export default function RankedSelect({ onBack, onMatchFound }) {
         style={{ borderColor: `${rank.color}66`, background: `${rank.color}11` }}>
         {rankState.calibrated ? (
           <>
-            <span className="text-5xl">{rank.icon}</span>
+            <span style={{ color: rank.color }}><rank.icon size={44}/></span>
             <span className="text-2xl font-black" style={{ color: rank.color }}>{rank.name}</span>
             <span className="text-zinc-400 text-xs">{rankState.mmr} MMR · {rankState.wins}W {rankState.losses}L</span>
           </>
         ) : (
           <>
-            <span className="text-5xl">🎯</span>
+            <Target size={44} className="text-zinc-400"/>
             <span className="text-xl font-black text-white">Calibrating</span>
             <span className="text-zinc-400 text-xs">{rankState.calibrationGames}/{CALIBRATION_GAMES} placement games played</span>
             <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden mt-1">
@@ -121,7 +122,7 @@ export default function RankedSelect({ onBack, onMatchFound }) {
 
       {banMinutes > 0 && (
         <div className="rounded-xl border border-red-800 bg-red-950/40 px-4 py-3 text-center max-w-sm">
-          <p className="text-red-300 font-bold text-sm">⛔ Ranked queue locked</p>
+          <p className="text-red-300 font-bold text-sm flex items-center justify-center gap-1.5"><Ban size={14}/> Ranked queue locked</p>
           <p className="text-red-400/80 text-xs mt-1">You left a match early. Try again in {banMinutes} minute{banMinutes === 1 ? "" : "s"}.</p>
         </div>
       )}
@@ -134,10 +135,10 @@ export default function RankedSelect({ onBack, onMatchFound }) {
 
       {queueState === "idle" && (
         <button onClick={handleFindMatch} disabled={banMinutes > 0}
-          className={`px-8 py-3 rounded-xl font-black text-lg transition-all ${
+          className={`px-8 py-3 rounded-xl font-black text-lg transition-all flex items-center gap-2 ${
             banMinutes > 0 ? "bg-zinc-800 text-zinc-600 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95"
           }`}>
-          🔍 Find Match
+          <Search size={18}/> Find Match
         </button>
       )}
       {queueState === "searching" && (
@@ -151,7 +152,7 @@ export default function RankedSelect({ onBack, onMatchFound }) {
       )}
       {queueState === "matched" && (
         <div className="flex flex-col items-center gap-2">
-          <p className="text-green-400 font-black text-lg">⚔️ Matched vs {opponent}!</p>
+          <p className="text-green-400 font-black text-lg flex items-center gap-2"><Swords size={18}/> Matched vs {opponent}!</p>
           <p className="text-zinc-500 text-xs">Live match sync is still being wired up — hang tight.</p>
         </div>
       )}

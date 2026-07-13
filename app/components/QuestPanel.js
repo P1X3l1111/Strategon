@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Calendar, CalendarDays, Lock, Coins, Gem, Star, CheckCircle2 } from "lucide-react";
 import {
   STAT_META,
   getActiveDailyQuests, getWeeklyQuestsForWeek, getActiveWeekIndex,
@@ -51,7 +52,7 @@ export default function QuestPanel({ type, fill = false }) {
   function handleClaim(q) {
     const ok = isDaily ? claimDailyQuest(q.id) : claimWeeklyQuest(q.id);
     if (ok) {
-      setFlash(`+${q.rewardCoins || 0}💰${q.rewardGems ? ` +${q.rewardGems}💎` : ""}`);
+      setFlash({ coins: q.rewardCoins || 0, gems: q.rewardGems || 0 });
       setTimeout(() => setFlash(null), 1600);
     }
   }
@@ -62,7 +63,7 @@ export default function QuestPanel({ type, fill = false }) {
     <div className={`bg-zinc-900 border border-zinc-700 rounded-2xl p-4 flex flex-col gap-3 w-full ${fill ? "flex-1 min-h-0" : "shrink-0"}`}>
       <div className="flex items-center justify-between gap-2 shrink-0">
         <h3 className="text-white font-black text-sm flex items-center gap-1.5 whitespace-nowrap">
-          {isDaily ? "📅 Daily Quests" : "🗓️ Weekly Quests"}
+          {isDaily ? <Calendar size={15}/> : <CalendarDays size={15}/>} {isDaily ? "Daily Quests" : "Weekly Quests"}
         </h3>
         <span className="text-zinc-600 text-[9px] font-semibold shrink-0">{resetLabel}</span>
       </div>
@@ -86,7 +87,7 @@ export default function QuestPanel({ type, fill = false }) {
                     : "border-zinc-700 text-zinc-400 bg-zinc-800/50 hover:text-white hover:border-zinc-500"
                 }`}
               >
-                {unlocked ? `Week ${w}` : `🔒 Week ${w}`}
+                {unlocked ? `Week ${w}` : <span className="flex items-center justify-center gap-1"><Lock size={10}/> Week {w}</span>}
               </button>
             );
           })}
@@ -94,8 +95,9 @@ export default function QuestPanel({ type, fill = false }) {
       )}
 
       {flash && (
-        <div className="bg-green-900/60 border border-green-700 text-green-300 text-[11px] font-bold rounded-lg px-2 py-1 text-center shrink-0">
-          {flash}
+        <div className="bg-green-900/60 border border-green-700 text-green-300 text-[11px] font-bold rounded-lg px-2 py-1 text-center shrink-0 flex items-center justify-center gap-1">
+          <span className="flex items-center gap-0.5">+{flash.coins}<Coins size={11}/></span>
+          {flash.gems > 0 && <span className="flex items-center gap-0.5">+{flash.gems}<Gem size={11}/></span>}
         </div>
       )}
 
@@ -111,7 +113,7 @@ export default function QuestPanel({ type, fill = false }) {
           return (
             <div key={q.id} className={`rounded-xl border p-3 flex flex-col gap-1.5 overflow-hidden ${fill ? "h-full" : "h-[110px]"} ${isClaimed ? "border-zinc-800 bg-zinc-900/40 opacity-50" : "border-zinc-700 bg-zinc-800/50"}`}>
               <div className="flex items-start gap-1.5">
-                <span className="text-lg shrink-0 leading-none">{meta?.icon || "⭐"}</span>
+                <span className="shrink-0 text-zinc-400">{meta?.icon ? <meta.icon size={16}/> : <Star size={16}/>}</span>
                 <p className="text-white text-[11px] font-bold leading-snug line-clamp-2">{q.desc}</p>
               </div>
               <div className="h-1.5 bg-zinc-700 rounded-full overflow-hidden">
@@ -120,13 +122,13 @@ export default function QuestPanel({ type, fill = false }) {
                   style={{ width: `${Math.max(0, (progress / q.target) * 100)}%` }}
                 />
               </div>
-              <p className="text-zinc-500 text-[9px]">
-                {progress}/{q.target} · +{q.rewardCoins || 0}💰{q.rewardGems ? ` +${q.rewardGems}💎` : ""}
+              <p className="text-zinc-500 text-[9px] flex items-center gap-1 flex-wrap">
+                {progress}/{q.target} · <span className="flex items-center gap-0.5"><Coins size={9}/>{q.rewardCoins || 0}</span>{q.rewardGems ? <span className="flex items-center gap-0.5">+{q.rewardGems}<Gem size={9}/></span> : null}
               </p>
               <button
                 onClick={() => handleClaim(q)}
                 disabled={!isComplete || isClaimed}
-                className={`mt-auto w-full py-1.5 rounded-lg text-[10px] font-bold transition-all active:scale-95 ${
+                className={`mt-auto w-full py-1.5 rounded-lg text-[10px] font-bold transition-all active:scale-95 flex items-center justify-center gap-1 ${
                   isClaimed
                     ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
                     : isComplete
@@ -134,7 +136,7 @@ export default function QuestPanel({ type, fill = false }) {
                     : "bg-zinc-700 text-zinc-500 cursor-not-allowed"
                 }`}
               >
-                {isClaimed ? "✓ Claimed" : isComplete ? "Claim" : "In progress"}
+                {isClaimed ? <><CheckCircle2 size={11}/> Claimed</> : isComplete ? "Claim" : "In progress"}
               </button>
             </div>
           );

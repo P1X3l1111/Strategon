@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { Swords, Infinity as InfinityIcon, Castle, ListOrdered, Trophy, Medal, Lock, ShoppingCart, Star, Ticket } from "lucide-react";
 import OnboardingModal from "./components/OnboardingModal";
 import Navbar from "./components/Navbar";
 import WarMap from "./components/WarMap";
@@ -10,13 +11,13 @@ import DailyRewardPanel from "./components/DailyRewardPanel";
 import { makeDefaultGrid } from "./components/MapEditor";
 
 const MODES = [
-  { id: "classic", name: "Classic", icon: "⚔",  color: "#6366f1", desc: "Clear all enemies in one decisive battle." },
-  { id: "endless", name: "Endless", icon: "∞",  color: "#16a34a", desc: "Enemies storm from the right wall forever." },
-  { id: "siege",   name: "Siege",   icon: "🏯", color: "#dc2626", desc: "Your castle is surrounded — hold the line from every side." },
-  { id: "turns",   name: "Turns",   icon: "♟️", color: "#0ea5e9", desc: "Move your troops manually, then watch the AI answer." },
+  { id: "classic", name: "Classic", icon: Swords,       color: "#6366f1", desc: "Clear all enemies in one decisive battle." },
+  { id: "endless", name: "Endless", icon: InfinityIcon, color: "#16a34a", desc: "Enemies storm from the right wall forever." },
+  { id: "siege",   name: "Siege",   icon: Castle,       color: "#dc2626", desc: "Your castle is surrounded — hold the line from every side." },
+  { id: "turns",   name: "Turns",   icon: ListOrdered,  color: "#0ea5e9", desc: "Move your troops manually, then watch the AI answer." },
 ];
 
-const RANKED_MODE = { id: "ranked", name: "Ranked", icon: "🏆", color: "#f59e0b", desc: "Queue up against a similarly-skilled real opponent." };
+const RANKED_MODE = { id: "ranked", name: "Ranked", icon: Trophy, color: "#f59e0b", desc: "Queue up against a similarly-skilled real opponent." };
 
 // Map-seeding keys — includes campaign's shared battlefield in addition to the 3 modes above
 const MAP_KEYS = [...MODES.map(m => m.id), "campaign"];
@@ -158,7 +159,7 @@ export default function Home() {
                       className="group relative flex flex-col items-center justify-center gap-3 text-center border rounded-2xl p-6 h-56 transition-all duration-200 shadow-xl overflow-hidden bg-gradient-to-br from-zinc-900 to-amber-950/30 border-amber-800/60 hover:border-amber-500 hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98] cursor-pointer"
                     >
                       <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: "#f59e0b" }} />
-                      <span className="text-6xl">🎖️</span>
+                      <Medal size={56} className="text-amber-500"/>
                       <span className="text-white font-black text-2xl">Campaign</span>
                       <span className="text-zinc-400 text-sm leading-snug px-2">Win scripted missions — some require capturing enemy troops alive.</span>
                     </button>
@@ -183,10 +184,10 @@ export default function Home() {
             {/* Profile / Shop / Commanders / Strategon Pass — quick-access shortcut cards */}
             <div className="flex flex-col justify-center h-full lg:w-[340px] lg:flex-none">
               <div className="flex flex-col gap-4 h-2/3">
-                <SideCard onClick={() => setNavLockerOpen(o => !o)} icon="🔒" label="Profile" caret={navLockerOpen} />
-                <SideCard onClick={() => setNavModal("shop")} icon="🛒" label="Shop" />
-                <SideCard onClick={() => setNavModal("generals")} icon="⭐" label="Commanders" />
-                <SideCard onClick={() => setNavModal("pass")} icon="🎫" label="Strategon Pass" />
+                <SideCard onClick={() => setNavLockerOpen(o => !o)} icon={Lock} label="Profile" caret={navLockerOpen} />
+                <SideCard onClick={() => setNavModal("shop")} icon={ShoppingCart} label="Shop" />
+                <SideCard onClick={() => setNavModal("generals")} icon={Star} label="Commanders" />
+                <SideCard onClick={() => setNavModal("pass")} icon={Ticket} label="Strategon Pass" />
               </div>
             </div>
           </div>
@@ -231,8 +232,8 @@ function ModeCard({ m, isReady, onClick, compact = false }) {
           No Map
         </span>
       )}
-      <span className={`font-black ${compact ? "text-3xl" : "text-6xl"}`} style={{ color: isReady ? m.color : "#52525b", fontFamily: "monospace" }}>
-        {isReady ? m.icon : "🔒"}
+      <span style={{ color: isReady ? m.color : "#52525b" }}>
+        {isReady ? <m.icon size={compact ? 28 : 52}/> : <Lock size={compact ? 28 : 52}/>}
       </span>
       <span className={`text-white font-black ${compact ? "text-base" : "text-2xl"}`}>{m.name}</span>
       {!compact && (
@@ -245,14 +246,14 @@ function ModeCard({ m, isReady, onClick, compact = false }) {
 }
 
 // Big quick-access shortcut card for the right column (Profile / Shop / Commanders).
-function SideCard({ onClick, icon, label, caret }) {
+function SideCard({ onClick, icon: Icon, label, caret }) {
   return (
     <button
       onClick={onClick}
       className="flex-1 flex items-center justify-center bg-zinc-900 border border-zinc-700 hover:border-indigo-500 hover:bg-zinc-800 rounded-2xl transition-all"
     >
       <span className="flex items-center gap-2 bg-zinc-800 border border-zinc-700 rounded-full px-4 py-1.5 text-sm font-semibold">
-        <span className="text-base">{icon}</span>
+        <Icon size={15}/>
         <span className="text-zinc-200">{label}</span>
         {caret !== undefined && (
           <span className={`text-zinc-500 text-xs transition-transform duration-200 inline-block ${caret ? "rotate-180" : ""}`}>▼</span>
@@ -279,8 +280,8 @@ function ModeLine({ m, isReady, onClick }) {
           No Map
         </span>
       )}
-      <span className="text-4xl font-black shrink-0" style={{ color: isReady ? m.color : "#52525b", fontFamily: "monospace" }}>
-        {isReady ? m.icon : "🔒"}
+      <span className="shrink-0" style={{ color: isReady ? m.color : "#52525b" }}>
+        {isReady ? <m.icon size={34}/> : <Lock size={34}/>}
       </span>
       <div className="min-w-0">
         <span className="text-white font-black text-lg block">{m.name}</span>

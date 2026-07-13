@@ -1,6 +1,7 @@
 // Ranked mode — MMR/rank tracking, 5-game calibration, and escalating leaver
 // penalties. All purely client-side (per-account, like coins/mana/quests).
 // Matchmaking + live match sync against a real opponent live in ./realtime.js.
+import { Medal, Trophy, Award, Gem, Crown } from "lucide-react";
 
 function currentUser() {
   if (typeof window === "undefined") return null;
@@ -8,12 +9,12 @@ function currentUser() {
 }
 
 export const RANKS = [
-  { name: "Bronze",   minMmr: 0,    color: "#a16207", icon: "🥉" },
-  { name: "Silver",   minMmr: 1000, color: "#94a3b8", icon: "🥈" },
-  { name: "Gold",     minMmr: 1300, color: "#eab308", icon: "🥇" },
-  { name: "Platinum", minMmr: 1600, color: "#22d3ee", icon: "💠" },
-  { name: "Diamond",  minMmr: 1900, color: "#818cf8", icon: "💎" },
-  { name: "Champion", minMmr: 2200, color: "#f43f5e", icon: "👑" },
+  { name: "Bronze",   minMmr: 0,    color: "#a16207", icon: Medal },
+  { name: "Silver",   minMmr: 1000, color: "#94a3b8", icon: Medal },
+  { name: "Gold",     minMmr: 1300, color: "#eab308", icon: Trophy },
+  { name: "Platinum", minMmr: 1600, color: "#22d3ee", icon: Award },
+  { name: "Diamond",  minMmr: 1900, color: "#818cf8", icon: Gem },
+  { name: "Champion", minMmr: 2200, color: "#f43f5e", icon: Crown },
 ];
 
 export const CALIBRATION_GAMES = 5;

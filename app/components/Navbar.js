@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { Swords, X, Ticket, Coins, Gem, Skull, Clock, Timer } from "lucide-react";
 import ReportBugModal from "./modals/ReportBugModal";
 import SuggestionModal from "./modals/SuggestionModal";
 import ReportPlayerModal from "./modals/ReportPlayerModal";
@@ -116,7 +117,7 @@ export default function Navbar({ modal: modalProp, setModal: setModalProp, locke
           <div className="mx-auto w-full max-w-[1400px] flex items-center px-6 py-2 gap-4">
             {/* Username */}
             <div className="flex items-center gap-2 bg-zinc-800 rounded-full px-4 py-1.5 text-sm font-semibold shrink-0">
-              <span className="text-lg">⚔️</span>
+              <Swords size={18}/>
               <span className="text-zinc-100">
                 {username || <span className="text-zinc-400 italic">No profile</span>}
               </span>
@@ -158,14 +159,14 @@ export default function Navbar({ modal: modalProp, setModal: setModalProp, locke
                     <div className="text-zinc-500 text-xs">Your account at a glance</div>
                   </div>
                 </div>
-                <button onClick={() => setLockerOpen(false)} className="text-zinc-500 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded hover:bg-zinc-800 shrink-0">✕</button>
+                <button onClick={() => setLockerOpen(false)} className="text-zinc-500 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded hover:bg-zinc-800 shrink-0"><X size={16}/></button>
               </div>
 
               <div className="p-4 flex flex-col gap-4">
                 {/* Strategon Pass progress — one clear line instead of two disconnected numbers */}
                 <div className="rounded-xl border border-amber-800/50 bg-amber-950/20 p-3">
                   <div className="flex items-center justify-between text-xs mb-1.5">
-                    <span className="text-amber-300 font-bold flex items-center gap-1.5">🎫 Strategon Pass — Level {passLevel}{passLevel >= PASS_MAX_LEVEL ? " (MAX)" : ""}</span>
+                    <span className="text-amber-300 font-bold flex items-center gap-1.5"><Ticket size={13}/> Strategon Pass — Level {passLevel}{passLevel >= PASS_MAX_LEVEL ? " (MAX)" : ""}</span>
                     <span className="text-zinc-400">{passLevel >= PASS_MAX_LEVEL ? `${passXp.toLocaleString()} XP` : `${intoLevel} / ${PASS_LEVEL_XP} XP`}</span>
                   </div>
                   <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
@@ -178,8 +179,8 @@ export default function Navbar({ modal: modalProp, setModal: setModalProp, locke
                 <div>
                   <p className="text-zinc-500 text-[10px] uppercase tracking-widest font-bold mb-1.5">Currency</p>
                   <div className="grid grid-cols-2 gap-2">
-                    <CurrencyTile icon="💰" label="Coins" value={coins} color="text-yellow-400" />
-                    <CurrencyTile icon="💎" label="Gems"  value={gems}  color="text-cyan-400" />
+                    <CurrencyTile icon={Coins} label="Coins" value={coins} color="text-yellow-400" />
+                    <CurrencyTile icon={Gem}   label="Gems"  value={gems}  color="text-cyan-400" />
                   </div>
                 </div>
 
@@ -187,9 +188,9 @@ export default function Navbar({ modal: modalProp, setModal: setModalProp, locke
                 <div>
                   <p className="text-zinc-500 text-[10px] uppercase tracking-widest font-bold mb-1.5">Activity</p>
                   <div className="flex flex-col gap-2">
-                    <StatRow icon="💀" label="Enemies Defeated" value={kills.toLocaleString()} />
-                    <StatRow icon="⏱️" label="Total Time Online" value={formatTime(onlineTime)} />
-                    <StatRow icon="🕐" label="This Session" value={formatTime(Math.floor((Date.now() - sessionStart.current) / 1000))} />
+                    <StatRow icon={Skull} label="Enemies Defeated" value={kills.toLocaleString()} />
+                    <StatRow icon={Clock} label="Total Time Online" value={formatTime(onlineTime)} />
+                    <StatRow icon={Timer} label="This Session" value={formatTime(Math.floor((Date.now() - sessionStart.current) / 1000))} />
                   </div>
                 </div>
               </div>
@@ -199,8 +200,8 @@ export default function Navbar({ modal: modalProp, setModal: setModalProp, locke
 
         {/* ── Row 3: currency ── */}
         <div className="mx-auto w-full max-w-[1400px] flex items-center justify-end px-6 py-2 gap-3">
-          <CurrencyBadge icon="💰" label="Coins" value={coins} color="text-yellow-400" />
-          <CurrencyBadge icon="💎" label="Gems"  value={gems}  color="text-cyan-400" />
+          <CurrencyBadge icon={Coins} label="Coins" value={coins} color="text-yellow-400" />
+          <CurrencyBadge icon={Gem}   label="Gems"  value={gems}  color="text-cyan-400" />
         </div>
       </nav>
 
@@ -225,20 +226,20 @@ function TopBarButton({ onClick, children }) {
   );
 }
 
-function CurrencyBadge({ icon, label, value, color }) {
+function CurrencyBadge({ icon: Icon, label, value, color }) {
   return (
     <div className="flex items-center gap-2 bg-zinc-800 rounded-full px-4 py-1.5 text-sm" title={label}>
-      <span className="text-base">{icon}</span>
+      <Icon size={15} className={color}/>
       <span className={`font-bold ${color}`}>{value.toLocaleString()}</span>
       <span className="text-zinc-400 text-xs hidden sm:inline">{label}</span>
     </div>
   );
 }
 
-function CurrencyTile({ icon, label, value, color }) {
+function CurrencyTile({ icon: Icon, label, value, color }) {
   return (
     <div className="flex items-center gap-2.5 bg-zinc-800/60 border border-zinc-700 rounded-xl px-3 py-2.5">
-      <span className="text-2xl leading-none">{icon}</span>
+      <Icon size={22} className={color}/>
       <div className="min-w-0">
         <div className={`font-black text-base leading-tight ${color}`}>{value.toLocaleString()}</div>
         <div className="text-zinc-500 text-[10px]">{label}</div>
@@ -247,11 +248,11 @@ function CurrencyTile({ icon, label, value, color }) {
   );
 }
 
-function StatRow({ icon, label, value, color = "text-zinc-200" }) {
+function StatRow({ icon: Icon, label, value, color = "text-zinc-200" }) {
   return (
     <div className="flex items-center justify-between bg-zinc-800/40 rounded-lg px-2.5 py-1.5">
       <div className="flex items-center gap-2 text-zinc-400 text-xs">
-        <span>{icon}</span>
+        <Icon size={13}/>
         <span>{label}</span>
       </div>
       <span className={`text-xs font-bold ${color}`}>{value}</span>

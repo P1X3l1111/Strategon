@@ -1,28 +1,33 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
+import {
+  Sprout, Route, TreePine, Mountain as MountainIcon, Droplet,
+  User, UserPlus, Truck, Medal, Car, Shield, ShieldAlert, Crosshair, Target, Rocket,
+  X, CheckCircle2, Castle, Skull,
+} from "lucide-react";
 
 const COLS = 32, ROWS = 18;
 
 const TERRAIN = {
-  G: { label:'Grass',    bg:'#243d10', pass:true,  icon:'🌿' },
-  R: { label:'Road',     bg:'#7a6448', pass:true,  icon:'🛤️' },
-  F: { label:'Forest',   bg:'#152e08', pass:false, icon:'🌲' },
-  M: { label:'Mountain', bg:'#4a4545', pass:false, icon:'⛰️' },
-  W: { label:'Water',    bg:'#173d60', pass:false, icon:'💧' },
+  G: { label:'Grass',    bg:'#243d10', pass:true,  icon:Sprout },
+  R: { label:'Road',     bg:'#7a6448', pass:true,  icon:Route },
+  F: { label:'Forest',   bg:'#152e08', pass:false, icon:TreePine },
+  M: { label:'Mountain', bg:'#4a4545', pass:false, icon:MountainIcon },
+  W: { label:'Water',    bg:'#173d60', pass:false, icon:Droplet },
 };
 
 // Troop types an admin can hand-place as the enemy garrison on a Siege map.
 export const ENEMY_TROOP_TYPES = [
-  { key:'inf_light',   label:'Light Inf.',   icon:'🪖' },
-  { key:'inf_assault', label:'Assault Inf.', icon:'💂' },
-  { key:'inf_motor',   label:'Motorized',    icon:'🚛' },
-  { key:'commandos',   label:'Commandos',    icon:'🎖️' },
-  { key:'armor_car',   label:'Armored Car',  icon:'🚗' },
-  { key:'tank_light',  label:'Light Tank',   icon:'🛡️' },
-  { key:'tank_heavy',  label:'Heavy Tank',   icon:'🦾' },
-  { key:'artillery',   label:'Artillery',    icon:'💥' },
-  { key:'howitzer',    label:'Howitzer',     icon:'🔫' },
-  { key:'rocket',      label:'Rocket Arty',  icon:'🚀' },
+  { key:'inf_light',   label:'Light Inf.',   icon:User },
+  { key:'inf_assault', label:'Assault Inf.', icon:UserPlus },
+  { key:'inf_motor',   label:'Motorized',    icon:Truck },
+  { key:'commandos',   label:'Commandos',    icon:Medal },
+  { key:'armor_car',   label:'Armored Car',  icon:Car },
+  { key:'tank_light',  label:'Light Tank',   icon:Shield },
+  { key:'tank_heavy',  label:'Heavy Tank',   icon:ShieldAlert },
+  { key:'artillery',   label:'Artillery',    icon:Crosshair },
+  { key:'howitzer',    label:'Howitzer',     icon:Target },
+  { key:'rocket',      label:'Rocket Arty',  icon:Rocket },
 ];
 const MAX_OUTPOSTS = 2;
 
@@ -196,9 +201,9 @@ export default function MapEditor({ mode, modeName, modeColor, onBack }) {
             <button key={key} onClick={() => { setTool('terrain'); setSelected(key); }}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${tool==='terrain'&&selected===key?'border-white text-white scale-105':'border-zinc-600 text-zinc-400 hover:border-zinc-400'}`}
               style={{background: tool==='terrain'&&selected===key ? t.bg+'cc' : t.bg+'44'}}>
-              <span>{t.icon}</span>
+              <t.icon size={13}/>
               <span>{t.label}</span>
-              {!t.pass && <span className="text-red-400 text-[9px]">✕</span>}
+              {!t.pass && <X size={9} className="text-red-400"/>}
             </button>
           ))}
         </div>
@@ -220,8 +225,8 @@ export default function MapEditor({ mode, modeName, modeColor, onBack }) {
             Delete Map
           </button>
           <button onClick={handleSave}
-            className={`px-4 py-1 text-xs font-black rounded-lg border transition-all ${saved?'bg-green-700 border-green-500 text-white':'bg-indigo-600 hover:bg-indigo-500 border-indigo-400 text-white'}`}>
-            {saved ? '✓ Saved!' : 'Save Map'}
+            className={`px-4 py-1 text-xs font-black rounded-lg border transition-all flex items-center gap-1 ${saved?'bg-green-700 border-green-500 text-white':'bg-indigo-600 hover:bg-indigo-500 border-indigo-400 text-white'}`}>
+            {saved ? <><CheckCircle2 size={13}/> Saved!</> : 'Save Map'}
           </button>
         </div>
       </div>
@@ -232,12 +237,12 @@ export default function MapEditor({ mode, modeName, modeColor, onBack }) {
 
         <button onClick={() => setTool(t => t === 'commandpost' ? 'terrain' : 'commandpost')}
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${tool==='commandpost'?'border-blue-400 text-white bg-blue-900/60 scale-105':'border-zinc-600 text-zinc-400 hover:border-zinc-400'}`}>
-          🏰 Command Post {commandPost ? '(set)' : '(default)'}
+          <Castle size={13}/> Command Post {commandPost ? '(set)' : '(default)'}
         </button>
 
         <button onClick={() => setTool(t => t === 'outpost' ? 'terrain' : 'outpost')}
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${tool==='outpost'?'border-blue-400 text-white bg-blue-900/60 scale-105':'border-zinc-600 text-zinc-400 hover:border-zinc-400'}`}>
-          🛡️ Outposts ({outposts.length}/{MAX_OUTPOSTS}{outposts.length===0?', default':''})
+          <Shield size={13}/> Outposts ({outposts.length}/{MAX_OUTPOSTS}{outposts.length===0?', default':''})
         </button>
 
         {isSiege && (
@@ -246,11 +251,11 @@ export default function MapEditor({ mode, modeName, modeColor, onBack }) {
             <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest shrink-0">Enemy Garrison</span>
             <select value={enemyType} onChange={e => setEnemyType(e.target.value)}
               className="bg-zinc-800 border border-zinc-600 text-zinc-200 text-xs rounded-lg px-2 py-1">
-              {ENEMY_TROOP_TYPES.map(t => <option key={t.key} value={t.key}>{t.icon} {t.label}</option>)}
+              {ENEMY_TROOP_TYPES.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
             </select>
             <button onClick={() => setTool(t => t === 'enemy' ? 'terrain' : 'enemy')}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${tool==='enemy'?'border-red-400 text-white bg-red-900/60 scale-105':'border-zinc-600 text-zinc-400 hover:border-zinc-400'}`}>
-              👹 Place Enemy ({enemyUnits.length}{enemyUnits.length===0?', default':''})
+              <Skull size={13}/> Place Enemy ({enemyUnits.length}{enemyUnits.length===0?', default':''})
             </button>
           </>
         )}
@@ -297,20 +302,21 @@ export default function MapEditor({ mode, modeName, modeColor, onBack }) {
           {/* Placement overlays */}
           <div style={{ position:'absolute', inset:0, pointerEvents:'none' }}>
             {commandPost && (
-              <div title="Command Post" style={{ position:'absolute', left:commandPost.col*C, top:commandPost.row*C, width:C*2, height:C*2, display:'flex', alignItems:'center', justifyContent:'center', fontSize:Math.max(C*1.1,14), background:'rgba(59,130,246,0.35)', border:'2px solid #60a5fa', borderRadius:4 }}>
-                🏰
+              <div title="Command Post" style={{ position:'absolute', left:commandPost.col*C, top:commandPost.row*C, width:C*2, height:C*2, display:'flex', alignItems:'center', justifyContent:'center', color:'#60a5fa', background:'rgba(59,130,246,0.35)', border:'2px solid #60a5fa', borderRadius:4 }}>
+                <Castle size={Math.max(C*1.1,14)}/>
               </div>
             )}
             {outposts.map((o,i) => (
-              <div key={i} title="Outpost" style={{ position:'absolute', left:o.col*C, top:o.row*C, width:C, height:C, display:'flex', alignItems:'center', justifyContent:'center', fontSize:Math.max(C*0.8,12), background:'rgba(96,165,250,0.3)', border:'2px solid #93c5fd', borderRadius:4 }}>
-                🛡️
+              <div key={i} title="Outpost" style={{ position:'absolute', left:o.col*C, top:o.row*C, width:C, height:C, display:'flex', alignItems:'center', justifyContent:'center', color:'#93c5fd', background:'rgba(96,165,250,0.3)', border:'2px solid #93c5fd', borderRadius:4 }}>
+                <Shield size={Math.max(C*0.8,12)}/>
               </div>
             ))}
             {enemyUnits.map((e,i) => {
               const t = ENEMY_TROOP_TYPES.find(x => x.key === e.type);
+              const EnemyIcon = t?.icon || Skull;
               return (
-                <div key={i} title={t?.label||e.type} style={{ position:'absolute', left:e.col*C, top:e.row*C, width:C, height:C, display:'flex', alignItems:'center', justifyContent:'center', fontSize:Math.max(C*0.8,12), background:'rgba(239,68,68,0.3)', border:'2px solid #f87171', borderRadius:4 }}>
-                  {t?.icon || '👹'}
+                <div key={i} title={t?.label||e.type} style={{ position:'absolute', left:e.col*C, top:e.row*C, width:C, height:C, display:'flex', alignItems:'center', justifyContent:'center', color:'#f87171', background:'rgba(239,68,68,0.3)', border:'2px solid #f87171', borderRadius:4 }}>
+                  <EnemyIcon size={Math.max(C*0.8,12)}/>
                 </div>
               );
             })}
@@ -321,7 +327,7 @@ export default function MapEditor({ mode, modeName, modeColor, onBack }) {
       {/* Legend */}
       <div className="flex items-center gap-4 px-4 py-1.5 bg-zinc-900 border-t border-zinc-700 shrink-0">
         <span className="text-zinc-500 text-[10px] uppercase font-bold">Grid: {COLS}×{ROWS}</span>
-        <span className="text-zinc-600 text-[10px]">Click or drag to paint terrain · Use Placements above to set Command Post, Outposts{isSiege ? ' and enemy troops' : ''} · Red ✕ = impassable terrain</span>
+        <span className="text-zinc-600 text-[10px]">Click or drag to paint terrain · Use Placements above to set Command Post, Outposts{isSiege ? ' and enemy troops' : ''} · Red X = impassable terrain</span>
       </div>
     </div>
   );

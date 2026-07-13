@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Ticket, X, Coins, Gem, Lock, CheckCircle2 } from "lucide-react";
 import {
   PASS_REWARDS, PASS_LEVEL_XP, PASS_MAX_LEVEL,
   getPassState, getPassLevel, claimPassReward,
@@ -32,7 +33,7 @@ export default function StrategonPassModal({ onClose }) {
 
   function handleClaim(reward) {
     if (claimPassReward(reward.level)) {
-      setToast(`Level ${reward.level} claimed! +${reward.rewardCoins || 0}💰${reward.rewardGems ? ` +${reward.rewardGems}💎` : ""}`);
+      setToast({ level: reward.level, coins: reward.rewardCoins || 0, gems: reward.rewardGems || 0 });
       setTimeout(() => setToast(null), 2200);
     }
   }
@@ -46,13 +47,15 @@ export default function StrategonPassModal({ onClose }) {
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-zinc-800 shrink-0">
-          <h2 className="text-xl font-bold text-white">🎫 Strategon Pass</h2>
-          <button onClick={onClose} className="text-zinc-500 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded hover:bg-zinc-800">✕</button>
+          <h2 className="text-xl font-bold text-white flex items-center gap-2"><Ticket size={18}/> Strategon Pass</h2>
+          <button onClick={onClose} className="text-zinc-500 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded hover:bg-zinc-800"><X size={16}/></button>
         </div>
 
         {toast && (
-          <div className="mx-6 mt-3 bg-amber-950/60 border border-amber-700 text-amber-300 text-xs font-bold rounded-lg px-3 py-1.5 text-center shrink-0">
-            {toast}
+          <div className="mx-6 mt-3 bg-amber-950/60 border border-amber-700 text-amber-300 text-xs font-bold rounded-lg px-3 py-1.5 text-center shrink-0 flex items-center justify-center gap-1.5">
+            Level {toast.level} claimed!
+            {toast.coins > 0 && <span className="flex items-center gap-0.5">+{toast.coins}<Coins size={12}/></span>}
+            {toast.gems > 0 && <span className="flex items-center gap-0.5">+{toast.gems}<Gem size={12}/></span>}
           </div>
         )}
 
@@ -86,20 +89,22 @@ export default function StrategonPassModal({ onClose }) {
                   : "border-zinc-800 bg-zinc-800/30"
                 }`}>
                   <span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest">Lv.{r.level}</span>
-                  <span className="text-2xl">{unlocked ? (r.rewardGems ? "💎" : "💰") : "🔒"}</span>
+                  <span className={unlocked ? (r.rewardGems ? "text-cyan-400" : "text-yellow-400") : "text-zinc-600"}>
+                    {unlocked ? (r.rewardGems ? <Gem size={22}/> : <Coins size={22}/>) : <Lock size={22}/>}
+                  </span>
                   <span className="text-zinc-300 text-[11px] font-semibold">
                     {r.rewardCoins ? `+${r.rewardCoins} coins` : ""}{r.rewardGems ? `+${r.rewardGems} gems` : ""}
                   </span>
                   <button
                     onClick={() => handleClaim(r)}
                     disabled={!unlocked || claimed}
-                    className={`mt-1 w-full py-1 rounded-lg text-[10px] font-bold transition-all active:scale-95 ${
+                    className={`mt-1 w-full py-1 rounded-lg text-[10px] font-bold transition-all active:scale-95 flex items-center justify-center gap-1 ${
                       claimed ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
                       : unlocked ? "bg-amber-600 hover:bg-amber-500 text-white"
                       : "bg-zinc-700 text-zinc-500 cursor-not-allowed"
                     }`}
                   >
-                    {claimed ? "✓ Claimed" : unlocked ? "Claim" : "Locked"}
+                    {claimed ? <><CheckCircle2 size={11}/> Claimed</> : unlocked ? "Claim" : "Locked"}
                   </button>
                 </div>
               );

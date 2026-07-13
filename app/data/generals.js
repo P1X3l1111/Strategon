@@ -1,3 +1,4 @@
+import { Shield, Zap, Target, Castle, Crown, Heart, Flame, Footprints, Eye, Dumbbell } from "lucide-react";
 import { spendCoins, spendGems } from "./troops";
 
 // Generals — optional hero boosts, each ownable and independently upgradable.
@@ -11,21 +12,21 @@ import { spendCoins, spendGems } from "./troops";
 // extra stat bonuses layered on top).
 
 export const GENERALS = [
-  { id: "iron",     name: "Iron Commander",     icon: "🛡️", color: "#94a3b8", desc: "+50% max HP",                       boosts: { hpMult: 1.5 },  price: 0   },
-  { id: "blitz",    name: "Blitz Commander",    icon: "⚡",  color: "#0ea5e9", desc: "+3 movement",                       boosts: { movAdd: 3 },    price: 100 },
-  { id: "marksman", name: "Marksman Commander", icon: "🎯", color: "#ef4444", desc: "+50% attack damage",                boosts: { atkMult: 1.5 }, price: 120 },
-  { id: "guardian", name: "Guardian Commander", icon: "🏰", color: "#22c55e", desc: "+2 attack range",                   boosts: { rangeAdd: 2 },  price: 120 },
-  { id: "warlord",  name: "Warlord",            icon: "👑", color: "#f59e0b", desc: "+25% HP and +25% attack damage",    boosts: { hpMult: 1.25, atkMult: 1.25 }, price: 200 },
+  { id: "iron",     name: "Iron Commander",     icon: Shield, color: "#94a3b8", desc: "+50% max HP",                       boosts: { hpMult: 1.5 },  price: 0   },
+  { id: "blitz",    name: "Blitz Commander",    icon: Zap,    color: "#0ea5e9", desc: "+3 movement",                       boosts: { movAdd: 3 },    price: 100 },
+  { id: "marksman", name: "Marksman Commander", icon: Target, color: "#ef4444", desc: "+50% attack damage",                boosts: { atkMult: 1.5 }, price: 120 },
+  { id: "guardian", name: "Guardian Commander", icon: Castle, color: "#22c55e", desc: "+2 attack range",                   boosts: { rangeAdd: 2 },  price: 120 },
+  { id: "warlord",  name: "Warlord",            icon: Crown,  color: "#f59e0b", desc: "+25% HP and +25% attack damage",    boosts: { hpMult: 1.25, atkMult: 1.25 }, price: 200 },
 ];
 // Iron Commander is free so a new account has at least one usable commander.
 
 // ── Buffs — small extra boosts bought with gems and slotted onto a general ──
 export const BUFFS = [
-  { id: "vitality",   name: "Vitality Buff",   icon: "❤️", desc: "+15% max HP",                cost: 40, boosts: { hpMult: 1.15 } },
-  { id: "ferocity",   name: "Ferocity Buff",   icon: "🔥", desc: "+15% attack damage",         cost: 40, boosts: { atkMult: 1.15 } },
-  { id: "swift",      name: "Swift Buff",      icon: "🥾", desc: "+1 movement",                cost: 35, boosts: { movAdd: 1 } },
-  { id: "eagle-eye",  name: "Eagle Eye Buff",  icon: "🦅", desc: "+1 attack range",            cost: 35, boosts: { rangeAdd: 1 } },
-  { id: "juggernaut", name: "Juggernaut Buff", icon: "💪", desc: "+10% HP and +10% attack",    cost: 60, boosts: { hpMult: 1.1, atkMult: 1.1 } },
+  { id: "vitality",   name: "Vitality Buff",   icon: Heart,      desc: "+15% max HP",                cost: 40, boosts: { hpMult: 1.15 } },
+  { id: "ferocity",   name: "Ferocity Buff",   icon: Flame,      desc: "+15% attack damage",         cost: 40, boosts: { atkMult: 1.15 } },
+  { id: "swift",      name: "Swift Buff",      icon: Footprints, desc: "+1 movement",                cost: 35, boosts: { movAdd: 1 } },
+  { id: "eagle-eye",  name: "Eagle Eye Buff",  icon: Eye,        desc: "+1 attack range",            cost: 35, boosts: { rangeAdd: 1 } },
+  { id: "juggernaut", name: "Juggernaut Buff", icon: Dumbbell,   desc: "+10% HP and +10% attack",    cost: 60, boosts: { hpMult: 1.1, atkMult: 1.1 } },
 ];
 
 export const MAX_GENERAL_LEVEL = 5;

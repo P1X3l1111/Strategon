@@ -1,5 +1,6 @@
 // Daily quests, weekly quests, and the daily-login reward streak.
 // Rewards pay out in coins/gems only — mana and oil are earned in battle, not from quests.
+import { Trophy, Swords, User, Skull, Sparkles, Fuel, Factory, MousePointer2 } from "lucide-react";
 import { awardCoins, awardGems } from "./troops";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -49,14 +50,14 @@ function pickN(pool, n, seed) {
 }
 
 export const STAT_META = {
-  battlesWon:        { icon: "🏆", label: "battles won" },
-  battlesPlayed:     { icon: "⚔️", label: "battles played" },
-  troopsDeployed:    { icon: "🪖", label: "troops deployed" },
-  enemiesKilled:     { icon: "💀", label: "enemies defeated" },
-  manaEarned:        { icon: "💜", label: "mana earned" },
-  oilEarned:         { icon: "🛢️", label: "oil collected" },
-  structuresBuilt:   { icon: "🏭", label: "structures built" },
-  multiUnitCommands: { icon: "🖱️", label: "group commands issued" },
+  battlesWon:        { icon: Trophy,        label: "battles won" },
+  battlesPlayed:     { icon: Swords,        label: "battles played" },
+  troopsDeployed:    { icon: User,          label: "troops deployed" },
+  enemiesKilled:     { icon: Skull,         label: "enemies defeated" },
+  manaEarned:        { icon: Sparkles,      label: "mana earned" },
+  oilEarned:         { icon: Fuel,          label: "oil collected" },
+  structuresBuilt:   { icon: Factory,       label: "structures built" },
+  multiUnitCommands: { icon: MousePointer2, label: "group commands issued" },
 };
 
 // ── Daily quests — easy, 3 drawn from this pool each day ──────────────────────

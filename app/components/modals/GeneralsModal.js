@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Star, Coins, Gem, X, Medal, Lock, ArrowUp } from "lucide-react";
 import {
   GENERALS, BUFFS, MAX_GENERAL_LEVEL, MAX_BUFF_SLOTS, MAX_BATTLE_SLOTS,
   getGeneralProgress, getUpgradeCost, getSlotCost,
@@ -83,11 +84,11 @@ export default function GeneralsModal({ onClose }) {
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-zinc-800 shrink-0">
-          <h2 className="text-xl font-bold text-white">⭐ Commanders</h2>
+          <h2 className="text-xl font-bold text-white flex items-center gap-2"><Star size={18}/> Commanders</h2>
           <div className="flex items-center gap-3">
-            <span className="text-yellow-400 text-sm font-bold">💰 {coins.toLocaleString()}</span>
-            <span className="text-cyan-400 text-sm font-bold">💎 {gems.toLocaleString()}</span>
-            <button onClick={onClose} className="text-zinc-500 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded hover:bg-zinc-800">✕</button>
+            <span className="text-yellow-400 text-sm font-bold flex items-center gap-1"><Coins size={15}/> {coins.toLocaleString()}</span>
+            <span className="text-cyan-400 text-sm font-bold flex items-center gap-1"><Gem size={15}/> {gems.toLocaleString()}</span>
+            <button onClick={onClose} className="text-zinc-500 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded hover:bg-zinc-800"><X size={16}/></button>
           </div>
         </div>
 
@@ -100,7 +101,7 @@ export default function GeneralsModal({ onClose }) {
         {/* Battle slots — account-wide cap on commanders per battle */}
         <div className="mx-6 mt-4 p-3 rounded-xl border border-indigo-800 bg-indigo-950/30 flex items-center justify-between gap-3 shrink-0">
           <div>
-            <p className="text-white text-sm font-bold">🎖️ Battle Slots — {battleSlots}/{MAX_BATTLE_SLOTS}</p>
+            <p className="text-white text-sm font-bold flex items-center gap-1.5"><Medal size={15}/> Battle Slots — {battleSlots}/{MAX_BATTLE_SLOTS}</p>
             <p className="text-zinc-400 text-[11px]">How many different commanders you can lead troops with in one battle.</p>
           </div>
           <button
@@ -112,7 +113,7 @@ export default function GeneralsModal({ onClose }) {
               : "bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95"
             }`}
           >
-            {battleSlots >= MAX_BATTLE_SLOTS ? "MAX" : `+1 Slot — 💎${getBattleSlotCost(battleSlots + 1)}`}
+            {battleSlots >= MAX_BATTLE_SLOTS ? "MAX" : <span className="flex items-center gap-1">+1 Slot — <Gem size={12}/>{getBattleSlotCost(battleSlots + 1)}</span>}
           </button>
         </div>
 
@@ -128,20 +129,20 @@ export default function GeneralsModal({ onClose }) {
               if (!prog.owned) {
                 return (
                   <div key={g.id} className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 flex items-center gap-3">
-                    <span className="text-3xl grayscale opacity-60">{g.icon}</span>
+                    <span className="text-zinc-600"><g.icon size={28}/></span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-zinc-300 font-black text-sm">🔒 {g.name}</p>
+                      <p className="text-zinc-300 font-black text-sm flex items-center gap-1.5"><Lock size={12}/> {g.name}</p>
                       <p className="text-zinc-500 text-xs">{g.desc}</p>
                     </div>
                     <button
                       onClick={() => handleBuyCommander(g)}
                       disabled={gems < g.price}
-                      className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
                         gems < g.price ? "bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed"
                         : "bg-cyan-600 hover:bg-cyan-500 text-white active:scale-95"
                       }`}
                     >
-                      Buy — 💎{g.price}
+                      Buy — <Gem size={12}/>{g.price}
                     </button>
                   </div>
                 );
@@ -156,7 +157,7 @@ export default function GeneralsModal({ onClose }) {
                 <div key={g.id} className="rounded-xl border p-4 flex flex-col gap-3" style={{ borderColor: `${g.color}55`, background: `${g.color}0d` }}>
                   {/* Header row */}
                   <div className="flex items-center gap-3">
-                    <span className="text-3xl">{g.icon}</span>
+                    <span style={{ color: g.color }}><g.icon size={28}/></span>
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-black text-sm" style={{ color: g.color }}>{g.name} <span className="text-zinc-400 font-semibold">· Lv.{prog.level}/{MAX_GENERAL_LEVEL}</span></p>
                       <p className="text-zinc-400 text-xs">{g.desc}</p>
@@ -164,13 +165,13 @@ export default function GeneralsModal({ onClose }) {
                     <button
                       onClick={() => handleUpgrade(g)}
                       disabled={maxed || coins < upgradeCost}
-                      className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
                         maxed ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
                         : coins < upgradeCost ? "bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed"
                         : "bg-yellow-600 hover:bg-yellow-500 text-white active:scale-95"
                       }`}
                     >
-                      {maxed ? "MAX LEVEL" : `⬆ Upgrade — 💰${upgradeCost}`}
+                      {maxed ? "MAX LEVEL" : <><ArrowUp size={12}/> Upgrade — <Coins size={12}/>{upgradeCost}</>}
                     </button>
                   </div>
 
@@ -182,7 +183,7 @@ export default function GeneralsModal({ onClose }) {
                         const buff = equippedBuffs[i];
                         return buff ? (
                           <div key={i} title={buff.desc} className="flex items-center gap-1.5 bg-zinc-800/80 border border-zinc-700 rounded-lg px-2 py-1">
-                            <span>{buff.icon}</span>
+                            <buff.icon size={12}/>
                             <span className="text-zinc-300 text-[10px] font-semibold">{buff.name}</span>
                           </div>
                         ) : (
@@ -195,10 +196,10 @@ export default function GeneralsModal({ onClose }) {
                       const slotCost = getSlotCost(slotNum);
                       return (
                         <button key={i} onClick={() => handleBuySlot(g)} disabled={gems < slotCost}
-                          className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all ${
+                          className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all flex items-center gap-1 ${
                             gems < slotCost ? "border-zinc-800 text-zinc-600 cursor-not-allowed" : "border-cyan-800 text-cyan-300 hover:bg-cyan-950"
                           }`}>
-                          🔒 Slot {slotNum} — 💎{slotCost}
+                          <Lock size={10}/> Slot {slotNum} — <Gem size={10}/>{slotCost}
                         </button>
                       );
                     })}
@@ -213,8 +214,8 @@ export default function GeneralsModal({ onClose }) {
                           className={`flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-left transition-all ${
                             gems < buff.cost ? "bg-zinc-900 text-zinc-600 cursor-not-allowed" : "bg-zinc-800 hover:bg-zinc-700 text-white"
                           }`}>
-                          <span className="text-xs font-semibold flex items-center gap-1.5">{buff.icon} {buff.name}<span className="text-zinc-400 font-normal">— {buff.desc}</span></span>
-                          <span className="text-cyan-300 text-xs font-bold shrink-0">💎{buff.cost}</span>
+                          <span className="text-xs font-semibold flex items-center gap-1.5"><buff.icon size={13}/> {buff.name}<span className="text-zinc-400 font-normal">— {buff.desc}</span></span>
+                          <span className="text-cyan-300 text-xs font-bold shrink-0 flex items-center gap-0.5"><Gem size={11}/>{buff.cost}</span>
                         </button>
                       ))}
                     </div>

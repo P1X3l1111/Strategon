@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Flag } from "lucide-react";
 import { Overlay, Field, SuccessMessage, inputCls, primaryBtn, secondaryBtn } from "./ReportBugModal";
 
 export default function ReportPlayerModal({ onClose }) {
@@ -19,7 +20,7 @@ export default function ReportPlayerModal({ onClose }) {
 
   return (
     <Overlay onClose={onClose}>
-      <h2 className="text-xl font-bold text-white mb-1">🚩 Report a Player</h2>
+      <h2 className="text-xl font-bold text-white mb-1 flex items-center gap-2"><Flag size={20}/> Report a Player</h2>
       <p className="text-zinc-400 text-sm mb-5">Cheating, abusive chat, leaving matches on purpose? Let us know.</p>
 
       {submitted ? (

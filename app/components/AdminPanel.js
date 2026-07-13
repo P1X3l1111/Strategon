@@ -1,12 +1,16 @@
 "use client";
 import { useState, useEffect } from "react";
+import {
+  Star, Users, Map as MapIcon, UserX, Sparkles, Fuel, Gem, Skull, Clock,
+  CheckCircle2, X, Pencil, RotateCw, Swords, Infinity as InfinityIcon, Castle, ListOrdered,
+} from "lucide-react";
 import MapEditor, { makeDefaultGrid } from "./MapEditor";
 
 const MODES = [
-  { id:'classic', name:'Classic', color:'#6366f1', icon:'⚔',  desc:'Clear all enemy buildings.' },
-  { id:'endless', name:'Endless', color:'#16a34a', icon:'∞',  desc:'Enemies storm from the right wall.' },
-  { id:'siege',   name:'Siege',   color:'#dc2626', icon:'🏯', desc:'Castle surrounded on every side.' },
-  { id:'turns',   name:'Turns',   color:'#0ea5e9', icon:'♟️', desc:'Turn-based tactics battlefield.' },
+  { id:'classic', name:'Classic', color:'#6366f1', icon:Swords,       desc:'Clear all enemy buildings.' },
+  { id:'endless', name:'Endless', color:'#16a34a', icon:InfinityIcon, desc:'Enemies storm from the right wall.' },
+  { id:'siege',   name:'Siege',   color:'#dc2626', icon:Castle,       desc:'Castle surrounded on every side.' },
+  { id:'turns',   name:'Turns',   color:'#0ea5e9', icon:ListOrdered,  desc:'Turn-based tactics battlefield.' },
 ];
 
 const ACCOUNTS_KEY = 'rpg_accounts';
@@ -124,7 +128,7 @@ export default function AdminPanel({ currentUser, onBack, onMapChange }) {
         </button>
         <div className="w-px h-5 bg-zinc-700"/>
         <h1 className="text-white font-black text-xl flex items-center gap-2">
-          <span className="text-yellow-400">★</span> Admin Panel
+          <Star size={18} className="text-yellow-400" fill="currentColor"/> Admin Panel
         </h1>
         <div className="flex-1"/>
         {/* Summary stats */}
@@ -134,14 +138,14 @@ export default function AdminPanel({ currentUser, onBack, onMapChange }) {
         </div>
         <button onClick={refresh}
           className="text-zinc-500 hover:text-white text-xs px-2 py-1 rounded hover:bg-zinc-800 transition-all">
-          ↻
+          <RotateCw size={14}/>
         </button>
       </div>
 
       {/* Tab bar */}
       <div className="flex gap-1 px-6 pt-4 pb-0 shrink-0 bg-zinc-950 border-b border-zinc-800">
-        <TabBtn active={tab==='players'} onClick={()=>setTab('players')}>👥 Players ({totalUsers})</TabBtn>
-        <TabBtn active={tab==='modes'}   onClick={()=>setTab('modes')}>🗺️ Modes &amp; Maps</TabBtn>
+        <TabBtn active={tab==='players'} onClick={()=>setTab('players')}><Users size={14}/> Players ({totalUsers})</TabBtn>
+        <TabBtn active={tab==='modes'}   onClick={()=>setTab('modes')}><MapIcon size={14}/> Modes &amp; Maps</TabBtn>
       </div>
 
       {/* Content */}
@@ -152,7 +156,7 @@ export default function AdminPanel({ currentUser, onBack, onMapChange }) {
           <div className="flex flex-col gap-4">
 
             {totalUsers === 0 ? (
-              <EmptyState icon="👤" text="No accounts registered yet." />
+              <EmptyState icon={UserX} text="No accounts registered yet." />
             ) : (
               <>
                 {/* Sort bar */}
@@ -186,11 +190,11 @@ export default function AdminPanel({ currentUser, onBack, onMapChange }) {
 
                           {/* Stats grid */}
                           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                            <Stat icon="💜" label="Mana"   value={fmt(u.mana)}         color="text-purple-300"/>
-                            <Stat icon="🟡" label="Oil"    value={fmt(u.oil)}           color="text-amber-300"/>
-                            <Stat icon="💎" label="Gems"   value={fmt(u.gems)}          color="text-cyan-300"/>
-                            <Stat icon="💀" label="Kills"  value={fmt(u.kills)}         color="text-red-300"/>
-                            <Stat icon="⏱"  label="Online" value={fmtTime(u.online)}    color="text-zinc-300"/>
+                            <Stat icon={Sparkles} label="Mana"   value={fmt(u.mana)}         color="text-purple-300"/>
+                            <Stat icon={Fuel}     label="Oil"    value={fmt(u.oil)}           color="text-amber-300"/>
+                            <Stat icon={Gem}      label="Gems"   value={fmt(u.gems)}          color="text-cyan-300"/>
+                            <Stat icon={Skull}    label="Kills"  value={fmt(u.kills)}         color="text-red-300"/>
+                            <Stat icon={Clock}    label="Online" value={fmtTime(u.online)}    color="text-zinc-300"/>
                           </div>
                         </div>
 
@@ -238,23 +242,23 @@ export default function AdminPanel({ currentUser, onBack, onMapChange }) {
               const ready = hasMap(m.id);
               return (
                 <div key={m.id} className={`rounded-2xl border p-5 flex items-center gap-5 transition-all ${ready?'border-zinc-700 bg-zinc-900':'border-red-900 bg-red-950/10'}`}>
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl font-black shrink-0"
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
                     style={{background:`${m.color}18`, border:`2px solid ${m.color}44`, color:m.color}}>
-                    {m.icon}
+                    <m.icon size={26}/>
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-white font-black text-lg">{m.name}</span>
                       {ready
-                        ? <span className="text-[10px] font-black text-green-300 bg-green-950 border border-green-800 px-2 py-0.5 rounded-full">✓ Map Ready</span>
-                        : <span className="text-[10px] font-black text-red-300 bg-red-950 border border-red-800 px-2 py-0.5 rounded-full">✕ No Map — Locked</span>
+                        ? <span className="text-[10px] font-black text-green-300 bg-green-950 border border-green-800 px-2 py-0.5 rounded-full flex items-center gap-1"><CheckCircle2 size={10}/> Map Ready</span>
+                        : <span className="text-[10px] font-black text-red-300 bg-red-950 border border-red-800 px-2 py-0.5 rounded-full flex items-center gap-1"><X size={10}/> No Map — Locked</span>
                       }
                     </div>
                     <p className="text-zinc-500 text-xs">{m.desc}</p>
                   </div>
                   <button onClick={() => openEditor(m.id)}
-                    className="px-5 py-2 text-sm font-bold rounded-xl border transition-all shrink-0 bg-indigo-700 hover:bg-indigo-600 border-indigo-500 text-white">
-                    {ready ? '✏️ Edit Map' : '+ Create Map'}
+                    className="px-5 py-2 text-sm font-bold rounded-xl border transition-all shrink-0 bg-indigo-700 hover:bg-indigo-600 border-indigo-500 text-white flex items-center gap-1.5">
+                    {ready ? <><Pencil size={13}/> Edit Map</> : '+ Create Map'}
                   </button>
                 </div>
               );
@@ -264,7 +268,7 @@ export default function AdminPanel({ currentUser, onBack, onMapChange }) {
               <p className="text-zinc-400 text-xs font-bold mb-2">Map Editor Quick Tips</p>
               <ul className="text-zinc-500 text-xs space-y-1 list-disc list-inside">
                 <li>Click or drag on tiles to paint terrain</li>
-                <li>Forest, Mountain, Water are impassable (red ✕)</li>
+                <li>Forest, Mountain, Water are impassable (shown in red)</li>
                 <li>Use <strong className="text-zinc-300">Default</strong> to load the built-in terrain template</li>
                 <li><strong className="text-zinc-300">Save Map</strong> makes the mode immediately playable</li>
                 <li><strong className="text-red-400">Delete Map</strong> locks the mode until a new map is saved</li>
@@ -281,7 +285,7 @@ export default function AdminPanel({ currentUser, onBack, onMapChange }) {
 function TabBtn({ active, onClick, children }) {
   return (
     <button onClick={onClick}
-      className={`px-5 py-2.5 text-sm font-bold rounded-t-xl border-b-2 transition-all ${active?'border-indigo-500 text-white bg-zinc-900':'border-transparent text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/50'}`}>
+      className={`flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold rounded-t-xl border-b-2 transition-all ${active?'border-indigo-500 text-white bg-zinc-900':'border-transparent text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/50'}`}>
       {children}
     </button>
   );
@@ -306,10 +310,10 @@ function Badge({ color, children }) {
   );
 }
 
-function Stat({ icon, label, value, color }) {
+function Stat({ icon: Icon, label, value, color }) {
   return (
     <div className="flex items-center gap-1.5 bg-zinc-800/60 rounded-lg px-2 py-1">
-      <span className="text-xs">{icon}</span>
+      <Icon size={13} className={color}/>
       <div className="flex flex-col">
         <span className={`text-xs font-bold leading-tight ${color}`}>{value}</span>
         <span className="text-zinc-600 text-[9px] leading-tight">{label}</span>
@@ -318,10 +322,10 @@ function Stat({ icon, label, value, color }) {
   );
 }
 
-function EmptyState({ icon, text }) {
+function EmptyState({ icon: Icon, text }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-zinc-600">
-      <div className="text-5xl mb-3">{icon}</div>
+      <Icon size={44} className="mb-3"/>
       <p className="text-sm">{text}</p>
     </div>
   );

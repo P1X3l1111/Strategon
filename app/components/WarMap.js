@@ -1,6 +1,10 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
+  Star, X, Map, Target, Castle, Swords, Shield, MousePointer2,
+  Sparkles, Gem, Fuel, Circle, ListOrdered,
+} from "lucide-react";
+import {
   spendMana, awardMana,
   spendOil,  awardOil,
   awardGems,
@@ -380,7 +384,7 @@ function UnitSprite({ u, C, isSel, isShaking, isActed, onSelect }) {
         </div>
       )}
       {u.general && (
-        <div style={{ position:'absolute', top:-6, left:'50%', transform:'translateX(-50%)', fontSize:10, lineHeight:1, pointerEvents:'none' }}>⭐</div>
+        <div style={{ position:'absolute', top:-6, left:'50%', transform:'translate(-50%,0)', color:'#fbbf24', pointerEvents:'none' }}><Star size={10} fill="#fbbf24"/></div>
       )}
     </div>
   );
@@ -557,7 +561,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
         cur = cur.map(u=>u.id===t.id?{...u,hp:Math.max(0,u.hp-dmg)}:u);
         events.push({id:t.id,col:t.col,row:t.row,dmg});
         if (live.faction==='player' && t.hp>0 && t.hp-dmg<=0) {
-          if (t.capture) { addCaptured(); addLog(`🎯 Captured ${t.name}!`); }
+          if (t.capture) { addCaptured(); addLog(`Captured ${t.name}!`); }
           else bumpQuestStat('enemiesKilled');
         }
       }
@@ -618,7 +622,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
           if (mission.rewardMana) bumpQuestStat('manaEarned',mission.rewardMana);
           if (mission.rewardOil) bumpQuestStat('oilEarned',mission.rewardOil);
           completeMission(mission.id);
-          addLog(`🎖️ ${mission.name} complete — Victory!`);return;
+          addLog(`${mission.name} complete — Victory!`);return;
         }
       } else if (mode==='siege') {
         if (cur.filter(u=>u.faction==='enemy'&&u.hp>0).length===0) {
@@ -920,7 +924,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
     const boosted=applyGeneralBoost(u,selectedGeneral);
     setUnits(unitsRef.current.map(x=>x.id===unitId?boosted:x));
     setAssignedGenerals(prev=>[...prev,{generalId:selectedGeneral.id,unitId,level:selectedGeneral.level||0,name:selectedGeneral.name,icon:selectedGeneral.icon,color:selectedGeneral.color}]);
-    addLog(`⭐ ${selectedGeneral.name}${selectedGeneral.level>0?` (Lv.${selectedGeneral.level})`:''} now leads ${u.name}!`);
+    addLog(`${selectedGeneral.name}${selectedGeneral.level>0?` (Lv.${selectedGeneral.level})`:''} now leads ${u.name}!`);
     setSelectedGeneral(null);
   }
 
@@ -989,7 +993,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
 
   if(!G) return (
     <div className="flex flex-col items-center justify-center h-full bg-zinc-950 gap-6">
-      <div className="text-5xl">🗺️</div>
+      <div className="text-zinc-600"><Map size={48}/></div>
       <div className="text-center">
         <h2 className="text-white font-black text-2xl mb-2">No Map Configured</h2>
         <p className="text-zinc-400 text-sm max-w-xs">An admin must create a map for <span className="text-indigo-400 font-bold capitalize">{mode}</span> mode before it can be played.</p>
@@ -1025,7 +1029,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
         {/* Turns objective */}
         {mode==='turns'&&(
           <div className="px-3 py-2 border-b border-zinc-700 shrink-0 bg-sky-950/30">
-            <p className="text-sky-300 text-[10px] font-bold uppercase tracking-widest mb-1">♟️ Turn {turnNumber}</p>
+            <p className="text-sky-300 text-[10px] font-bold uppercase tracking-widest mb-1 flex items-center gap-1"><ListOrdered size={11}/> Turn {turnNumber}</p>
             <p className="text-zinc-400 text-[10px] leading-snug mb-1.5">Move each unit, then end your turn — the AI answers move for move.</p>
             <p className="text-sky-200 text-xs font-bold">{units.filter(u=>u.faction==='enemy'&&u.hp>0).length} enemies remaining</p>
           </div>
@@ -1034,8 +1038,8 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
         {/* Campaign objective */}
         {mission&&(
           <div className="px-3 py-2 border-b border-zinc-700 shrink-0 bg-amber-950/30">
-            <p className="text-amber-300 text-[10px] font-bold uppercase tracking-widest mb-1">
-              🎯 {mission.objective==='capture'?`Capture ${mission.captureCount} Troops`:'Eliminate All Enemies'}
+            <p className="text-amber-300 text-[10px] font-bold uppercase tracking-widest mb-1 flex items-center gap-1">
+              <Target size={11}/> {mission.objective==='capture'?`Capture ${mission.captureCount} Troops`:'Eliminate All Enemies'}
             </p>
             <p className="text-zinc-400 text-[10px] leading-snug mb-1.5">{mission.briefing}</p>
             {mission.objective==='capture'?(
@@ -1049,7 +1053,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
         {/* Siege objective */}
         {!mission&&mode==='siege'&&(
           <div className="px-3 py-2 border-b border-zinc-700 shrink-0 bg-red-950/30">
-            <p className="text-red-300 text-[10px] font-bold uppercase tracking-widest mb-1">🏯 Break the Siege</p>
+            <p className="text-red-300 text-[10px] font-bold uppercase tracking-widest mb-1 flex items-center gap-1"><Castle size={11}/> Break the Siege</p>
             <p className="text-zinc-400 text-[10px] leading-snug mb-1.5">Your castle is surrounded on every side. Defeat every attacker to win.</p>
             <p className="text-red-200 text-xs font-bold">{units.filter(u=>u.faction==='enemy'&&u.hp>0).length} enemies remaining</p>
           </div>
@@ -1081,7 +1085,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
                 const leadUnit = units.find(u=>u.id===a.unitId);
                 return (
                   <div key={a.generalId} className="rounded-lg border px-2 py-1.5" style={{borderColor:a.color,background:`${a.color}22`}}>
-                    <p className="text-xs font-bold" style={{color:a.color}}>{a.icon} {a.name}{a.level>0?` · Lv.${a.level}`:''}</p>
+                    <p className="text-xs font-bold flex items-center gap-1" style={{color:a.color}}><a.icon size={12}/> {a.name}{a.level>0?` · Lv.${a.level}`:''}</p>
                     <p className="text-zinc-400 text-[9px]">{leadUnit?`leads ${leadUnit.name}`:'that unit has fallen'}</p>
                   </div>
                 );
@@ -1094,7 +1098,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
           ) : selectedGeneral ? (
             <div className="rounded-lg border px-2 py-1.5 flex items-center justify-between gap-2" style={{borderColor:selectedGeneral.color,background:`${selectedGeneral.color}22`}}>
               <p className="text-[10px] font-bold" style={{color:selectedGeneral.color}}>Click a troop to assign {selectedGeneral.name}</p>
-              <button onClick={cancelGeneral} className="text-zinc-400 hover:text-red-400 text-xs font-bold shrink-0">✕</button>
+              <button onClick={cancelGeneral} className="text-zinc-400 hover:text-red-400 text-xs font-bold shrink-0"><X size={14}/></button>
             </div>
           ) : (() => {
             const available = GENERALS.filter(g=>isCommanderOwned(g.id) && !assignedGenerals.some(a=>a.generalId===g.id));
@@ -1102,8 +1106,8 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
               <div className="flex gap-1.5 flex-wrap">
                 {available.map(g=>(
                   <button key={g.id} onClick={()=>chooseGeneral(g.id)} title={`${g.name} — ${g.desc}`}
-                    className="w-8 h-8 rounded-lg border border-zinc-700 bg-zinc-800/60 hover:bg-zinc-700 flex items-center justify-center text-base transition-all active:scale-95">
-                    {g.icon}
+                    className="w-8 h-8 rounded-lg border border-zinc-700 bg-zinc-800/60 hover:bg-zinc-700 flex items-center justify-center transition-all active:scale-95">
+                    <g.icon size={16}/>
                   </button>
                 ))}
               </div>
@@ -1126,7 +1130,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
           )}
           {(phase==='won'||phase==='lost')&&(
             <div className="flex flex-col gap-1.5">
-              <p className={`text-center font-black text-sm ${phase==='won'?'text-yellow-400':'text-red-400'}`}>{phase==='won'?'★ Victory!':'✕ Defeat'}</p>
+              <p className={`text-center font-black text-sm flex items-center justify-center gap-1 ${phase==='won'?'text-yellow-400':'text-red-400'}`}>{phase==='won'?<><Star size={14} fill="currentColor"/> Victory!</>:<><X size={14}/> Defeat</>}</p>
               <button onClick={resetGame} className="w-full py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg">Play Again</button>
               <button onClick={()=>{resetGame();onBack();}} className="w-full py-1.5 bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-bold rounded-lg">← Menu</button>
             </div>
@@ -1136,7 +1140,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
         {/* Shop */}
         <div className="px-3 pt-1.5 pb-1 border-b border-zinc-700 shrink-0 flex items-center justify-between">
           <p className="text-zinc-400 text-[10px] uppercase tracking-widest font-semibold">Shop</p>
-          {pendingType&&<button onClick={cancelPending} className="text-red-400 text-[10px] hover:text-red-300 font-bold">✕ Cancel</button>}
+          {pendingType&&<button onClick={cancelPending} className="text-red-400 text-[10px] hover:text-red-300 font-bold flex items-center gap-0.5"><X size={10}/> Cancel</button>}
         </div>
 
         {factoryPlaced&&(
@@ -1171,8 +1175,8 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
                     </div>
                   </div>
                   <button onClick={()=>active?cancelPending():tryBuy(id)} disabled={!canBuy&&!active}
-                    className={`w-full text-[10px] font-bold py-0.5 rounded transition-all ${active?'bg-cyan-700 text-white':canBuy?'bg-indigo-700 hover:bg-indigo-600 text-white':'bg-zinc-700 text-zinc-500 cursor-not-allowed'}`}>
-                    {active?'✕ Cancel':canBuy?'Buy & Place':'Need mana'}
+                    className={`w-full text-[10px] font-bold py-0.5 rounded transition-all flex items-center justify-center gap-0.5 ${active?'bg-cyan-700 text-white':canBuy?'bg-indigo-700 hover:bg-indigo-600 text-white':'bg-zinc-700 text-zinc-500 cursor-not-allowed'}`}>
+                    {active?<><X size={10}/> Cancel</>:canBuy?'Buy & Place':'Need mana'}
                   </button>
                 </div>
               );
@@ -1187,7 +1191,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
               className={`flex items-center gap-1.5 rounded p-1 cursor-pointer transition-all ${selectedIds.has(u.id)?'bg-indigo-900/60 border border-indigo-500':'bg-zinc-800/50 border border-transparent hover:bg-zinc-800'}`}>
               <UShape type={u.type} color={selectedIds.has(u.id)?'#818cf8':'#3b82f6'} size={13}/>
               <div className="flex-1 min-w-0">
-                <p className="text-white text-[9px] font-bold truncate">{u.general&&'⭐ '}{u.name}</p>
+                <p className="text-white text-[9px] font-bold truncate flex items-center gap-0.5">{u.general&&<Star size={8} fill="#fbbf24" color="#fbbf24"/>}{u.name}</p>
                 {u.mov>0&&<span style={{fontSize:7,color:u.behavior==='attack'?'#f87171':u.behavior==='defend_castle'?'#67e8f9':'#86efac'}}>
                   {u.behavior==='attack'?'ATK':u.behavior==='defend_castle'?'DEF':u.behavior==='defend_spot'?'HOLD':'IDLE'}
                 </span>}
@@ -1302,14 +1306,14 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-cyan-950/95 border border-cyan-600 rounded-xl px-4 py-2.5 flex items-center gap-3 z-20 shadow-2xl">
             <UShape type={pendingType} color="#22d3ee" size={20}/>
             <span className="text-cyan-200 text-xs font-semibold">Click anywhere on the map to place {UD[pendingType]?.name}</span>
-            <button onClick={cancelPending} className="text-zinc-400 hover:text-red-400 text-sm ml-1 font-bold">✕</button>
+            <button onClick={cancelPending} className="text-zinc-400 hover:text-red-400 text-sm ml-1 font-bold"><X size={14}/></button>
           </div>
         )}
 
         {/* Drag-select hint — shown until the player has selected units at least once */}
         {mode!=='turns'&&selList.length===0&&!pendingType&&(
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-zinc-900/90 border border-zinc-700 rounded-xl px-4 py-2 flex items-center gap-2 z-20 shadow-xl pointer-events-none">
-            <span className="text-sm">🖱️</span>
+            <MousePointer2 size={14} className="text-zinc-400"/>
             <span className="text-zinc-300 text-xs font-semibold">Click-drag on the grid to box-select multiple units, then command them together</span>
           </div>
         )}
@@ -1353,17 +1357,17 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
                 <p className="text-zinc-400 text-[10px] uppercase font-bold mb-1.5">Behavior</p>
                 <div className="grid grid-cols-2 gap-1.5">
                   {[
-                    {key:'defend_spot',   label:'Hold Position', color:'#86efac', icon:'🛡'},
-                    {key:'defend_castle', label:'Guard Castle',   color:'#67e8f9', icon:'🏰'},
-                    {key:'attack',        label:'Attack Enemy',   color:'#f87171', icon:'⚔'},
-                    {key:'idle',          label:'Idle',           color:'#9ca3af', icon:'·'},
+                    {key:'defend_spot',   label:'Hold Position', color:'#86efac', icon:Shield},
+                    {key:'defend_castle', label:'Guard Castle',   color:'#67e8f9', icon:Castle},
+                    {key:'attack',        label:'Attack Enemy',   color:'#f87171', icon:Swords},
+                    {key:'idle',          label:'Idle',           color:'#9ca3af', icon:Circle},
                   ].map(b=>{
                     const allMatch=selMobile.every(u=>u.behavior===b.key);
                     return (
                       <button key={b.key} onClick={()=>setBehavior(b.key)}
                         className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-bold border transition-all ${allMatch?'border-opacity-100 bg-zinc-700':'border-zinc-600 bg-zinc-800/60 opacity-70 hover:opacity-100'}`}
                         style={{borderColor:allMatch?b.color:'',color:allMatch?b.color:'#9ca3af'}}>
-                        <span>{b.icon}</span>{b.label}
+                        <b.icon size={12}/>{b.label}
                       </button>
                     );
                   })}
@@ -1384,7 +1388,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
 
             {/* Deselect */}
             <button onClick={()=>setSelectedIds(new Set())}
-              className="absolute top-2 right-2 text-zinc-500 hover:text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded">✕</button>
+              className="absolute top-2 right-2 text-zinc-500 hover:text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded"><X size={12}/></button>
           </div>
         )}
 
@@ -1400,19 +1404,23 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
       {(phase==='won'||phase==='lost')&&(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <div className="bg-zinc-900 border-2 border-zinc-600 rounded-2xl p-10 flex flex-col items-center gap-5 shadow-2xl max-w-sm w-full mx-4">
-            <div className="text-7xl font-black" style={{fontFamily:'monospace',color:phase==='won'?'#fde047':'#ef4444'}}>
-              {phase==='won'?'★':'✕'}
+            <div style={{color:phase==='won'?'#fde047':'#ef4444'}}>
+              {phase==='won'?<Star size={56} fill="currentColor"/>:<X size={56}/>}
             </div>
             <h2 className={`text-3xl font-black ${phase==='won'?'text-yellow-300':'text-red-400'}`}>{phase==='won'?'Victory!':'Defeat'}</h2>
             <p className="text-zinc-400 text-sm text-center">{log[0]}</p>
             {mission&&phase==='won'&&(
               <div className="flex items-center gap-2 bg-amber-950/50 border border-amber-800 rounded-xl px-4 py-2 text-xs font-bold text-amber-200">
-                +{mission.rewardMana}💜{mission.rewardGems?` +${mission.rewardGems}💎`:''}{mission.rewardOil?` +${mission.rewardOil}🛢️`:''}
+                <span className="flex items-center gap-1"><Sparkles size={12}/>{mission.rewardMana}</span>
+                {mission.rewardGems?<span className="flex items-center gap-1">+{mission.rewardGems}<Gem size={12}/></span>:null}
+                {mission.rewardOil?<span className="flex items-center gap-1">+{mission.rewardOil}<Fuel size={12}/></span>:null}
               </div>
             )}
             {!mission&&phase==='won'&&winReward&&(
               <div className="flex items-center gap-2 bg-amber-950/50 border border-amber-800 rounded-xl px-4 py-2 text-xs font-bold text-amber-200">
-                +{winReward.mana}💜 +{winReward.oil}🛢️{winReward.gems?` +${winReward.gems}💎`:''}
+                <span className="flex items-center gap-1"><Sparkles size={12}/>{winReward.mana}</span>
+                <span className="flex items-center gap-1">+{winReward.oil}<Fuel size={12}/></span>
+                {winReward.gems?<span className="flex items-center gap-1">+{winReward.gems}<Gem size={12}/></span>:null}
               </div>
             )}
             <div className="flex gap-3 flex-wrap justify-center">

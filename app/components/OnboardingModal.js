@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Swords } from "lucide-react";
 
 const ACCOUNTS_KEY = "rpg_accounts"; // { [username]: hashedPassword }
 
@@ -91,8 +92,8 @@ export default function OnboardingModal() {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-zinc-900 shadow-2xl p-8 flex flex-col gap-6">
         <div className="flex flex-col gap-1 text-center">
-          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">
-            {isLogin ? "Welcome back! ⚔️" : "Welcome, adventurer! ⚔️"}
+          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white flex items-center justify-center gap-2">
+            {isLogin ? "Welcome back!" : "Welcome, adventurer!"} <Swords size={20}/>
           </h2>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             {isLogin ? "Log in to continue your journey." : "Create your profile to begin your journey."}

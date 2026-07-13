@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Lightbulb } from "lucide-react";
 import { Overlay, Field, SuccessMessage, inputCls, primaryBtn, secondaryBtn } from "./ReportBugModal";
 
 export default function SuggestionModal({ onClose }) {
@@ -17,7 +18,7 @@ export default function SuggestionModal({ onClose }) {
 
   return (
     <Overlay onClose={onClose}>
-      <h2 className="text-xl font-bold text-white mb-1">💡 Make a Suggestion</h2>
+      <h2 className="text-xl font-bold text-white mb-1 flex items-center gap-2"><Lightbulb size={20}/> Make a Suggestion</h2>
       <p className="text-zinc-400 text-sm mb-5">Have an idea to improve the game? Share it!</p>
 
       {submitted ? (

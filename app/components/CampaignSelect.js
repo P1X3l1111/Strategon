@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Medal, CheckCircle2, Lock, Sparkles, Gem, Fuel } from "lucide-react";
 import { MISSIONS, getCampaignProgress, isMissionUnlocked, isMissionComplete } from "../data/campaign";
 
 export default function CampaignSelect({ onSelectMission, onBack }) {
@@ -21,7 +22,7 @@ export default function CampaignSelect({ onSelectMission, onBack }) {
       </button>
 
       <div className="text-center">
-        <h1 className="text-4xl font-black text-white mb-2">🎖️ Campaign</h1>
+        <h1 className="text-4xl font-black text-white mb-2 flex items-center justify-center gap-3"><Medal size={32}/> Campaign</h1>
         <p className="text-zinc-500 text-sm">Win scripted battles. Some missions demand you capture enemy troops alive.</p>
         <p className="text-zinc-600 text-xs mt-2">{doneCount}/{MISSIONS.length} missions complete</p>
       </div>
@@ -41,8 +42,8 @@ export default function CampaignSelect({ onSelectMission, onBack }) {
                   : "bg-zinc-900/40 border-zinc-800 cursor-not-allowed opacity-50"
               }`}
             >
-              <span className="text-3xl font-black w-10 text-center shrink-0" style={{ color: unlocked ? (complete ? "#22c55e" : "#f59e0b") : "#52525b" }}>
-                {complete ? "✓" : unlocked ? i + 1 : "🔒"}
+              <span className="text-3xl font-black w-10 flex items-center justify-center shrink-0" style={{ color: unlocked ? (complete ? "#22c55e" : "#f59e0b") : "#52525b" }}>
+                {complete ? <CheckCircle2 size={26}/> : unlocked ? i + 1 : <Lock size={24}/>}
               </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5 flex-wrap">
@@ -57,8 +58,10 @@ export default function CampaignSelect({ onSelectMission, onBack }) {
                   {complete && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border text-green-300 bg-green-950 border-green-800">COMPLETE</span>}
                 </div>
                 <p className="text-zinc-400 text-sm">{unlocked ? m.briefing : "Complete the previous mission to unlock."}</p>
-                <p className="text-zinc-600 text-xs mt-1">
-                  Reward: {m.rewardMana}💜{m.rewardGems ? ` +${m.rewardGems}💎` : ""}{m.rewardOil ? ` +${m.rewardOil}🛢️` : ""}
+                <p className="text-zinc-600 text-xs mt-1 flex items-center gap-1.5">
+                  Reward: <span className="flex items-center gap-0.5"><Sparkles size={11}/>{m.rewardMana}</span>
+                  {m.rewardGems ? <span className="flex items-center gap-0.5">+{m.rewardGems}<Gem size={11}/></span> : null}
+                  {m.rewardOil ? <span className="flex items-center gap-0.5">+{m.rewardOil}<Fuel size={11}/></span> : null}
                 </p>
               </div>
               {unlocked && <span className="text-2xl text-zinc-600 group-hover:text-white transition-all shrink-0">→</span>}
