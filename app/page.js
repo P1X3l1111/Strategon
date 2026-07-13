@@ -148,19 +148,23 @@ export default function Home() {
                   <p className="text-zinc-500 text-sm">Choose a battle mode to deploy your forces</p>
                 </div>
 
-                {/* Classic & Ranked anchor the center as tilted diamonds with a soft edge
-                    fade; every other mode fans out below, tilted the opposite way. */}
-                <div className="flex flex-col items-center gap-9 w-full">
+                {/* Classic & Ranked anchor the center, tilted 30° with the fade facing
+                    outward (never on the edges that meet each other). The rest of the
+                    modes sit clear above and below, tilted the opposite way. */}
+                <div className="flex flex-col items-center gap-12 w-full">
                   <div className="flex items-center justify-center gap-5">
-                    <DiamondCard m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} />
-                    <DiamondCard m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} />
+                    <FlankCard m={CAMPAIGN_MODE} isReady={true} onClick={() => setView("campaign")} fade="top" />
+                    <FlankCard m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} fade="top" />
                   </div>
 
-                  <div className="flex items-center justify-center gap-3 flex-wrap">
-                    <TiltCard m={CAMPAIGN_MODE} isReady={true} onClick={() => setView("campaign")} />
-                    <TiltCard m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} />
-                    <TiltCard m={MODES.find(m => m.id === "siege")} isReady={isModeReady("siege", mapStatus)} onClick={() => enterGame("siege")} />
-                    <TiltCard m={MODES.find(m => m.id === "turns")} isReady={isModeReady("turns", mapStatus)} onClick={() => enterGame("turns")} />
+                  <div className="flex items-center justify-center gap-4">
+                    <CenterCard m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} fade="left" />
+                    <CenterCard m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} fade="right" />
+                  </div>
+
+                  <div className="flex items-center justify-center gap-5">
+                    <FlankCard m={MODES.find(m => m.id === "siege")} isReady={isModeReady("siege", mapStatus)} onClick={() => enterGame("siege")} fade="bottom" />
+                    <FlankCard m={MODES.find(m => m.id === "turns")} isReady={isModeReady("turns", mapStatus)} onClick={() => enterGame("turns")} fade="bottom" />
                   </div>
                 </div>
 
@@ -202,9 +206,19 @@ function isModeReady(id, mapStatus) {
   return mapStatus === null ? true : (mapStatus[id] ?? false);
 }
 
-// Center-stage mode card — a rotated diamond with the icon/label counter-rotated
-// upright, and a mask fade toward its two points.
-function DiamondCard({ m, isReady, onClick }) {
+// Fade direction → CSS gradient, always transparent on the named edge and
+// solid on the opposite edge (so cards never fade on the side facing a neighbor).
+const EDGE_FADE = {
+  left:   "linear-gradient(to right, transparent 0%, black 40%, black 100%)",
+  right:  "linear-gradient(to left, transparent 0%, black 40%, black 100%)",
+  top:    "linear-gradient(to bottom, transparent 0%, black 40%, black 100%)",
+  bottom: "linear-gradient(to top, transparent 0%, black 40%, black 100%)",
+};
+
+// Center-stage mode card — Classic & Ranked. Tilted 30°, with the fade always
+// facing outward (away from the other center card), never on the meeting edge.
+function CenterCard({ m, isReady, onClick, fade }) {
+  const gradient = EDGE_FADE[fade];
   return (
     <button
       onClick={() => isReady && onClick()}
@@ -217,15 +231,12 @@ function DiamondCard({ m, isReady, onClick }) {
         style={{ background: m.color, opacity: isReady ? 0.22 : 0 }}
       />
       <div
-        className={`absolute left-1/2 top-1/2 w-[140px] h-[140px] -translate-x-1/2 -translate-y-1/2 rotate-45 group-hover:scale-105 border rounded-2xl shadow-2xl transition-all duration-200 ${
+        className={`absolute left-1/2 top-1/2 w-[150px] h-[150px] -translate-x-1/2 -translate-y-1/2 rotate-[30deg] group-hover:scale-105 border rounded-2xl shadow-2xl transition-all duration-200 ${
           isReady
             ? "bg-zinc-900 border-zinc-700 group-hover:border-zinc-400"
             : "bg-zinc-900/40 border-zinc-800 opacity-50"
         }`}
-        style={{
-          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 24%, black 76%, transparent 100%)",
-          maskImage: "linear-gradient(to bottom, transparent 0%, black 24%, black 76%, transparent 100%)",
-        }}
+        style={{ WebkitMaskImage: gradient, maskImage: gradient }}
       />
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center pointer-events-none">
         <span style={{ color: isReady ? m.color : "#52525b" }}>
@@ -242,8 +253,11 @@ function DiamondCard({ m, isReady, onClick }) {
   );
 }
 
-// Supporting-cast mode card — smaller, tilted the opposite way from DiamondCard.
-function TiltCard({ m, isReady, onClick }) {
+// Supporting-cast mode card — the rest of the modes, above and below the
+// center pair. Tilted 30° the opposite way from CenterCard, kept clear of it,
+// and faded on the edge pointing away from the center row.
+function FlankCard({ m, isReady, onClick, fade }) {
+  const gradient = EDGE_FADE[fade];
   return (
     <button
       onClick={() => isReady && onClick()}
@@ -256,11 +270,12 @@ function TiltCard({ m, isReady, onClick }) {
         style={{ background: m.color, opacity: isReady ? 0.14 : 0 }}
       />
       <div
-        className={`absolute left-1/2 top-1/2 w-[92px] h-[92px] -translate-x-1/2 -translate-y-1/2 -rotate-45 group-hover:scale-105 border rounded-xl shadow-lg transition-all duration-200 ${
+        className={`absolute left-1/2 top-1/2 w-[98px] h-[98px] -translate-x-1/2 -translate-y-1/2 -rotate-[30deg] group-hover:scale-105 border rounded-xl shadow-lg transition-all duration-200 ${
           isReady
             ? "bg-zinc-900 border-zinc-700 group-hover:border-zinc-500"
             : "bg-zinc-900/40 border-zinc-800 opacity-50"
         }`}
+        style={{ WebkitMaskImage: gradient, maskImage: gradient }}
       />
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center pointer-events-none">
         <span style={{ color: isReady ? m.color : "#52525b" }}>
