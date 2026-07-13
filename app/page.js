@@ -148,22 +148,22 @@ export default function Home() {
                   <p className="text-zinc-500 text-sm">Choose a battle mode to deploy your forces</p>
                 </div>
 
-                {/* Classic & Ranked anchor the center, tilted 30° with the fade facing
-                    outward (never on the edges that meet each other). The rest of the
-                    modes sit clear above and below, tilted the opposite way. */}
-                <div className="flex flex-col items-center gap-12 w-full">
-                  <div className="flex items-center justify-center gap-5">
+                {/* Classic & Ranked sit in a line, barely touching. Three of the
+                    remaining modes sit above that line, one sits below — all
+                    tilted the opposite way from the center pair. */}
+                <div className="flex flex-col items-center gap-10 w-full">
+                  <div className="flex items-center justify-center gap-3">
                     <FlankCard m={CAMPAIGN_MODE} isReady={true} onClick={() => setView("campaign")} fade="top" />
                     <FlankCard m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} fade="top" />
+                    <FlankCard m={MODES.find(m => m.id === "siege")} isReady={isModeReady("siege", mapStatus)} onClick={() => enterGame("siege")} fade="top" />
                   </div>
 
-                  <div className="flex items-center justify-center gap-4">
+                  <div className="flex items-center justify-center gap-1">
                     <CenterCard m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} fade="left" />
                     <CenterCard m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} fade="right" />
                   </div>
 
                   <div className="flex items-center justify-center gap-5">
-                    <FlankCard m={MODES.find(m => m.id === "siege")} isReady={isModeReady("siege", mapStatus)} onClick={() => enterGame("siege")} fade="bottom" />
                     <FlankCard m={MODES.find(m => m.id === "turns")} isReady={isModeReady("turns", mapStatus)} onClick={() => enterGame("turns")} fade="bottom" />
                   </div>
                 </div>
