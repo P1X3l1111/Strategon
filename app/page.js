@@ -215,7 +215,7 @@ const EDGE_FADE = {
   bottom: "linear-gradient(to top, transparent 0%, black 40%, black 100%)",
 };
 
-// Center-stage mode card — Classic & Ranked. Tilted 30°, with the fade always
+// Center-stage mode card — Classic & Ranked. Tilted -30°, with the fade always
 // facing outward (away from the other center card), never on the meeting edge.
 function CenterCard({ m, isReady, onClick, fade }) {
   const gradient = EDGE_FADE[fade];
@@ -231,7 +231,7 @@ function CenterCard({ m, isReady, onClick, fade }) {
         style={{ background: m.color, opacity: isReady ? 0.22 : 0 }}
       />
       <div
-        className={`absolute left-1/2 top-1/2 w-[150px] h-[150px] -translate-x-1/2 -translate-y-1/2 rotate-[30deg] group-hover:scale-105 border rounded-2xl shadow-2xl transition-all duration-200 ${
+        className={`absolute left-1/2 top-1/2 w-[150px] h-[150px] -translate-x-1/2 -translate-y-1/2 -rotate-[30deg] group-hover:scale-105 border rounded-2xl shadow-2xl transition-all duration-200 ${
           isReady
             ? "bg-zinc-900 border-zinc-700 group-hover:border-zinc-400"
             : "bg-zinc-900/40 border-zinc-800 opacity-50"
@@ -254,7 +254,7 @@ function CenterCard({ m, isReady, onClick, fade }) {
 }
 
 // Supporting-cast mode card — the rest of the modes, above and below the
-// center pair. Tilted 30° the opposite way from CenterCard, kept clear of it,
+// center pair. Tilted +30° the opposite way from CenterCard, kept clear of it,
 // and faded on the edge pointing away from the center row.
 function FlankCard({ m, isReady, onClick, fade }) {
   const gradient = EDGE_FADE[fade];
@@ -270,7 +270,7 @@ function FlankCard({ m, isReady, onClick, fade }) {
         style={{ background: m.color, opacity: isReady ? 0.14 : 0 }}
       />
       <div
-        className={`absolute left-1/2 top-1/2 w-[98px] h-[98px] -translate-x-1/2 -translate-y-1/2 -rotate-[30deg] group-hover:scale-105 border rounded-xl shadow-lg transition-all duration-200 ${
+        className={`absolute left-1/2 top-1/2 w-[98px] h-[98px] -translate-x-1/2 -translate-y-1/2 rotate-[30deg] group-hover:scale-105 border rounded-xl shadow-lg transition-all duration-200 ${
           isReady
             ? "bg-zinc-900 border-zinc-700 group-hover:border-zinc-500"
             : "bg-zinc-900/40 border-zinc-800 opacity-50"
