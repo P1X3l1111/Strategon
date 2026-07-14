@@ -1,5 +1,6 @@
 import { Shield, Zap, Target, Castle, Crown, Heart, Flame, Footprints, Eye, Dumbbell } from "lucide-react";
 import { spendCoins, spendGems } from "./troops";
+import { resolveIcon } from "./icons";
 
 // Generals — optional hero boosts, each ownable and independently upgradable.
 // Owning a commander (gems, one-time) is separate from battle slots (gems,
@@ -29,6 +30,52 @@ export const BUFFS = [
   { id: "juggernaut", name: "Juggernaut Buff", icon: Dumbbell,   desc: "+10% HP and +10% attack",    cost: 60, boosts: { hpMult: 1.1, atkMult: 1.1 } },
 ];
 
+// ── Admin-created commanders — global (not per-account), stored as plain
+// data (icon as a string key) and merged with the built-in roster above via
+// getAllGenerals(). Any code that used to read GENERALS directly should read
+// getAllGenerals() instead so custom commanders behave identically.
+const CUSTOM_GENERALS_KEY = "rpg_admin_custom_generals";
+
+function loadCustomGeneralsRaw() {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(localStorage.getItem(CUSTOM_GENERALS_KEY) || "[]"); }
+  catch { return []; }
+}
+
+function saveCustomGeneralsRaw(list) {
+  localStorage.setItem(CUSTOM_GENERALS_KEY, JSON.stringify(list));
+  window.dispatchEvent(new CustomEvent("rpg_admin_generals_updated"));
+}
+
+export function getCustomGenerals() {
+  return loadCustomGeneralsRaw().map(g => ({ ...g, icon: resolveIcon(g.iconKey) }));
+}
+
+export function getAllGenerals() {
+  return [...GENERALS, ...getCustomGenerals()];
+}
+
+export function addCustomGeneral({ name, iconKey, color, desc, price, boosts }) {
+  const list = loadCustomGeneralsRaw();
+  const entry = { id: `custom_${Date.now()}`, name, iconKey, color, desc, price: price || 0, boosts };
+  list.push(entry);
+  saveCustomGeneralsRaw(list);
+  return entry;
+}
+
+export function updateCustomGeneral(id, patch) {
+  const list = loadCustomGeneralsRaw();
+  const idx = list.findIndex(g => g.id === id);
+  if (idx === -1) return false;
+  list[idx] = { ...list[idx], ...patch };
+  saveCustomGeneralsRaw(list);
+  return true;
+}
+
+export function deleteCustomGeneral(id) {
+  saveCustomGeneralsRaw(loadCustomGeneralsRaw().filter(g => g.id !== id));
+}
+
 export const MAX_GENERAL_LEVEL = 5;
 export const MAX_BUFF_SLOTS    = 3;
 export const LEVEL_POWER_STEP  = 0.15; // each level makes the general's own boosts 15% stronger
@@ -52,7 +99,7 @@ function currentUser() {
 function storageKey(u) { return `rpg_generals_${u}`; }
 
 function defaultProgress(generalId) {
-  const base = GENERALS.find(g => g.id === generalId);
+  const base = getAllGenerals().find(g => g.id === generalId);
   return { owned: !!base && base.price === 0, level: 0, slots: 1, buffs: [] };
 }
 
@@ -81,7 +128,7 @@ export function isCommanderOwned(generalId) {
 
 // One-time gem purchase that unlocks a commander for use/upgrades.
 export function buyCommander(generalId) {
-  const base = GENERALS.find(g => g.id === generalId);
+  const base = getAllGenerals().find(g => g.id === generalId);
   if (!base) return false;
   const all = loadGeneralsProgress();
   const prog = { ...defaultProgress(generalId), ...(all[generalId] || {}) };
@@ -160,7 +207,7 @@ export function buyBattleSlot() {
 // Merges a general's base boosts with its level bonus and equipped buffs into one
 // resolved boosts object, ready to hand to applyGeneralBoost.
 export function getEffectiveGeneral(generalId) {
-  const base = GENERALS.find(g => g.id === generalId);
+  const base = getAllGenerals().find(g => g.id === generalId);
   if (!base) return null;
   const prog = getGeneralProgress(generalId);
   const power = 1 + prog.level * LEVEL_POWER_STEP;

@@ -3,8 +3,10 @@ import { useState, useEffect } from "react";
 import {
   Star, Users, Map as MapIcon, UserX, Sparkles, Fuel, Gem, Skull, Clock,
   CheckCircle2, X, Pencil, RotateCw, Swords, Infinity as InfinityIcon, Castle, ListOrdered,
+  ShoppingCart,
 } from "lucide-react";
 import MapEditor, { makeDefaultGrid } from "./MapEditor";
+import { ShopItemsEditor, CommandersEditor } from "./admin/ContentEditors";
 
 const MODES = [
   { id:'classic', name:'Classic', color:'#6366f1', icon:Swords,       desc:'Clear all enemy buildings.' },
@@ -38,6 +40,7 @@ function readStat(key, username) {
 
 export default function AdminPanel({ currentUser, onBack, onMapChange }) {
   const [tab,         setTab]         = useState('players');
+  const [contentSubTab, setContentSubTab] = useState('shop');
   const [editingMode, setEditingMode] = useState(null);
   const [accounts,    setAccounts]    = useState({});
   const [adminList,   setAdminList]   = useState([]);
@@ -146,6 +149,7 @@ export default function AdminPanel({ currentUser, onBack, onMapChange }) {
       <div className="flex gap-1 px-6 pt-4 pb-0 shrink-0 bg-zinc-950 border-b border-zinc-800">
         <TabBtn active={tab==='players'} onClick={()=>setTab('players')}><Users size={14}/> Players ({totalUsers})</TabBtn>
         <TabBtn active={tab==='modes'}   onClick={()=>setTab('modes')}><MapIcon size={14}/> Modes &amp; Maps</TabBtn>
+        <TabBtn active={tab==='content'} onClick={()=>setTab('content')}><ShoppingCart size={14}/> Shop &amp; Commanders</TabBtn>
       </div>
 
       {/* Content */}
@@ -274,6 +278,23 @@ export default function AdminPanel({ currentUser, onBack, onMapChange }) {
                 <li><strong className="text-red-400">Delete Map</strong> locks the mode until a new map is saved</li>
               </ul>
             </div>
+          </div>
+        )}
+
+        {/* ── SHOP & COMMANDERS ── */}
+        {tab === 'content' && (
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-2">
+              <button onClick={()=>setContentSubTab('shop')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${contentSubTab==='shop'?'border-indigo-500 bg-indigo-950 text-indigo-300':'border-zinc-700 text-zinc-500 hover:text-white'}`}>
+                Shop Items
+              </button>
+              <button onClick={()=>setContentSubTab('commanders')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${contentSubTab==='commanders'?'border-indigo-500 bg-indigo-950 text-indigo-300':'border-zinc-700 text-zinc-500 hover:text-white'}`}>
+                Commanders
+              </button>
+            </div>
+            {contentSubTab === 'shop' ? <ShopItemsEditor/> : <CommandersEditor/>}
           </div>
         )}
       </div>

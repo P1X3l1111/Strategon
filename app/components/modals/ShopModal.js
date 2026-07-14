@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Coins, Wallet, Package, Landmark, Gem, Diamond, Shapes, Crown, Star, Unlock, TrendingUp, Medal, Castle, X, ShoppingCart } from "lucide-react";
+import { getCustomShopItemsByCategory } from "../../data/shopItems";
 
 // Real-money purchases, grouped into three sections. No payment processing yet —
 // "Buy" just previews the price with a "Coming soon" toast.
@@ -38,6 +39,16 @@ const SECTIONS = {
 export default function ShopModal({ open, onClose }) {
   const [tab, setTab] = useState("coins");
   const [toast, setToast] = useState(null);
+  const [customItems, setCustomItems] = useState([]);
+
+  useEffect(() => {
+    const refresh = () => setCustomItems(getCustomShopItemsByCategory(tab));
+    refresh();
+    window.addEventListener("rpg_admin_shop_items_updated", refresh);
+    return () => window.removeEventListener("rpg_admin_shop_items_updated", refresh);
+  }, [tab]);
+
+  const items = [...SECTIONS[tab].items, ...customItems];
 
   function handleBuy(item) {
     setToast(`${item.name} — payments aren't live yet. Coming soon!`);
@@ -87,7 +98,7 @@ export default function ShopModal({ open, onClose }) {
         <div className="flex-1 overflow-y-auto p-6 pt-4">
           <p className="text-zinc-500 text-xs mb-4">Purchases aren&apos;t live yet — browse away.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {SECTIONS[tab].items.map((item) => (
+            {items.map((item) => (
               <div key={item.id} className="relative rounded-xl border border-zinc-700 bg-zinc-800/50 p-4 flex flex-col gap-2">
                 {item.tag && (
                   <span className="absolute top-3 right-3 text-[9px] font-bold text-indigo-300 bg-indigo-950 border border-indigo-800 rounded-full px-2 py-0.5">

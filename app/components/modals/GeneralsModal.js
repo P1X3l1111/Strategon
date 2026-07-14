@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { Star, Coins, Gem, X, Medal, Lock, ArrowUp } from "lucide-react";
 import {
-  GENERALS, BUFFS, MAX_GENERAL_LEVEL, MAX_BUFF_SLOTS, MAX_BATTLE_SLOTS,
-  getGeneralProgress, getUpgradeCost, getSlotCost,
+  BUFFS, MAX_GENERAL_LEVEL, MAX_BUFF_SLOTS, MAX_BATTLE_SLOTS,
+  getAllGenerals, getGeneralProgress, getUpgradeCost, getSlotCost,
   upgradeGeneral, buyGeneralSlot, buyGeneralBuff, buyCommander,
   getBattleSlotCount, getBattleSlotCost, buyBattleSlot,
 } from "../../data/generals";
@@ -17,13 +17,16 @@ export default function GeneralsModal({ open, onClose }) {
   const [battleSlots, setBattleSlots] = useState(1);
   const [toast, setToast] = useState(null);
   const [pickingFor, setPickingFor] = useState(null); // generalId currently choosing a buff
+  const [allGenerals, setAllGenerals] = useState([]);
 
   function refresh() {
     setCoins(getCoins());
     setGems(getGems());
     setBattleSlots(getBattleSlotCount());
+    const generals = getAllGenerals();
+    setAllGenerals(generals);
     const p = {};
-    GENERALS.forEach(g => { p[g.id] = getGeneralProgress(g.id); });
+    generals.forEach(g => { p[g.id] = getGeneralProgress(g.id); });
     setProgress(p);
   }
 
@@ -32,9 +35,11 @@ export default function GeneralsModal({ open, onClose }) {
     const onUpdate = () => refresh();
     window.addEventListener("rpg_currency_updated", onUpdate);
     window.addEventListener("rpg_generals_updated", onUpdate);
+    window.addEventListener("rpg_admin_generals_updated", onUpdate);
     return () => {
       window.removeEventListener("rpg_currency_updated", onUpdate);
       window.removeEventListener("rpg_generals_updated", onUpdate);
+      window.removeEventListener("rpg_admin_generals_updated", onUpdate);
     };
   }, []);
 
@@ -125,10 +130,10 @@ export default function GeneralsModal({ open, onClose }) {
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 pt-4">
           <p className="text-zinc-500 text-xs mb-4">
-            Own {ownedCount}/{GENERALS.length} commanders. Level up owned commanders with coins for stronger boosts, and spend gems on buff slots (max {MAX_BUFF_SLOTS}) plus the buffs that fill them.
+            Own {ownedCount}/{allGenerals.length} commanders. Level up owned commanders with coins for stronger boosts, and spend gems on buff slots (max {MAX_BUFF_SLOTS}) plus the buffs that fill them.
           </p>
           <div className="flex flex-col gap-4">
-            {GENERALS.map((g) => {
+            {allGenerals.map((g) => {
               const prog = progress[g.id] || { owned: g.price === 0, level: 0, slots: 1, buffs: [] };
 
               if (!prog.owned) {

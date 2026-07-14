@@ -12,7 +12,7 @@ import {
 } from "../data/troops";
 import { bumpQuestStat } from "../data/quests";
 import { completeMission, getNextMission } from "../data/campaign";
-import { GENERALS, applyGeneralBoost, getEffectiveGeneral, isCommanderOwned, getBattleSlotCount } from "../data/generals";
+import { getAllGenerals, applyGeneralBoost, getEffectiveGeneral, isCommanderOwned, getBattleSlotCount } from "../data/generals";
 import { normalizeMapData } from "./MapEditor";
 
 // ── Grid ──────────────────────────────────────────────────────────────────────
@@ -1127,7 +1127,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
               <button onClick={cancelGeneral} className="text-zinc-400 hover:text-red-400 text-xs font-bold shrink-0"><X size={14}/></button>
             </div>
           ) : (() => {
-            const available = GENERALS.filter(g=>isCommanderOwned(g.id) && !assignedGenerals.some(a=>a.generalId===g.id));
+            const available = getAllGenerals().filter(g=>isCommanderOwned(g.id) && !assignedGenerals.some(a=>a.generalId===g.id));
             return available.length>0 ? (
               <div className="flex gap-1.5 flex-wrap">
                 {available.map(g=>(
