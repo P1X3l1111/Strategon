@@ -225,14 +225,14 @@ function CenterCard({ m, isReady, onClick, fade }) {
       onClick={() => isReady && onClick()}
       disabled={!isReady}
       title={isReady ? m.desc : "Admin must create a map for this mode."}
-      className={`group relative shrink-0 w-[215px] h-[235px] ${isReady ? "cursor-pointer" : "cursor-not-allowed"}`}
+      className={`group relative shrink-0 w-[235px] h-[215px] ${isReady ? "cursor-pointer" : "cursor-not-allowed"}`}
     >
       <div
         className="absolute inset-0 rounded-full blur-2xl transition-opacity duration-200"
         style={{ background: m.color, opacity: isReady ? 0.22 : 0 }}
       />
       <div
-        className={`absolute left-1/2 top-1/2 w-[150px] h-[215px] -translate-x-1/2 -translate-y-1/2 -rotate-[30deg] group-hover:scale-105 border rounded-2xl shadow-2xl transition-all duration-200 ${
+        className={`absolute left-1/2 top-1/2 w-[215px] h-[150px] -translate-x-1/2 -translate-y-1/2 -rotate-[30deg] group-hover:scale-105 border rounded-2xl shadow-2xl transition-all duration-200 ${
           isReady
             ? "bg-zinc-900 border-zinc-700 group-hover:border-zinc-400"
             : "bg-zinc-900/40 border-zinc-800 opacity-50"
