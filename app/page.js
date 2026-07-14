@@ -244,7 +244,7 @@ function CenterCard({ m, isReady, onClick, fade }) {
         style={{ background: m.color }}
       />
       <div
-        className={`absolute left-1/2 top-1/2 w-[215px] h-[150px] -translate-x-1/2 -translate-y-1/2 -rotate-[30deg] border rounded-2xl shadow-2xl transition-colors duration-200 ${
+        className={`absolute left-1/2 top-1/2 w-[215px] h-[150px] -translate-x-1/2 -translate-y-1/2 -rotate-[30deg] group-hover:scale-x-110 border rounded-2xl shadow-2xl transition-all duration-200 ${
           isReady
             ? "bg-zinc-900 border-zinc-700 group-hover:border-zinc-400"
             : "bg-zinc-900/40 border-zinc-800 opacity-50"
@@ -287,7 +287,7 @@ function FlankCard({ m, isReady, onClick, fade }) {
         style={{ background: m.color }}
       />
       <div
-        className={`absolute left-1/2 top-1/2 w-[98px] h-[98px] -translate-x-1/2 -translate-y-1/2 rotate-[30deg] border rounded-xl shadow-lg transition-colors duration-200 ${
+        className={`absolute left-1/2 top-1/2 w-[98px] h-[98px] -translate-x-1/2 -translate-y-1/2 rotate-[30deg] group-hover:scale-x-110 border rounded-xl shadow-lg transition-all duration-200 ${
           isReady
             ? "bg-zinc-900 border-zinc-700 group-hover:border-zinc-500"
             : "bg-zinc-900/40 border-zinc-800 opacity-50"
