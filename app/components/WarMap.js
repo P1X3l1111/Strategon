@@ -979,11 +979,15 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
     const rect=mapRef.current?.getBoundingClientRect();
     if(!rect)return;
     const x=lastClientPos.current.x-rect.left, y=lastClientPos.current.y-rect.top;
+    // Clear margin so the panel never sits over the clicked unit/cursor —
+    // otherwise a click meant to deselect lands on the panel instead of the
+    // map (it stops propagation) and looks like the panel "won't close".
+    const MARGIN=44;
     const style={};
-    if(x>rect.width/2) style.right=Math.max(8,rect.width-x+14);
-    else style.left=Math.max(8,x+14);
-    if(y>rect.height/2) style.bottom=Math.max(8,rect.height-y+14);
-    else style.top=Math.max(8,y+14);
+    if(x>rect.width/2) style.right=Math.max(8,rect.width-x+MARGIN);
+    else style.left=Math.max(8,x+MARGIN);
+    if(y>rect.height/2) style.bottom=Math.max(8,rect.height-y+MARGIN);
+    else style.top=Math.max(8,y+MARGIN);
     setPanelStyle(style);
   }
   function onMapPointerUp(e) {
