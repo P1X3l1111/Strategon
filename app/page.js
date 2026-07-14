@@ -215,8 +215,9 @@ const EDGE_FADE = {
   bottom: "linear-gradient(to top, transparent 0%, black 40%, black 100%)",
 };
 
-// Center-stage mode card — Classic & Ranked. Tilted -30°, with the fade always
-// facing outward (away from the other center card), never on the meeting edge.
+// Center-stage mode card — Classic & Ranked. Tilted -30°, elongated and
+// level with each other, with the fade always facing outward (away from
+// the other center card), never on the meeting edge.
 function CenterCard({ m, isReady, onClick, fade }) {
   const gradient = EDGE_FADE[fade];
   return (
@@ -224,14 +225,14 @@ function CenterCard({ m, isReady, onClick, fade }) {
       onClick={() => isReady && onClick()}
       disabled={!isReady}
       title={isReady ? m.desc : "Admin must create a map for this mode."}
-      className={`group relative shrink-0 w-[200px] h-[200px] ${isReady ? "cursor-pointer" : "cursor-not-allowed"}`}
+      className={`group relative shrink-0 w-[215px] h-[235px] ${isReady ? "cursor-pointer" : "cursor-not-allowed"}`}
     >
       <div
         className="absolute inset-0 rounded-full blur-2xl transition-opacity duration-200"
         style={{ background: m.color, opacity: isReady ? 0.22 : 0 }}
       />
       <div
-        className={`absolute left-1/2 top-1/2 w-[150px] h-[150px] -translate-x-1/2 -translate-y-1/2 -rotate-[30deg] group-hover:scale-105 border rounded-2xl shadow-2xl transition-all duration-200 ${
+        className={`absolute left-1/2 top-1/2 w-[150px] h-[215px] -translate-x-1/2 -translate-y-1/2 -rotate-[30deg] group-hover:scale-105 border rounded-2xl shadow-2xl transition-all duration-200 ${
           isReady
             ? "bg-zinc-900 border-zinc-700 group-hover:border-zinc-400"
             : "bg-zinc-900/40 border-zinc-800 opacity-50"
@@ -240,9 +241,9 @@ function CenterCard({ m, isReady, onClick, fade }) {
       />
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center pointer-events-none">
         <span style={{ color: isReady ? m.color : "#52525b" }}>
-          {isReady ? <m.icon size={40}/> : <Lock size={40}/>}
+          {isReady ? <m.icon size={44}/> : <Lock size={44}/>}
         </span>
-        <span className="text-white font-black text-lg">{m.name}</span>
+        <span className="text-white font-black text-xl">{m.name}</span>
       </div>
       {!isReady && (
         <span className="absolute top-1 right-1 text-[9px] font-bold text-red-400 bg-red-950 border border-red-800 px-1.5 py-0.5 rounded-full z-10">
