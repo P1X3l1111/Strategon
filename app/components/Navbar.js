@@ -158,62 +158,69 @@ export default function Navbar({ modal: modalProp, setModal: setModalProp, locke
         {/* Accent line */}
         <div className="h-[2px] bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-amber-500 opacity-70"/>
 
-        {/* Profile panel — opened from the home screen's Profile card, centered on screen */}
-        {lockerOpen && (
+        {/* Profile panel — slides in from the right as a drawer. Always mounted
+            (rather than conditionally rendered) so the open AND close motion
+            both get to animate via the CSS transition below. */}
+        <div
+          className={`fixed inset-0 z-50 flex justify-end transition-colors duration-300 ${
+            lockerOpen ? "bg-black/70 backdrop-blur-sm pointer-events-auto" : "bg-transparent pointer-events-none"
+          }`}
+          onClick={(e) => e.target === e.currentTarget && setLockerOpen(false)}
+          aria-hidden={!lockerOpen}
+        >
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-            onClick={(e) => e.target === e.currentTarget && setLockerOpen(false)}
+            className={`h-full w-full max-w-sm bg-zinc-900 border-l border-zinc-700 shadow-2xl overflow-y-auto transition-transform duration-300 ease-out ${
+              lockerOpen ? "translate-x-0" : "translate-x-full"
+            }`}
           >
-            <div className="w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden">
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-zinc-800/60 border-b border-zinc-700">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full bg-indigo-700 flex items-center justify-center text-xl font-bold shrink-0">
-                    {username ? username[0].toUpperCase() : "?"}
-                  </div>
-                  <div>
-                    <div className="text-white font-bold text-base leading-tight">{username || "Guest"}</div>
-                    <div className="text-zinc-500 text-xs">Your account at a glance</div>
-                  </div>
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-zinc-800/60 border-b border-zinc-700 sticky top-0">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-full bg-indigo-700 flex items-center justify-center text-xl font-bold shrink-0">
+                  {username ? username[0].toUpperCase() : "?"}
                 </div>
-                <button onClick={() => setLockerOpen(false)} className="text-zinc-500 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded hover:bg-zinc-800 shrink-0"><X size={16}/></button>
+                <div>
+                  <div className="text-white font-bold text-base leading-tight">{username || "Guest"}</div>
+                  <div className="text-zinc-500 text-xs">Your account at a glance</div>
+                </div>
+              </div>
+              <button onClick={() => setLockerOpen(false)} className="text-zinc-500 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded hover:bg-zinc-800 shrink-0"><X size={16}/></button>
+            </div>
+
+            <div className="p-4 flex flex-col gap-4">
+              {/* Strategon Pass progress — one clear line instead of two disconnected numbers */}
+              <div className="rounded-xl border border-amber-800/50 bg-amber-950/20 p-3">
+                <div className="flex items-center justify-between text-xs mb-1.5">
+                  <span className="text-amber-300 font-bold flex items-center gap-1.5"><Ticket size={13}/> Strategon Pass — Level {passLevel}{passLevel >= PASS_MAX_LEVEL ? " (MAX)" : ""}</span>
+                  <span className="text-zinc-400">{passLevel >= PASS_MAX_LEVEL ? `${passXp.toLocaleString()} XP` : `${intoLevel} / ${PASS_LEVEL_XP} XP`}</span>
+                </div>
+                <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-500" style={{ width: `${xpPercent}%` }} />
+                </div>
+                <p className="text-zinc-500 text-[10px] mt-1.5">Earned by completing weekly quests — {passLevel >= PASS_MAX_LEVEL ? "you've reached the top level!" : "keep going to unlock the next reward."}</p>
               </div>
 
-              <div className="p-4 flex flex-col gap-4">
-                {/* Strategon Pass progress — one clear line instead of two disconnected numbers */}
-                <div className="rounded-xl border border-amber-800/50 bg-amber-950/20 p-3">
-                  <div className="flex items-center justify-between text-xs mb-1.5">
-                    <span className="text-amber-300 font-bold flex items-center gap-1.5"><Ticket size={13}/> Strategon Pass — Level {passLevel}{passLevel >= PASS_MAX_LEVEL ? " (MAX)" : ""}</span>
-                    <span className="text-zinc-400">{passLevel >= PASS_MAX_LEVEL ? `${passXp.toLocaleString()} XP` : `${intoLevel} / ${PASS_LEVEL_XP} XP`}</span>
-                  </div>
-                  <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-500" style={{ width: `${xpPercent}%` }} />
-                  </div>
-                  <p className="text-zinc-500 text-[10px] mt-1.5">Earned by completing weekly quests — {passLevel >= PASS_MAX_LEVEL ? "you've reached the top level!" : "keep going to unlock the next reward."}</p>
+              {/* Currency — the two things you spend, front and center */}
+              <div>
+                <p className="text-zinc-500 text-[10px] uppercase tracking-widest font-bold mb-1.5">Currency</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <CurrencyTile icon={Coins} label="Coins" value={coins} color="text-yellow-400" />
+                  <CurrencyTile icon={Gem}   label="Gems"  value={gems}  color="text-cyan-400" />
                 </div>
+              </div>
 
-                {/* Currency — the two things you spend, front and center */}
-                <div>
-                  <p className="text-zinc-500 text-[10px] uppercase tracking-widest font-bold mb-1.5">Currency</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <CurrencyTile icon={Coins} label="Coins" value={coins} color="text-yellow-400" />
-                    <CurrencyTile icon={Gem}   label="Gems"  value={gems}  color="text-cyan-400" />
-                  </div>
-                </div>
-
-                {/* Activity — how much you've played */}
-                <div>
-                  <p className="text-zinc-500 text-[10px] uppercase tracking-widest font-bold mb-1.5">Activity</p>
-                  <div className="flex flex-col gap-2">
-                    <StatRow icon={Skull} label="Enemies Defeated" value={kills.toLocaleString()} />
-                    <StatRow icon={Clock} label="Total Time Online" value={formatTime(onlineTime)} />
-                    <StatRow icon={Timer} label="This Session" value={formatTime(Math.floor((Date.now() - sessionStart.current) / 1000))} />
-                  </div>
+              {/* Activity — how much you've played */}
+              <div>
+                <p className="text-zinc-500 text-[10px] uppercase tracking-widest font-bold mb-1.5">Activity</p>
+                <div className="flex flex-col gap-2">
+                  <StatRow icon={Skull} label="Enemies Defeated" value={kills.toLocaleString()} />
+                  <StatRow icon={Clock} label="Total Time Online" value={formatTime(onlineTime)} />
+                  <StatRow icon={Timer} label="This Session" value={formatTime(Math.floor((Date.now() - sessionStart.current) / 1000))} />
                 </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
       </nav>
 
       {modal === "bug"        && <ReportBugModal        onClose={() => setModal(null)} />}
