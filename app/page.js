@@ -160,7 +160,7 @@ export default function Home() {
 
                   <div className="flex items-center justify-center gap-1">
                     <CenterCard m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} fade="left" />
-                    <CenterCard m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} fade="right" />
+                    <CenterCard m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} fade="right" mirror />
                   </div>
 
                   <div className="flex items-center justify-center gap-5">
@@ -215,10 +215,11 @@ const EDGE_FADE = {
   bottom: "linear-gradient(to top, transparent 0%, black 40%, black 100%)",
 };
 
-// Center-stage mode card — Classic & Ranked. Tilted -30°, elongated and
-// level with each other, with the fade always facing outward (away from
-// the other center card), never on the meeting edge.
-function CenterCard({ m, isReady, onClick, fade }) {
+// Center-stage mode card — Classic & Ranked. Elongated, mirror-tilted 30°
+// toward each other so their facing edges line up flush instead of
+// stair-stepping, with the fade always facing outward, never on the
+// meeting edge.
+function CenterCard({ m, isReady, onClick, fade, mirror = false }) {
   const gradient = EDGE_FADE[fade];
   return (
     <button
@@ -232,7 +233,7 @@ function CenterCard({ m, isReady, onClick, fade }) {
         style={{ background: m.color, opacity: isReady ? 0.22 : 0 }}
       />
       <div
-        className={`absolute left-1/2 top-1/2 w-[215px] h-[150px] -translate-x-1/2 -translate-y-1/2 -rotate-[30deg] group-hover:scale-105 border rounded-2xl shadow-2xl transition-all duration-200 ${
+        className={`absolute left-1/2 top-1/2 w-[215px] h-[150px] -translate-x-1/2 -translate-y-1/2 ${mirror ? "rotate-[30deg]" : "-rotate-[30deg]"} group-hover:scale-105 border rounded-2xl shadow-2xl transition-all duration-200 ${
           isReady
             ? "bg-zinc-900 border-zinc-700 group-hover:border-zinc-400"
             : "bg-zinc-900/40 border-zinc-800 opacity-50"
