@@ -226,9 +226,10 @@ export default function Navbar({ modal: modalProp, setModal: setModalProp, locke
       {modal === "bug"        && <ReportBugModal        onClose={() => setModal(null)} />}
       {modal === "suggestion" && <SuggestionModal       onClose={() => setModal(null)} />}
       {modal === "reportplayer" && <ReportPlayerModal   onClose={() => setModal(null)} />}
-      {modal === "shop"       && <ShopModal             onClose={() => setModal(null)} />}
-      {modal === "generals"   && <GeneralsModal         onClose={() => setModal(null)} />}
-      {modal === "pass"       && <StrategonPassModal    onClose={() => setModal(null)} />}
+      {/* Shop/Commanders/Pass stay mounted so they can slide in and out like the Profile drawer */}
+      <ShopModal          open={modal === "shop"}     onClose={() => setModal(null)} />
+      <GeneralsModal      open={modal === "generals"} onClose={() => setModal(null)} />
+      <StrategonPassModal open={modal === "pass"}     onClose={() => setModal(null)} />
     </>
   );
 }

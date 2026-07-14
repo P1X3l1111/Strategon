@@ -10,7 +10,7 @@ import {
 } from "../../data/generals";
 import { getCoins, getGems } from "../../data/troops";
 
-export default function GeneralsModal({ onClose }) {
+export default function GeneralsModal({ open, onClose }) {
   const [coins, setCoins] = useState(0);
   const [gems, setGems] = useState(0);
   const [progress, setProgress] = useState({});
@@ -77,10 +77,15 @@ export default function GeneralsModal({ onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      className={`fixed inset-0 z-50 flex justify-end transition-colors duration-300 ${
+        open ? "bg-black/70 backdrop-blur-sm pointer-events-auto" : "bg-transparent pointer-events-none"
+      }`}
       onClick={(e) => e.target === e.currentTarget && onClose()}
+      aria-hidden={!open}
     >
-      <div className="w-full max-w-3xl max-h-[85vh] rounded-2xl bg-zinc-900 border border-zinc-700 shadow-2xl flex flex-col overflow-hidden">
+      <div className={`h-full w-full max-w-2xl bg-zinc-900 border-l border-zinc-700 shadow-2xl flex flex-col overflow-hidden transition-transform duration-300 ease-out ${
+        open ? "translate-x-0" : "translate-x-full"
+      }`}>
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-zinc-800 shrink-0">

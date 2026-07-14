@@ -7,7 +7,7 @@ import {
   getPassState, getPassLevel, claimPassReward,
 } from "../../data/quests";
 
-export default function StrategonPassModal({ onClose }) {
+export default function StrategonPassModal({ open, onClose }) {
   const [state, setState] = useState(null);
   const [toast, setToast] = useState(null);
 
@@ -16,11 +16,16 @@ export default function StrategonPassModal({ onClose }) {
   useEffect(() => {
     refresh();
     const onUpdate = () => refresh();
+    // Now that this modal stays mounted from page load (for the slide-in
+    // animation), its first read can land before login sets a username —
+    // re-read on rpg_profile_updated too, not just pass/quest changes.
     window.addEventListener("rpg_pass_updated", onUpdate);
     window.addEventListener("rpg_quests_updated", onUpdate);
+    window.addEventListener("rpg_profile_updated", onUpdate);
     return () => {
       window.removeEventListener("rpg_pass_updated", onUpdate);
       window.removeEventListener("rpg_quests_updated", onUpdate);
+      window.removeEventListener("rpg_profile_updated", onUpdate);
     };
   }, []);
 
@@ -40,10 +45,15 @@ export default function StrategonPassModal({ onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      className={`fixed inset-0 z-50 flex justify-end transition-colors duration-300 ${
+        open ? "bg-black/70 backdrop-blur-sm pointer-events-auto" : "bg-transparent pointer-events-none"
+      }`}
       onClick={(e) => e.target === e.currentTarget && onClose()}
+      aria-hidden={!open}
     >
-      <div className="w-full max-w-3xl max-h-[85vh] rounded-2xl bg-zinc-900 border border-zinc-700 shadow-2xl flex flex-col overflow-hidden">
+      <div className={`h-full w-full max-w-2xl bg-zinc-900 border-l border-zinc-700 shadow-2xl flex flex-col overflow-hidden transition-transform duration-300 ease-out ${
+        open ? "translate-x-0" : "translate-x-full"
+      }`}>
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-zinc-800 shrink-0">
