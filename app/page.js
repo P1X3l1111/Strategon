@@ -159,13 +159,13 @@ export default function Home() {
                   </div>
 
                   {/* Precisely offset (not just flexed side by side) so the two
-                      tilted rectangles continue one straight diagonal line
-                      instead of meeting at a mirrored point. */}
-                  <div className="relative" style={{ width: 422, height: 323 }}>
-                    <div className="absolute" style={{ left: 0, top: 108 }}>
+                      tilted rectangles continue one straight diagonal line,
+                      with a small gap between them along that same line. */}
+                  <div className="relative" style={{ width: 433, height: 330 }}>
+                    <div className="absolute" style={{ left: 0, top: 115 }}>
                       <CenterCard m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} fade="left" />
                     </div>
-                    <div className="absolute" style={{ left: 186, top: 0 }}>
+                    <div className="absolute" style={{ left: 198, top: 0 }}>
                       <CenterCard m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} fade="right" />
                     </div>
                   </div>
