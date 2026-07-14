@@ -477,6 +477,10 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
 
   // Selection — Set of unit IDs
   const [selectedIds, setSelectedIds] = useState(new Set());
+  // Where to float the selected-unit panel — kept near wherever the player
+  // last clicked/dragged, so they don't have to reach across the screen.
+  const lastClientPos = useRef({ x: 0, y: 0 });
+  const [panelStyle, setPanelStyle] = useState(null);
 
   const [pendingType, setPending]  = useState(null);
   const [shopCat,     setShopCat]  = useState('struct');
@@ -802,6 +806,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
       if (clicked.id===selId) { markActed(clicked.id); return; }
       if (!clicked.mov) return; // stationary structures/turrets act automatically each round
       setSelectedIds(new Set([clicked.id]));
+      updatePanelPos();
       setMoveTargets(clicked.mov>0 ? getReachableCells(clicked, all, G) : []);
       setAttackTargets(clicked.range>0 ? getInRange(clicked, all).map(u=>({col:u.col,row:u.row,id:u.id})) : []);
       return;
@@ -895,6 +900,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
   // ── Selection & behavior ──────────────────────────────────────────────────
   function selectUnit(id) {
     setSelectedIds(new Set([id]));
+    updatePanelPos();
   }
   function setBehavior(beh) {
     const ids=selectedIds;
@@ -948,6 +954,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
 
   // ── Drag-select ───────────────────────────────────────────────────────────
   function onMapPointerDown(e) {
+    lastClientPos.current={x:e.clientX,y:e.clientY};
     if(pendingType||selectedGeneral||e.button!==0||(mode==='turns'&&phase==='battle'))return;
     const rect=gridRef.current?.getBoundingClientRect();
     if(!rect)return;
@@ -957,6 +964,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
     setIsDragging(false);
   }
   function onMapPointerMove(e) {
+    lastClientPos.current={x:e.clientX,y:e.clientY};
     if(!dragStart.current)return;
     const rect=gridRef.current?.getBoundingClientRect();
     if(!rect)return;
@@ -965,7 +973,21 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
     if(dx>6||dy>6)setIsDragging(true);
     setDragBox({x1:dragStart.current.x,y1:dragStart.current.y,x2:x,y2:y});
   }
+  // Float the selected-unit panel near wherever the pointer last was, anchored
+  // from whichever edge is closest so it never runs off the map.
+  function updatePanelPos() {
+    const rect=mapRef.current?.getBoundingClientRect();
+    if(!rect)return;
+    const x=lastClientPos.current.x-rect.left, y=lastClientPos.current.y-rect.top;
+    const style={};
+    if(x>rect.width/2) style.right=Math.max(8,rect.width-x+14);
+    else style.left=Math.max(8,x+14);
+    if(y>rect.height/2) style.bottom=Math.max(8,rect.height-y+14);
+    else style.top=Math.max(8,y+14);
+    setPanelStyle(style);
+  }
   function onMapPointerUp(e) {
+    lastClientPos.current={x:e.clientX,y:e.clientY};
     if(!dragStart.current)return;
     if(isDragging&&dragBox){
       const C=cellSize;
@@ -977,7 +999,7 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
         u.faction==='player'&&u.hp>0&&
         u.col>=minC&&u.col<=maxC&&u.row>=minR&&u.row<=maxR
       ).map(u=>u.id);
-      if(inBox.length>0)setSelectedIds(new Set(inBox));
+      if(inBox.length>0){setSelectedIds(new Set(inBox));updatePanelPos();}
     }
     dragStart.current=null;
     setDragBox(null);
@@ -1318,9 +1340,10 @@ function GameBoard({ mode, mission, onBack, onNextMission }) {
           </div>
         )}
 
-        {/* Selected unit panel — prominent bottom-left */}
+        {/* Selected unit panel — floats near wherever the player just clicked/dragged */}
         {selList.length>0&&!pendingType&&(
-          <div className="absolute bottom-4 left-4 z-20 bg-zinc-800 border-2 border-indigo-500 rounded-2xl p-4 shadow-2xl min-w-[220px] max-w-xs"
+          <div className="absolute z-20 bg-zinc-800 border-2 border-indigo-500 rounded-2xl p-4 shadow-2xl min-w-[220px] max-w-xs"
+            style={panelStyle||{left:16,bottom:16}}
             onClick={e=>e.stopPropagation()}>
 
             {/* Unit info */}
