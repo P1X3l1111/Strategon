@@ -188,15 +188,23 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Profile / Shop / Commanders / Strategon Pass — quick-access shortcut cards.
-                Slide in from off-screen on mount and settle into place, each a beat behind the last. */}
-            <div className="flex flex-col justify-center h-full lg:w-[340px] lg:flex-none overflow-hidden">
-              <div className="flex flex-col gap-4 h-2/3">
-                <SideCard delay={0}   in={sideCardsIn} onClick={() => setNavLockerOpen(o => !o)} icon={Lock} label="Profile" caret={navLockerOpen} />
-                <SideCard delay={80}  in={sideCardsIn} onClick={() => setNavModal("shop")} icon={ShoppingCart} label="Shop" />
-                <SideCard delay={160} in={sideCardsIn} onClick={() => setNavModal("generals")} icon={Star} label="Commanders" />
-                <SideCard delay={240} in={sideCardsIn} onClick={() => setNavModal("pass")} icon={Ticket} label="Strategon Pass" />
-              </div>
+            {/* Empty spacer — keeps the Quests/Modes columns at the same width
+                now that the shortcut cards below render as a centered overlay
+                instead of living in this column. */}
+            <div className="hidden lg:block lg:w-[340px] lg:flex-none" aria-hidden="true"/>
+          </div>
+
+          {/* Profile / Shop / Commanders / Strategon Pass — floats centered on
+              screen, on top of everything else, and rises into place on mount.
+              pointer-events-none on the wrapper/stack so the empty space
+              around the buttons doesn't block clicks to the Modes cards
+              underneath; only the buttons themselves are clickable. */}
+          <div className="fixed inset-0 z-30 flex items-center justify-center pointer-events-none">
+            <div className="flex flex-col gap-4 pointer-events-none">
+              <SideCard delay={0}   in={sideCardsIn} onClick={() => setNavLockerOpen(o => !o)} icon={Lock} label="Profile" caret={navLockerOpen} />
+              <SideCard delay={80}  in={sideCardsIn} onClick={() => setNavModal("shop")} icon={ShoppingCart} label="Shop" />
+              <SideCard delay={160} in={sideCardsIn} onClick={() => setNavModal("generals")} icon={Star} label="Commanders" />
+              <SideCard delay={240} in={sideCardsIn} onClick={() => setNavModal("pass")} icon={Ticket} label="Strategon Pass" />
             </div>
           </div>
         </div>
@@ -322,8 +330,8 @@ function SideCard({ onClick, icon: Icon, label, caret, in: entered, delay = 0 })
   return (
     <button
       onClick={onClick}
-      className={`flex-1 flex items-center justify-center bg-zinc-900 border border-zinc-700 hover:border-indigo-500 hover:bg-zinc-800 rounded-2xl transition-all duration-500 ease-out ${
-        entered ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
+      className={`pointer-events-auto w-60 flex items-center justify-center bg-zinc-900 border border-zinc-700 hover:border-indigo-500 hover:bg-zinc-800 rounded-2xl py-3.5 shadow-2xl transition-all duration-500 ease-out ${
+        entered ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
       }`}
       style={{ transitionDelay: `${delay}ms` }}
     >
