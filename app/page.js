@@ -34,6 +34,13 @@ export default function Home() {
   // trigger the same navbar modal/dropdown as the navbar's own buttons.
   const [navModal,       setNavModal]       = useState(null);
   const [navLockerOpen,  setNavLockerOpen]  = useState(false);
+  // Profile/Shop/Commanders/Pass cards start off-screen and slide in to rest
+  // in place on mount — flips true a tick after paint so the transition runs.
+  const [sideCardsIn, setSideCardsIn] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setSideCardsIn(true), 50);
+    return () => clearTimeout(t);
+  }, []);
 
   // After mount: seed missing maps (including campaign's shared battlefield) with default terrain, then read status
   useEffect(() => {
@@ -181,13 +188,14 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Profile / Shop / Commanders / Strategon Pass — quick-access shortcut cards */}
-            <div className="flex flex-col justify-center h-full lg:w-[340px] lg:flex-none">
+            {/* Profile / Shop / Commanders / Strategon Pass — quick-access shortcut cards.
+                Slide in from off-screen on mount and settle into place, each a beat behind the last. */}
+            <div className="flex flex-col justify-center h-full lg:w-[340px] lg:flex-none overflow-hidden">
               <div className="flex flex-col gap-4 h-2/3">
-                <SideCard onClick={() => setNavLockerOpen(o => !o)} icon={Lock} label="Profile" caret={navLockerOpen} />
-                <SideCard onClick={() => setNavModal("shop")} icon={ShoppingCart} label="Shop" />
-                <SideCard onClick={() => setNavModal("generals")} icon={Star} label="Commanders" />
-                <SideCard onClick={() => setNavModal("pass")} icon={Ticket} label="Strategon Pass" />
+                <SideCard delay={0}   in={sideCardsIn} onClick={() => setNavLockerOpen(o => !o)} icon={Lock} label="Profile" caret={navLockerOpen} />
+                <SideCard delay={80}  in={sideCardsIn} onClick={() => setNavModal("shop")} icon={ShoppingCart} label="Shop" />
+                <SideCard delay={160} in={sideCardsIn} onClick={() => setNavModal("generals")} icon={Star} label="Commanders" />
+                <SideCard delay={240} in={sideCardsIn} onClick={() => setNavModal("pass")} icon={Ticket} label="Strategon Pass" />
               </div>
             </div>
           </div>
@@ -310,11 +318,14 @@ function FlankCard({ m, isReady, onClick, fade }) {
 }
 
 // Big quick-access shortcut card for the right column (Profile / Shop / Commanders).
-function SideCard({ onClick, icon: Icon, label, caret }) {
+function SideCard({ onClick, icon: Icon, label, caret, in: entered, delay = 0 }) {
   return (
     <button
       onClick={onClick}
-      className="flex-1 flex items-center justify-center bg-zinc-900 border border-zinc-700 hover:border-indigo-500 hover:bg-zinc-800 rounded-2xl transition-all"
+      className={`flex-1 flex items-center justify-center bg-zinc-900 border border-zinc-700 hover:border-indigo-500 hover:bg-zinc-800 rounded-2xl transition-all duration-500 ease-out ${
+        entered ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
+      }`}
+      style={{ transitionDelay: `${delay}ms` }}
     >
       <span className="flex items-center gap-2 bg-zinc-800 border border-zinc-700 rounded-full px-4 py-1.5 text-sm font-semibold">
         <Icon size={15}/>
