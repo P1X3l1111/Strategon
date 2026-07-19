@@ -149,16 +149,16 @@ export default function Home() {
 
             {/* Modes — centered in the middle column, the widest section */}
             <div className="flex justify-center items-center h-full lg:flex-[1.6] min-w-0">
-              <div className="flex flex-col items-center gap-8 w-full max-w-2xl">
+              <div className="flex flex-col items-center gap-2 w-full max-w-2xl">
                 <div className="text-center">
-                  <h1 className="text-5xl font-black text-white tracking-tight mb-2">MODES</h1>
+                  <h1 className="text-4xl font-black text-white tracking-tight mb-1">MODES</h1>
                   <p className="text-zinc-500 text-sm">Choose a battle mode to deploy your forces</p>
                 </div>
 
                 {/* Classic & Ranked sit in a line, barely touching. Three of the
                     remaining modes sit above that line, one sits below — all
                     tilted the opposite way from the center pair. */}
-                <div className="flex flex-col items-center gap-10 w-full">
+                <div className="flex flex-col items-center gap-4 w-full">
                   <div className="flex items-center justify-center gap-3">
                     <FlankCard m={CAMPAIGN_MODE} isReady={true} onClick={() => setView("campaign")} fade="top" />
                     <FlankCard m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} fade="top" />
@@ -168,11 +168,11 @@ export default function Home() {
                   {/* Precisely offset (not just flexed side by side) so the two
                       tilted rectangles continue one straight diagonal line,
                       with a small gap between them along that same line. */}
-                  <div className="relative" style={{ width: 433, height: 330 }}>
-                    <div className="absolute" style={{ left: 0, top: 115 }}>
+                  <div className="relative" style={{ width: 468, height: 356 }}>
+                    <div className="absolute" style={{ left: 0, top: 124 }}>
                       <CenterCard m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} fade="left" />
                     </div>
-                    <div className="absolute" style={{ left: 198, top: 0 }}>
+                    <div className="absolute" style={{ left: 214, top: 0 }}>
                       <CenterCard m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} fade="right" />
                     </div>
                   </div>
@@ -241,7 +241,7 @@ function CenterCard({ m, isReady, onClick, fade }) {
       onClick={() => isReady && onClick()}
       disabled={!isReady}
       title={isReady ? m.desc : "Admin must create a map for this mode."}
-      className={`group relative shrink-0 w-[235px] h-[215px] ${isReady ? "cursor-pointer" : "cursor-not-allowed"}`}
+      className={`group relative shrink-0 w-[254px] h-[232px] ${isReady ? "cursor-pointer" : "cursor-not-allowed"}`}
     >
       <div
         className="absolute inset-0 rounded-full blur-2xl transition-opacity duration-200"
@@ -252,7 +252,7 @@ function CenterCard({ m, isReady, onClick, fade }) {
         style={{ background: m.color }}
       />
       <div
-        className={`absolute left-1/2 top-1/2 w-[215px] h-[150px] -translate-x-1/2 -translate-y-1/2 -rotate-[30deg] group-hover:scale-x-110 border rounded-2xl shadow-2xl transition-all duration-200 ${
+        className={`absolute left-1/2 top-1/2 w-[232px] h-[162px] -translate-x-1/2 -translate-y-1/2 -rotate-[30deg] group-hover:scale-x-110 border rounded-2xl shadow-2xl transition-all duration-200 ${
           isReady
             ? "bg-zinc-900 border-zinc-700 group-hover:border-zinc-400"
             : "bg-zinc-900/40 border-zinc-800 opacity-50"
@@ -261,9 +261,9 @@ function CenterCard({ m, isReady, onClick, fade }) {
       />
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center pointer-events-none">
         <span style={{ color: isReady ? m.color : "#52525b" }}>
-          {isReady ? <m.icon size={44}/> : <Lock size={44}/>}
+          {isReady ? <m.icon size={48}/> : <Lock size={48}/>}
         </span>
-        <span className="text-white font-black text-xl">{m.name}</span>
+        <span className="text-white font-black text-2xl">{m.name}</span>
       </div>
       {!isReady && (
         <span className="absolute top-1 right-1 text-[9px] font-bold text-red-400 bg-red-950 border border-red-800 px-1.5 py-0.5 rounded-full z-10">
@@ -284,7 +284,7 @@ function FlankCard({ m, isReady, onClick, fade }) {
       onClick={() => isReady && onClick()}
       disabled={!isReady}
       title={isReady ? m.desc : "Admin must create a map for this mode."}
-      className={`group relative shrink-0 w-[132px] h-[132px] ${isReady ? "cursor-pointer" : "cursor-not-allowed"}`}
+      className={`group relative shrink-0 w-[143px] h-[143px] ${isReady ? "cursor-pointer" : "cursor-not-allowed"}`}
     >
       <div
         className="absolute inset-0 rounded-full blur-xl transition-opacity duration-200"
@@ -295,7 +295,7 @@ function FlankCard({ m, isReady, onClick, fade }) {
         style={{ background: m.color }}
       />
       <div
-        className={`absolute left-1/2 top-1/2 w-[98px] h-[98px] -translate-x-1/2 -translate-y-1/2 rotate-[30deg] group-hover:scale-x-110 border rounded-xl shadow-lg transition-all duration-200 ${
+        className={`absolute left-1/2 top-1/2 w-[106px] h-[106px] -translate-x-1/2 -translate-y-1/2 rotate-[30deg] group-hover:scale-x-110 border rounded-xl shadow-lg transition-all duration-200 ${
           isReady
             ? "bg-zinc-900 border-zinc-700 group-hover:border-zinc-500"
             : "bg-zinc-900/40 border-zinc-800 opacity-50"
@@ -304,9 +304,9 @@ function FlankCard({ m, isReady, onClick, fade }) {
       />
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center pointer-events-none">
         <span style={{ color: isReady ? m.color : "#52525b" }}>
-          {isReady ? <m.icon size={22}/> : <Lock size={22}/>}
+          {isReady ? <m.icon size={24}/> : <Lock size={24}/>}
         </span>
-        <span className="text-white font-bold text-[11px]">{m.name}</span>
+        <span className="text-white font-bold text-xs">{m.name}</span>
       </div>
       {!isReady && (
         <span className="absolute top-0 right-0 text-[8px] font-bold text-red-400 bg-red-950 border border-red-800 px-1 py-0.5 rounded-full z-10">
