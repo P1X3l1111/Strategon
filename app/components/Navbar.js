@@ -158,19 +158,19 @@ export default function Navbar({ modal: modalProp, setModal: setModalProp, locke
         {/* Accent line */}
         <div className="h-[2px] bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-amber-500 opacity-70"/>
 
-        {/* Profile panel — slides in from the right as a drawer. Always mounted
-            (rather than conditionally rendered) so the open AND close motion
-            both get to animate via the CSS transition below. */}
+        {/* Profile panel — slides up into the center of the screen. Always
+            mounted (rather than conditionally rendered) so the open AND close
+            motion both get to animate via the CSS transition below. */}
         <div
-          className={`fixed inset-0 z-50 flex justify-end transition-colors duration-300 ${
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-colors duration-300 ${
             lockerOpen ? "bg-black/70 backdrop-blur-sm pointer-events-auto" : "bg-transparent pointer-events-none"
           }`}
           onClick={(e) => e.target === e.currentTarget && setLockerOpen(false)}
           aria-hidden={!lockerOpen}
         >
           <div
-            className={`h-full w-full max-w-sm bg-zinc-900 border-l border-zinc-700 shadow-2xl overflow-y-auto transition-transform duration-300 ease-out ${
-              lockerOpen ? "translate-x-0" : "translate-x-full"
+            className={`w-full max-w-sm max-h-[85vh] rounded-2xl bg-zinc-900 border border-zinc-700 shadow-2xl overflow-y-auto transition-all duration-300 ease-out ${
+              lockerOpen ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
             }`}
           >
             {/* Header */}

@@ -82,14 +82,14 @@ export default function GeneralsModal({ open, onClose }) {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex justify-end transition-colors duration-300 ${
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-colors duration-300 ${
         open ? "bg-black/70 backdrop-blur-sm pointer-events-auto" : "bg-transparent pointer-events-none"
       }`}
       onClick={(e) => e.target === e.currentTarget && onClose()}
       aria-hidden={!open}
     >
-      <div className={`h-full w-full max-w-2xl bg-zinc-900 border-l border-zinc-700 shadow-2xl flex flex-col overflow-hidden transition-transform duration-300 ease-out ${
-        open ? "translate-x-0" : "translate-x-full"
+      <div className={`w-full max-w-2xl max-h-[85vh] rounded-2xl bg-zinc-900 border border-zinc-700 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out ${
+        open ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
       }`}>
 
         {/* Header */}
