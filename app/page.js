@@ -155,28 +155,27 @@ export default function Home() {
                   <p className="text-zinc-500 text-xs">Choose a battle mode to deploy your forces</p>
                 </div>
 
-                {/* Classic & Ranked anchor the center as a spine; the other four
-                    modes burst outward from it diagonally, compass-style, each
-                    tilted along its own radial direction like spokes. */}
-                <div className="relative" style={{ width: 640, height: 440 }}>
-                  <div className="absolute" style={{ left: 68, top: 162 }}>
-                    <CenterCard m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} fade="left" />
+                {/* All six modes orbit an empty center in a hexagonal ring, each
+                    tilted tangentially to its position — like a mandala/wheel
+                    instead of any kind of row or line. */}
+                <div className="relative" style={{ width: 542, height: 600 }}>
+                  <div className="absolute" style={{ left: 191, top: 0 }}>
+                    <RingCard m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} fade="top" rotateClass="rotate-0" />
                   </div>
-                  <div className="absolute" style={{ left: 299, top: 28 }}>
-                    <CenterCard m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} fade="right" />
+                  <div className="absolute" style={{ left: 382, top: 110 }}>
+                    <RingCard m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} fade="top" rotateClass="rotate-[60deg]" />
                   </div>
-
-                  <div className="absolute" style={{ left: 3, top: 3 }}>
-                    <FlankCard m={CAMPAIGN_MODE} isReady={true} onClick={() => setView("campaign")} fade="top" angle={-45} />
+                  <div className="absolute" style={{ left: 382, top: 330 }}>
+                    <RingCard m={MODES.find(m => m.id === "turns")} isReady={isModeReady("turns", mapStatus)} onClick={() => enterGame("turns")} fade="bottom" rotateClass="-rotate-[60deg]" />
                   </div>
-                  <div className="absolute" style={{ left: 483, top: 3 }}>
-                    <FlankCard m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} fade="top" angle={45} />
+                  <div className="absolute" style={{ left: 191, top: 440 }}>
+                    <RingCard m={MODES.find(m => m.id === "siege")} isReady={isModeReady("siege", mapStatus)} onClick={() => enterGame("siege")} fade="bottom" rotateClass="rotate-0" />
                   </div>
-                  <div className="absolute" style={{ left: 3, top: 283 }}>
-                    <FlankCard m={MODES.find(m => m.id === "siege")} isReady={isModeReady("siege", mapStatus)} onClick={() => enterGame("siege")} fade="bottom" angle={45} />
+                  <div className="absolute" style={{ left: 1, top: 330 }}>
+                    <RingCard m={CAMPAIGN_MODE} isReady={true} onClick={() => setView("campaign")} fade="bottom" rotateClass="rotate-[60deg]" />
                   </div>
-                  <div className="absolute" style={{ left: 483, top: 283 }}>
-                    <FlankCard m={MODES.find(m => m.id === "turns")} isReady={isModeReady("turns", mapStatus)} onClick={() => enterGame("turns")} fade="bottom" angle={-45} />
+                  <div className="absolute" style={{ left: 1, top: 110 }}>
+                    <RingCard m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} fade="top" rotateClass="-rotate-[60deg]" />
                   </div>
                 </div>
 
@@ -228,76 +227,29 @@ const EDGE_FADE = {
   bottom: "linear-gradient(to top, transparent 0%, black 40%, black 100%)",
 };
 
-// Center-stage mode card — Classic & Ranked. Elongated and tilted -30°,
-// positioned (by the caller) so the two cards continue one straight
-// diagonal line, with the fade always facing outward, never on the
-// meeting edge.
-function CenterCard({ m, isReady, onClick, fade }) {
+// Mode card for the hexagonal ring — all six modes use the same shape,
+// each tilted tangentially to its position on the circle (passed in as a
+// literal Tailwind rotate class, since the JIT scanner needs a real string
+// in source rather than a computed `rotate-[${angle}deg]`).
+function RingCard({ m, isReady, onClick, fade, rotateClass }) {
   const gradient = EDGE_FADE[fade];
   return (
     <button
       onClick={() => isReady && onClick()}
       disabled={!isReady}
       title={isReady ? m.desc : "Admin must create a map for this mode."}
-      className={`group relative shrink-0 w-[274px] h-[251px] ${isReady ? "cursor-pointer" : "cursor-not-allowed"}`}
-    >
-      <div
-        className="absolute inset-0 rounded-full blur-2xl transition-opacity duration-200"
-        style={{ background: m.color, opacity: isReady ? 0.22 : 0 }}
-      />
-      <div
-        className="absolute inset-0 rounded-full blur-2xl opacity-0 group-hover:opacity-40 transition-opacity duration-200"
-        style={{ background: m.color }}
-      />
-      <div
-        className={`absolute left-1/2 top-1/2 w-[251px] h-[175px] -translate-x-1/2 -translate-y-1/2 -rotate-[30deg] group-hover:scale-x-110 border rounded-2xl shadow-2xl transition-all duration-200 ${
-          isReady
-            ? "bg-zinc-900 border-zinc-700 group-hover:border-zinc-400"
-            : "bg-zinc-900/40 border-zinc-800 opacity-50"
-        }`}
-        style={{ WebkitMaskImage: gradient, maskImage: gradient }}
-      />
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center pointer-events-none">
-        <span style={{ color: isReady ? m.color : "#52525b" }}>
-          {isReady ? <m.icon size={52}/> : <Lock size={52}/>}
-        </span>
-        <span className="text-white font-black text-2xl">{m.name}</span>
-      </div>
-      {!isReady && (
-        <span className="absolute top-1 right-1 text-[9px] font-bold text-red-400 bg-red-950 border border-red-800 px-1.5 py-0.5 rounded-full z-10">
-          No Map
-        </span>
-      )}
-    </button>
-  );
-}
-
-// Supporting-cast mode card — the rest of the modes, above and below the
-// center pair. Tilted +30° the opposite way from CenterCard, kept clear of it,
-// and faded on the edge pointing away from the center row.
-function FlankCard({ m, isReady, onClick, fade, angle = -30 }) {
-  const gradient = EDGE_FADE[fade];
-  // Tailwind's JIT scanner needs literal class strings, not a computed
-  // `rotate-[${angle}deg]` — so pick between the two literal spoke angles
-  // this layout actually uses (both stay in the source for it to find).
-  const rotateClass = angle === 45 ? "rotate-45" : angle === -45 ? "-rotate-45" : "-rotate-[30deg]";
-  return (
-    <button
-      onClick={() => isReady && onClick()}
-      disabled={!isReady}
-      title={isReady ? m.desc : "Admin must create a map for this mode."}
-      className={`group relative shrink-0 w-[154px] h-[154px] ${isReady ? "cursor-pointer" : "cursor-not-allowed"}`}
+      className={`group relative shrink-0 w-[160px] h-[160px] ${isReady ? "cursor-pointer" : "cursor-not-allowed"}`}
     >
       <div
         className="absolute inset-0 rounded-full blur-xl transition-opacity duration-200"
-        style={{ background: m.color, opacity: isReady ? 0.14 : 0 }}
+        style={{ background: m.color, opacity: isReady ? 0.18 : 0 }}
       />
       <div
-        className="absolute inset-0 rounded-full blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-200"
+        className="absolute inset-0 rounded-full blur-xl opacity-0 group-hover:opacity-35 transition-opacity duration-200"
         style={{ background: m.color }}
       />
       <div
-        className={`absolute left-1/2 top-1/2 w-[114px] h-[114px] -translate-x-1/2 -translate-y-1/2 ${rotateClass} group-hover:scale-x-110 border rounded-xl shadow-lg transition-all duration-200 ${
+        className={`absolute left-1/2 top-1/2 w-[118px] h-[118px] -translate-x-1/2 -translate-y-1/2 ${rotateClass} group-hover:scale-x-110 border rounded-xl shadow-lg transition-all duration-200 ${
           isReady
             ? "bg-zinc-900 border-zinc-700 group-hover:border-zinc-500"
             : "bg-zinc-900/40 border-zinc-800 opacity-50"
@@ -306,7 +258,7 @@ function FlankCard({ m, isReady, onClick, fade, angle = -30 }) {
       />
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center pointer-events-none">
         <span style={{ color: isReady ? m.color : "#52525b" }}>
-          {isReady ? <m.icon size={26}/> : <Lock size={26}/>}
+          {isReady ? <m.icon size={28}/> : <Lock size={28}/>}
         </span>
         <span className="text-white font-bold text-xs">{m.name}</span>
       </div>
