@@ -155,27 +155,29 @@ export default function Home() {
                   <p className="text-zinc-500 text-xs">Choose a battle mode to deploy your forces</p>
                 </div>
 
-                {/* All six modes orbit an empty center in a hexagonal ring, each
-                    tilted tangentially to its position — like a mandala/wheel
-                    instead of any kind of row or line. */}
-                <div className="relative" style={{ width: 542, height: 600 }}>
-                  <div className="absolute" style={{ left: 191, top: 0 }}>
-                    <RingCard m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} fade="top" rotateClass="rotate-0" />
+                {/* Classic & Ranked are the main event — a big, prominent pair
+                    at the center, still tiling into one line like before. The
+                    rest of the modes orbit them at the four corners, each
+                    tilted tangentially for a pinwheel feel. */}
+                <div className="relative" style={{ width: 640, height: 440 }}>
+                  <div className="absolute" style={{ left: 68, top: 162 }}>
+                    <RingCard big m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} fade="left" rotateClass="-rotate-[30deg]" />
                   </div>
-                  <div className="absolute" style={{ left: 382, top: 110 }}>
-                    <RingCard m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} fade="top" rotateClass="rotate-[60deg]" />
+                  <div className="absolute" style={{ left: 299, top: 28 }}>
+                    <RingCard big m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} fade="right" rotateClass="-rotate-[30deg]" />
                   </div>
-                  <div className="absolute" style={{ left: 382, top: 330 }}>
-                    <RingCard m={MODES.find(m => m.id === "turns")} isReady={isModeReady("turns", mapStatus)} onClick={() => enterGame("turns")} fade="bottom" rotateClass="-rotate-[60deg]" />
+
+                  <div className="absolute" style={{ left: 3, top: 3 }}>
+                    <RingCard m={CAMPAIGN_MODE} isReady={true} onClick={() => setView("campaign")} fade="top" rotateClass="rotate-[60deg]" />
                   </div>
-                  <div className="absolute" style={{ left: 191, top: 440 }}>
-                    <RingCard m={MODES.find(m => m.id === "siege")} isReady={isModeReady("siege", mapStatus)} onClick={() => enterGame("siege")} fade="bottom" rotateClass="rotate-0" />
+                  <div className="absolute" style={{ left: 483, top: 3 }}>
+                    <RingCard m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} fade="top" rotateClass="-rotate-[60deg]" />
                   </div>
-                  <div className="absolute" style={{ left: 1, top: 330 }}>
-                    <RingCard m={CAMPAIGN_MODE} isReady={true} onClick={() => setView("campaign")} fade="bottom" rotateClass="rotate-[60deg]" />
+                  <div className="absolute" style={{ left: 3, top: 283 }}>
+                    <RingCard m={MODES.find(m => m.id === "siege")} isReady={isModeReady("siege", mapStatus)} onClick={() => enterGame("siege")} fade="bottom" rotateClass="-rotate-[60deg]" />
                   </div>
-                  <div className="absolute" style={{ left: 1, top: 110 }}>
-                    <RingCard m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} fade="top" rotateClass="-rotate-[60deg]" />
+                  <div className="absolute" style={{ left: 483, top: 283 }}>
+                    <RingCard m={MODES.find(m => m.id === "turns")} isReady={isModeReady("turns", mapStatus)} onClick={() => enterGame("turns")} fade="bottom" rotateClass="rotate-[60deg]" />
                   </div>
                 </div>
 
@@ -231,36 +233,38 @@ const EDGE_FADE = {
 // each tilted tangentially to its position on the circle (passed in as a
 // literal Tailwind rotate class, since the JIT scanner needs a real string
 // in source rather than a computed `rotate-[${angle}deg]`).
-function RingCard({ m, isReady, onClick, fade, rotateClass }) {
+function RingCard({ m, isReady, onClick, fade, rotateClass, big = false }) {
   const gradient = EDGE_FADE[fade];
+  const outerClass = big ? "w-[274px] h-[251px]" : "w-[160px] h-[160px]";
+  const innerClass = big ? "w-[251px] h-[175px]" : "w-[118px] h-[118px]";
   return (
     <button
       onClick={() => isReady && onClick()}
       disabled={!isReady}
       title={isReady ? m.desc : "Admin must create a map for this mode."}
-      className={`group relative shrink-0 w-[160px] h-[160px] ${isReady ? "cursor-pointer" : "cursor-not-allowed"}`}
+      className={`group relative shrink-0 ${outerClass} ${isReady ? "cursor-pointer" : "cursor-not-allowed"}`}
     >
       <div
         className="absolute inset-0 rounded-full blur-xl transition-opacity duration-200"
-        style={{ background: m.color, opacity: isReady ? 0.18 : 0 }}
+        style={{ background: m.color, opacity: isReady ? (big ? 0.22 : 0.18) : 0 }}
       />
       <div
         className="absolute inset-0 rounded-full blur-xl opacity-0 group-hover:opacity-35 transition-opacity duration-200"
         style={{ background: m.color }}
       />
       <div
-        className={`absolute left-1/2 top-1/2 w-[118px] h-[118px] -translate-x-1/2 -translate-y-1/2 ${rotateClass} group-hover:scale-x-110 border rounded-xl shadow-lg transition-all duration-200 ${
+        className={`absolute left-1/2 top-1/2 ${innerClass} -translate-x-1/2 -translate-y-1/2 ${rotateClass} group-hover:scale-x-110 border rounded-xl shadow-lg transition-all duration-200 ${
           isReady
             ? "bg-zinc-900 border-zinc-700 group-hover:border-zinc-500"
             : "bg-zinc-900/40 border-zinc-800 opacity-50"
         }`}
         style={{ WebkitMaskImage: gradient, maskImage: gradient }}
       />
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center pointer-events-none">
+      <div className={`absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none ${big ? "gap-2" : "gap-1"}`}>
         <span style={{ color: isReady ? m.color : "#52525b" }}>
-          {isReady ? <m.icon size={28}/> : <Lock size={28}/>}
+          {isReady ? <m.icon size={big ? 52 : 28}/> : <Lock size={big ? 52 : 28}/>}
         </span>
-        <span className="text-white font-bold text-xs">{m.name}</span>
+        <span className={`text-white font-black ${big ? "text-2xl" : "text-xs font-bold"}`}>{m.name}</span>
       </div>
       {!isReady && (
         <span className="absolute top-0 right-0 text-[8px] font-bold text-red-400 bg-red-950 border border-red-800 px-1 py-0.5 rounded-full z-10">
