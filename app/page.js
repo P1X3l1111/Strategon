@@ -168,11 +168,22 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-center gap-2">
-                    <RingCard m={CAMPAIGN_MODE} isReady={true} onClick={() => setView("campaign")} fade="top" rotateClass="-rotate-[30deg]" />
-                    <RingCard m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} fade="top" rotateClass="-rotate-[30deg]" />
-                    <RingCard m={MODES.find(m => m.id === "siege")} isReady={isModeReady("siege", mapStatus)} onClick={() => enterGame("siege")} fade="top" rotateClass="-rotate-[30deg]" />
-                    <RingCard m={MODES.find(m => m.id === "turns")} isReady={isModeReady("turns", mapStatus)} onClick={() => enterGame("turns")} fade="top" rotateClass="-rotate-[30deg]" />
+                  {/* A gentle wave instead of a flat line — alternating tilt
+                      direction and a slight up/down arc per card, while still
+                      reading as one clean row left to right. */}
+                  <div className="flex items-start justify-center gap-2">
+                    <div style={{ marginTop: 40 }}>
+                      <RingCard m={CAMPAIGN_MODE} isReady={true} onClick={() => setView("campaign")} fade="top" rotateClass="-rotate-[30deg]" />
+                    </div>
+                    <div style={{ marginTop: 0 }}>
+                      <RingCard m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} fade="top" rotateClass="rotate-[30deg]" />
+                    </div>
+                    <div style={{ marginTop: 0 }}>
+                      <RingCard m={MODES.find(m => m.id === "siege")} isReady={isModeReady("siege", mapStatus)} onClick={() => enterGame("siege")} fade="top" rotateClass="-rotate-[30deg]" />
+                    </div>
+                    <div style={{ marginTop: 40 }}>
+                      <RingCard m={MODES.find(m => m.id === "turns")} isReady={isModeReady("turns", mapStatus)} onClick={() => enterGame("turns")} fade="top" rotateClass="rotate-[30deg]" />
+                    </div>
                   </div>
                 </div>
 
