@@ -155,30 +155,28 @@ export default function Home() {
                   <p className="text-zinc-500 text-xs">Choose a battle mode to deploy your forces</p>
                 </div>
 
-                {/* Classic & Ranked sit in a line, barely touching. Three of the
-                    remaining modes sit above that line, one sits below — all
-                    tilted the opposite way from the center pair. */}
-                <div className="flex flex-col items-center gap-3 w-full">
-                  <div className="flex items-center justify-center gap-2">
-                    <FlankCard m={CAMPAIGN_MODE} isReady={true} onClick={() => setView("campaign")} fade="top" />
-                    <FlankCard m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} fade="top" />
-                    <FlankCard m={MODES.find(m => m.id === "siege")} isReady={isModeReady("siege", mapStatus)} onClick={() => enterGame("siege")} fade="top" />
+                {/* Classic & Ranked anchor the center as a spine; the other four
+                    modes burst outward from it diagonally, compass-style, each
+                    tilted along its own radial direction like spokes. */}
+                <div className="relative" style={{ width: 640, height: 440 }}>
+                  <div className="absolute" style={{ left: 68, top: 162 }}>
+                    <CenterCard m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} fade="left" />
+                  </div>
+                  <div className="absolute" style={{ left: 299, top: 28 }}>
+                    <CenterCard m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} fade="right" />
                   </div>
 
-                  {/* Precisely offset (not just flexed side by side) so the two
-                      tilted rectangles continue one straight diagonal line,
-                      with a small gap between them along that same line. */}
-                  <div className="relative" style={{ width: 505, height: 385 }}>
-                    <div className="absolute" style={{ left: 0, top: 134 }}>
-                      <CenterCard m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} fade="left" />
-                    </div>
-                    <div className="absolute" style={{ left: 231, top: 0 }}>
-                      <CenterCard m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} fade="right" />
-                    </div>
+                  <div className="absolute" style={{ left: 3, top: 3 }}>
+                    <FlankCard m={CAMPAIGN_MODE} isReady={true} onClick={() => setView("campaign")} fade="top" angle={-45} />
                   </div>
-
-                  <div className="flex items-center justify-center gap-4">
-                    <FlankCard m={MODES.find(m => m.id === "turns")} isReady={isModeReady("turns", mapStatus)} onClick={() => enterGame("turns")} fade="bottom" />
+                  <div className="absolute" style={{ left: 483, top: 3 }}>
+                    <FlankCard m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} fade="top" angle={45} />
+                  </div>
+                  <div className="absolute" style={{ left: 3, top: 283 }}>
+                    <FlankCard m={MODES.find(m => m.id === "siege")} isReady={isModeReady("siege", mapStatus)} onClick={() => enterGame("siege")} fade="bottom" angle={45} />
+                  </div>
+                  <div className="absolute" style={{ left: 483, top: 283 }}>
+                    <FlankCard m={MODES.find(m => m.id === "turns")} isReady={isModeReady("turns", mapStatus)} onClick={() => enterGame("turns")} fade="bottom" angle={-45} />
                   </div>
                 </div>
 
@@ -277,8 +275,12 @@ function CenterCard({ m, isReady, onClick, fade }) {
 // Supporting-cast mode card — the rest of the modes, above and below the
 // center pair. Tilted +30° the opposite way from CenterCard, kept clear of it,
 // and faded on the edge pointing away from the center row.
-function FlankCard({ m, isReady, onClick, fade }) {
+function FlankCard({ m, isReady, onClick, fade, angle = -30 }) {
   const gradient = EDGE_FADE[fade];
+  // Tailwind's JIT scanner needs literal class strings, not a computed
+  // `rotate-[${angle}deg]` — so pick between the two literal spoke angles
+  // this layout actually uses (both stay in the source for it to find).
+  const rotateClass = angle === 45 ? "rotate-45" : angle === -45 ? "-rotate-45" : "-rotate-[30deg]";
   return (
     <button
       onClick={() => isReady && onClick()}
@@ -295,7 +297,7 @@ function FlankCard({ m, isReady, onClick, fade }) {
         style={{ background: m.color }}
       />
       <div
-        className={`absolute left-1/2 top-1/2 w-[114px] h-[114px] -translate-x-1/2 -translate-y-1/2 -rotate-[30deg] group-hover:scale-x-110 border rounded-xl shadow-lg transition-all duration-200 ${
+        className={`absolute left-1/2 top-1/2 w-[114px] h-[114px] -translate-x-1/2 -translate-y-1/2 ${rotateClass} group-hover:scale-x-110 border rounded-xl shadow-lg transition-all duration-200 ${
           isReady
             ? "bg-zinc-900 border-zinc-700 group-hover:border-zinc-500"
             : "bg-zinc-900/40 border-zinc-800 opacity-50"
