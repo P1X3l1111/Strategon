@@ -155,24 +155,30 @@ export default function Home() {
                   <p className="text-zinc-500 text-xs">Choose a battle mode to deploy your forces</p>
                 </div>
 
-                {/* Classic & Ranked are the main event — a big, prominent row
-                    tiling into one line. The rest of the modes sit in a clean
-                    row below, same tilt, evenly spaced — no scattered corners. */}
-                <div className="flex flex-col items-center gap-6 w-full">
-                  <div className="relative" style={{ width: 505, height: 385 }}>
-                    <div className="absolute" style={{ left: 0, top: 134 }}>
-                      <RingCard big m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} fade="left" rotateClass="-rotate-[30deg]" />
-                    </div>
-                    <div className="absolute" style={{ left: 231, top: 0 }}>
-                      <RingCard big m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} fade="right" rotateClass="-rotate-[30deg]" />
-                    </div>
+                {/* Classic & Ranked stay the big centered spine. The rest of the
+                    modes flank it in mirrored pairs — Campaign+Siege tucked at
+                    Classic's corners, Endless+Turns at Ranked's, each pair
+                    tilted the opposite way from the other so they frame the
+                    center instead of trailing off in a row. */}
+                <div className="relative" style={{ width: 640, height: 440 }}>
+                  <div className="absolute" style={{ left: 68, top: 162 }}>
+                    <RingCard big m={MODES.find(m => m.id === "classic")} isReady={isModeReady("classic", mapStatus)} onClick={() => enterGame("classic")} fade="left" rotateClass="-rotate-[30deg]" />
+                  </div>
+                  <div className="absolute" style={{ left: 299, top: 28 }}>
+                    <RingCard big m={RANKED_MODE} isReady={true} onClick={() => setView("ranked")} fade="right" rotateClass="-rotate-[30deg]" />
                   </div>
 
-                  <div className="flex items-center justify-center gap-2">
-                    <RingCard m={CAMPAIGN_MODE} isReady={true} onClick={() => setView("campaign")} fade="top" rotateClass="-rotate-[30deg]" />
-                    <RingCard m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} fade="top" rotateClass="-rotate-[30deg]" />
-                    <RingCard m={MODES.find(m => m.id === "siege")} isReady={isModeReady("siege", mapStatus)} onClick={() => enterGame("siege")} fade="top" rotateClass="-rotate-[30deg]" />
-                    <RingCard m={MODES.find(m => m.id === "turns")} isReady={isModeReady("turns", mapStatus)} onClick={() => enterGame("turns")} fade="top" rotateClass="-rotate-[30deg]" />
+                  <div className="absolute" style={{ left: 3, top: 3 }}>
+                    <RingCard m={CAMPAIGN_MODE} isReady={true} onClick={() => setView("campaign")} fade="top" rotateClass="-rotate-45" />
+                  </div>
+                  <div className="absolute" style={{ left: 3, top: 283 }}>
+                    <RingCard m={MODES.find(m => m.id === "siege")} isReady={isModeReady("siege", mapStatus)} onClick={() => enterGame("siege")} fade="bottom" rotateClass="-rotate-45" />
+                  </div>
+                  <div className="absolute" style={{ left: 483, top: 3 }}>
+                    <RingCard m={MODES.find(m => m.id === "endless")} isReady={isModeReady("endless", mapStatus)} onClick={() => enterGame("endless")} fade="top" rotateClass="rotate-45" />
+                  </div>
+                  <div className="absolute" style={{ left: 483, top: 283 }}>
+                    <RingCard m={MODES.find(m => m.id === "turns")} isReady={isModeReady("turns", mapStatus)} onClick={() => enterGame("turns")} fade="bottom" rotateClass="rotate-45" />
                   </div>
                 </div>
 
